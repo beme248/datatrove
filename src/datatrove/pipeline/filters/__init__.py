@@ -4,6 +4,7 @@ from .gopher_repetition_filter import GopherRepetitionFilter
 from .lambda_filter import LambdaFilter
 from .language_filter import LanguageFilter
 from .list_filter import ListFilter
+from .multilingual_gopher_quality_filter import MultilingualGopherQualityFilter
 from .regex_filter import RegexFilter
 from .sampler_filter import SamplerFilter
 from .unigram_log_probs import UnigramLogProbFilter

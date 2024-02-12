@@ -1,0 +1,120 @@
+import string
+
+import numpy as np
+
+from datatrove.data import Document
+from datatrove.pipeline.filters.base_filter import BaseFilter
+from datatrove.pipeline.writers.disk_base import DiskWriter
+
+# TODO: improve multilingual tokenization
+from datatrove.utils.langstats import TOKENIZER_LANGUAGES
+
+
+class MultilingualGopherQualityFilter(BaseFilter):
+    name = "🥇 Multilignual Gopher Quality"
+    _requires_dependencies = ["nltk"]
+
+    def __init__(
+        self,
+        min_doc_words: int | None = 50,
+        max_doc_words: int | None = 100000,
+        min_avg_word_lengths: dict[str, int] | None = None,
+        max_avg_word_lengths: dict[str, int] | None = None,
+        stop_words: dict[str, list[str]] | None = None,
+        min_stop_words: int | None = 2,  # TODO: Per language or one for all languages?
+        max_symbol_word_ratio: float | None = 0.1,
+        max_bullet_lines_ratio: float | None = 0.9,
+        max_ellipsis_lines_ratio: float | None = 0.3,
+        max_non_alpha_words_ratio: float | None = 0.8,
+        exclusion_writer: DiskWriter = None,
+    ):
+        super().__init__(exclusion_writer)
+        self.min_doc_words = min_doc_words
+        self.max_doc_words = max_doc_words
+        self.min_avg_word_lengths = min_avg_word_lengths
+        self.max_avg_word_lengths = max_avg_word_lengths
+        self.max_symbol_word_ratio = max_symbol_word_ratio
+        self.max_bullet_lines_ratio = max_bullet_lines_ratio
+        self.max_ellipsis_lines_ratio = max_ellipsis_lines_ratio
+        self.max_non_alpha_words_ratio = max_non_alpha_words_ratio
+        self.min_stop_words = min_stop_words
+        self.stop_words = stop_words
+
+    def filter(self, doc: Document) -> bool | tuple[bool, str]:
+        """
+
+        Args:
+            doc: Applies the heuristics rules to decide if a document should be REMOVED
+
+
+        Returns: False if sample.text does not pass any of the the heuristic tests
+
+        """
+        from nltk.tokenize import word_tokenize
+
+        text = doc.text
+        lang = doc.metadata["language"]
+
+        words = word_tokenize(text, TOKENIZER_LANGUAGES.get(lang, "english"))
+
+        # words < min_doc_words or words > max_doc_words
+        n_words = len([w for w in words if w not in string.punctuation])
+        if self.min_doc_words and n_words < self.min_doc_words:
+            return False, "gopher_short_doc"
+        if self.max_doc_words and n_words > self.max_doc_words:
+            return False, "gopher_long_doc"
+
+        # mean word length is outside the range per language
+        avg_n_words = np.mean([len(w) for w in words if w not in string.punctuation])
+        if (
+            self.min_avg_word_lengths is not None
+            and lang in self.min_avg_word_lengths
+            and avg_n_words < self.min_avg_word_lengths[lang]
+        ):
+            return False, "gopher_below_avg_threshold"
+        if (
+            self.max_avg_word_lengths is not None
+            and lang in self.max_avg_word_lengths
+            and avg_n_words > self.max_avg_word_lengths[lang]
+        ):
+            return False, "gopher_above_avg_threshold"
+
+        # symbol-to-word ratio greater than 0.1 for either the hash symbol or the ellipsis
+        if self.max_symbol_word_ratio and text.count("#") / n_words > self.max_symbol_word_ratio:
+            return False, "gopher_too_many_hashes"
+        if self.max_symbol_word_ratio and (text.count("...") + text.count("…")) / n_words > self.max_symbol_word_ratio:
+            return False, "gopher_too_many_ellipsis"
+
+        # any document with more than 90 % of lines starting with a bullet point,
+        # or more than 30 % ending with an ellipsis.
+        lines = text.splitlines()
+        if (
+            self.max_bullet_lines_ratio
+            and sum(s.lstrip().startswith("•") or s.lstrip().startswith("-") for s in lines) / len(lines)
+            > self.max_bullet_lines_ratio
+        ):
+            return False, "gopher_too_many_bullets"
+        if (
+            self.max_ellipsis_lines_ratio
+            and sum(s.rstrip().endswith("...") or s.rstrip().endswith("…") for s in lines) / len(lines)
+            > self.max_ellipsis_lines_ratio
+        ):
+            return False, "gopher_too_many_end_ellipsis"
+
+        # that 80 % of words in a document contain at least one alphabetic character
+        if (
+            self.max_non_alpha_words_ratio
+            and sum([any((c.isalpha() for c in w)) for w in words]) / n_words < self.max_non_alpha_words_ratio
+        ):
+            return False, "gopher_below_alpha_threshold"
+
+        # stop word filter
+        if (
+            self.min_stop_words
+            and self.stop_words is not None
+            and lang in self.stop_words
+            and sum(w in self.stop_words[lang] for w in words) < self.min_stop_words
+        ):
+            return False, "gopher_enough_stop_words"
+
+        return True
