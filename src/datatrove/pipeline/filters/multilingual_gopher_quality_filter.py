@@ -6,14 +6,36 @@ from datatrove.data import Document
 from datatrove.pipeline.filters.base_filter import BaseFilter
 from datatrove.pipeline.writers.disk_base import DiskWriter
 
-# TODO: improve multilingual tokenization
-from datatrove.utils.langstats import TOKENIZER_LANGUAGES
+
+# TODO: unify tokenization
+# Language code -> NLTK Punkt tokenizer language mapping
+TOKENIZER_LANGUAGES = {
+    "cz": "czech",
+    "da": "danish",
+    "en": "english",
+    "et": "estonian",
+    "fi": "finnish",
+    "fr": "french",
+    "de": "german",
+    "el": "greek",
+    "it": "italian",
+    "ml": "malayalam",
+    "no": "norwegian",
+    "pl": "polish",
+    "pt": "portuguese",
+    "ru": "russian",
+    "si": "slovene",
+    "es": "spanish",
+    "sv": "swedish",
+    "tr": "turkish",
+}
 
 
 class MultilingualGopherQualityFilter(BaseFilter):
     name = "🥇 Multilignual Gopher Quality"
     _requires_dependencies = ["nltk"]
 
+    # TODO: Decide which parameters are tweaked per-language
     def __init__(
         self,
         min_doc_words: int | None = 50,
@@ -21,7 +43,7 @@ class MultilingualGopherQualityFilter(BaseFilter):
         min_avg_word_lengths: dict[str, int] | None = None,
         max_avg_word_lengths: dict[str, int] | None = None,
         stop_words: dict[str, list[str]] | None = None,
-        min_stop_words: int | None = 2,  # TODO: Per language or one for all languages?
+        min_stop_words: int | None = 2,
         max_symbol_word_ratio: float | None = 0.1,
         max_bullet_lines_ratio: float | None = 0.9,
         max_ellipsis_lines_ratio: float | None = 0.3,
