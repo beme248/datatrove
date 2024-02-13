@@ -46,7 +46,7 @@ executor = {
         pipeline=pipeline,
         logging_dir=f"{MAIN_OUTPUT_PATH}/logs/{DATASET}",
         tasks=2,
-        time="00:05:00",
+        time="00:30:00",
         partition="clariden",
     ),
     "local": LocalPipelineExecutor(

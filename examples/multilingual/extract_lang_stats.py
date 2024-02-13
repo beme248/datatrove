@@ -1,6 +1,7 @@
-import numpy as np
+import os
 
 from datatrove.executor.local import LocalPipelineExecutor
+from datatrove.executor.slurm import SlurmPipelineExecutor
 from datatrove.pipeline.filters import LanguageFilter
 from datatrove.pipeline.readers import HuggingFaceDatasetReader
 from datatrove.pipeline.stats import LanguageStats, LanguageStatsReducer
@@ -13,6 +14,7 @@ LANGUAGES = ["fr", "de"]
 MAIN_OUTPUT_PATH = "./language_stats"
 WIKI_VERSION = "20231101"  # See https://huggingface.co/datasets/wikimedia/wikipedia
 DOC_LIMIT = 20000  # Limit number of documents per dataset
+EXECUTOR = os.environ.get("EXECUTOR", "slurm")  # local/slurm
 
 # Count token lengths
 readers = [
@@ -32,12 +34,24 @@ pipeline = [
     LanguageFilter(languages=(LANGUAGES)),
     LanguageStats(output_folder=f"{MAIN_OUTPUT_PATH}/lang_stats/"),
 ]
-executor = LocalPipelineExecutor(pipeline=pipeline, logging_dir=f"{MAIN_OUTPUT_PATH}/logs/")
+executor = {
+    "local": LocalPipelineExecutor(pipeline=pipeline, logging_dir=f"{MAIN_OUTPUT_PATH}/logs/"),
+    "slurm": SlurmPipelineExecutor(
+        pipeline=pipeline,
+        logging_dir=f"{MAIN_OUTPUT_PATH}/logs/",
+        tasks=2,
+        time="00:30:00",
+        partition="clariden",
+    ),
+}[EXECUTOR]
 executor.run()
 
 
 # Reduce token lengths into lang_stats.json file
 def length_counter_reducer(length_counter):
+    # Make sure to import np here for slurm executor
+    import numpy as np
+
     lengths = list(length_counter.keys())
     freqs = list(length_counter.values())
 
@@ -58,5 +72,15 @@ pipeline_reduce = [
         length_counter_reducer=length_counter_reducer,
     )
 ]
-executor_reduce = LocalPipelineExecutor(pipeline=pipeline_reduce, logging_dir=f"{MAIN_OUTPUT_PATH}/logs_reduce/")
+executor_reduce = {
+    "local": LocalPipelineExecutor(pipeline=pipeline_reduce, logging_dir=f"{MAIN_OUTPUT_PATH}/logs_reduce/"),
+    "slurm": SlurmPipelineExecutor(
+        pipeline=pipeline_reduce,
+        logging_dir=f"{MAIN_OUTPUT_PATH}/logs_reduce/",
+        tasks=1,
+        time="00:30:00",
+        partition="clariden",
+        depends=executor,
+    ),
+}[EXECUTOR]
 executor_reduce.run()
