@@ -4,7 +4,7 @@
 
 ### Install conda
 
-Follow [Quick command line install](https://docs.anaconda.com/free/miniconda/#quick-command-line-install) tutorial for Linux to set up `conda` under your user on the cluster.
+Follow [Quick command line install](https://docs.anaconda.com/free/miniconda/#quick-command-line-install) tutorial for Linux to set up `conda`.
 
 Restart your shell after running `~/miniconda3/bin/conda init bash` to be able to use `conda`.
 
@@ -28,6 +28,15 @@ pip install -U datasets # Upgrade datasets library to a newer version
 
 ```bash
 cd examples/multilingual
+```
+
+To generate language statistics (optional, `lang_stats.json` is already provided), run
+```bash
+EXECUTOR=local python extract_lang_stats.py
+```
+
+To start the fineweb preprocessing pipeline, run
+```bash
 EXECUTOR=local HF_TOKEN=your-huggingface-access-token python process_fineweb.py
 ```
 
@@ -71,7 +80,17 @@ pip install -U datasets # Upgrade datasets library to a newer version
 
 ### Run the pipeline
 
+
 ```bash
 cd examples/multilingual
+```
+
+To generate language statistics (optional, `lang_stats.json` is already provided), run
+```bash
+python extract_lang_stats.py
+```
+
+To start the fineweb preprocessing pipeline, run
+```bash
 HF_TOKEN=your-huggingface-access-token python process_fineweb.py
 ```
