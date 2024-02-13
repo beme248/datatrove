@@ -1,4 +1,5 @@
 import json
+import os
 import sys
 
 from nltk.corpus import stopwords
@@ -13,6 +14,7 @@ from datatrove.pipeline.writers import JsonlWriter
 MAIN_OUTPUT_PATH = "./processed_data"
 STATS_FILE = "./stats_20000_10.json"
 DATASET = "HuggingFaceFW/fineweb_german_extract"
+HF_TOKEN = os.environ.get("HF_TOKEN", "")
 
 if len(sys.argv) == 2 and sys.argv[1] in ["local", "slurm"]:
     EXECUTOR = sys.argv[1]
@@ -31,7 +33,7 @@ stopwords = {
 }
 
 pipeline = [
-    HuggingFaceDatasetReader(DATASET, dataset_options={"use_auth_token": True, "split": "train"}, limit=5000),
+    HuggingFaceDatasetReader(DATASET, dataset_options={"token": HF_TOKEN, "split": "train"}, limit=5000),
     GopherRepetitionFilter(),
     MultilingualGopherQualityFilter(
         max_avg_word_lengths=max_avg_word_lengths,
