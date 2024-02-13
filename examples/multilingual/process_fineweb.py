@@ -1,6 +1,5 @@
 import json
 import os
-import sys
 
 from nltk.corpus import stopwords
 
@@ -11,16 +10,11 @@ from datatrove.pipeline.readers import HuggingFaceDatasetReader
 from datatrove.pipeline.writers import JsonlWriter
 
 
-MAIN_OUTPUT_PATH = "./processed_data"
-STATS_FILE = "./stats_20000_10.json"
 DATASET = "HuggingFaceFW/fineweb_german_extract"
+MAIN_OUTPUT_PATH = "./processed_data"
 HF_TOKEN = os.environ.get("HF_TOKEN", "")
-
-if len(sys.argv) == 2 and sys.argv[1] in ["local", "slurm"]:
-    EXECUTOR = sys.argv[1]
-else:
-    print("Wrong executor provided (use either 'local' or 'slurm')")
-    exit(1)
+EXECUTOR = os.environ.get("EXECUTOR", "slurm")
+STATS_FILE = "./stats_20000_10.json"
 
 with open(STATS_FILE, "r") as f:
     language_stats = json.loads(f.read())
@@ -33,7 +27,7 @@ stopwords = {
 }
 
 pipeline = [
-    HuggingFaceDatasetReader(DATASET, dataset_options={"token": HF_TOKEN, "split": "train"}, limit=5000),
+    HuggingFaceDatasetReader(DATASET, dataset_options={"token": HF_TOKEN, "split": "train[:1000]"}),
     GopherRepetitionFilter(),
     MultilingualGopherQualityFilter(
         max_avg_word_lengths=max_avg_word_lengths,
@@ -44,15 +38,18 @@ pipeline = [
     JsonlWriter(f"{MAIN_OUTPUT_PATH}/output/{DATASET}"),
 ]
 
-if EXECUTOR == "local":
-    executor = LocalPipelineExecutor(pipeline=pipeline, logging_dir=f"{MAIN_OUTPUT_PATH}/logs/{DATASET}")
-elif EXECUTOR == "slurm":
-    executor = SlurmPipelineExecutor(
+executor = {
+    "slurm": SlurmPipelineExecutor(
         pipeline=pipeline,
         logging_dir=f"{MAIN_OUTPUT_PATH}/logs/{DATASET}",
         tasks=2,
         time="00:05:00",
         partition="clariden",
-    )
+    ),
+    "local": LocalPipelineExecutor(
+        pipeline=pipeline,
+        logging_dir=f"{MAIN_OUTPUT_PATH}/logs/{DATASET}",
+    ),
+}[EXECUTOR]
 
 executor.run()
