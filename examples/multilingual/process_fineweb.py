@@ -10,24 +10,27 @@ from datatrove.pipeline.readers import HuggingFaceDatasetReader
 from datatrove.pipeline.writers import JsonlWriter
 
 
+HF_TOKEN = os.environ.get("HF_TOKEN", "")  # HuggingFace token to access datasets (gated)
+EXECUTOR = os.environ.get("EXECUTOR", "slurm")  # local/slurm
 DATASET = "HuggingFaceFW/fineweb_german_extract"
-MAIN_OUTPUT_PATH = "./processed_data"
-HF_TOKEN = os.environ.get("HF_TOKEN", "")
-EXECUTOR = os.environ.get("EXECUTOR", "slurm")
-STATS_FILE = "./stats_20000_10.json"
+MAIN_OUTPUT_PATH = "./fineweb_processed"
+STATS_FILE = "./lang_stats.json"
+DOC_LIMIT = 1000  # Limit number of documents per dataset
 
+# Load language-specific statistics and stopwords
 with open(STATS_FILE, "r") as f:
-    language_stats = json.loads(f.read())
+    language_stats = json.load(f)
 
-min_avg_word_lengths = {k: round(v["word_length_mean"] - v["word_length_std"]) for k, v in language_stats.items()}
-max_avg_word_lengths = {k: round(v["word_length_mean"] + v["word_length_std"]) for k, v in language_stats.items()}
+min_avg_word_lengths = {k: v["min_avg_word_length"] for k, v in language_stats.items()}
+max_avg_word_lengths = {k: v["max_avg_word_length"] for k, v in language_stats.items()}
 stopwords = {
     "de": stopwords.words("german"),
     "fr": stopwords.words("french"),
 }
 
+# Process dataset
 pipeline = [
-    HuggingFaceDatasetReader(DATASET, dataset_options={"token": HF_TOKEN, "split": "train[:1000]"}),
+    HuggingFaceDatasetReader(DATASET, dataset_options={"token": HF_TOKEN, "split": "train"}, limit=DOC_LIMIT),
     GopherRepetitionFilter(),
     MultilingualGopherQualityFilter(
         max_avg_word_lengths=max_avg_word_lengths,
