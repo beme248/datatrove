@@ -32,13 +32,16 @@ if __name__=="__main__":
     # Process dataset
     pipeline = [
         HuggingFaceDatasetReader(DATASET, dataset_options={"token": HF_TOKEN, "split": "train"}, limit=DOC_LIMIT),
-        GopherRepetitionFilter(),
+        GopherRepetitionFilter(exclusion_writer=JsonlWriter(f"{MAIN_OUTPUT_PATH}/removed/{DATASET}/repetitive/")),
         MultilingualGopherQualityFilter(
             max_avg_word_lengths=max_avg_word_lengths,
             min_avg_word_lengths=min_avg_word_lengths,
             stop_words=stopwords,
+            exclusion_writer=JsonlWriter(f"{MAIN_OUTPUT_PATH}/removed/{DATASET}/quality/")
         ),
-        ListFilter(),
+        ListFilter(
+            exclusion_writer=JsonlWriter(f"{MAIN_OUTPUT_PATH}/removed/{DATASET}/list/")
+        ),
         JsonlWriter(f"{MAIN_OUTPUT_PATH}/output/{DATASET}"),
     ]
 
