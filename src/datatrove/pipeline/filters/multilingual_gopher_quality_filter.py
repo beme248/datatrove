@@ -5,35 +5,11 @@ import numpy as np
 from datatrove.data import Document
 from datatrove.pipeline.filters.base_filter import BaseFilter
 from datatrove.pipeline.writers.disk_base import DiskWriter
-
-
-# TODO: unify tokenization
-# Language code -> NLTK Punkt tokenizer language mapping
-TOKENIZER_LANGUAGES = {
-    "cz": "czech",
-    "da": "danish",
-    "en": "english",
-    "et": "estonian",
-    "fi": "finnish",
-    "fr": "french",
-    "de": "german",
-    "el": "greek",
-    "it": "italian",
-    "ml": "malayalam",
-    "no": "norwegian",
-    "pl": "polish",
-    "pt": "portuguese",
-    "ru": "russian",
-    "si": "slovene",
-    "es": "spanish",
-    "sv": "swedish",
-    "tr": "turkish",
-}
+from datatrove.tools.word_tokenizers import get_word_tokenizer
 
 
 class MultilingualGopherQualityFilter(BaseFilter):
     name = "🥇 Multilignual Gopher Quality"
-    _requires_dependencies = ["nltk"]
 
     # TODO: Decide which parameters are tweaked per-language
     def __init__(
@@ -72,12 +48,12 @@ class MultilingualGopherQualityFilter(BaseFilter):
         Returns: False if sample.text does not pass any of the the heuristic tests
 
         """
-        from nltk.tokenize import word_tokenize
 
         text = doc.text
         lang = doc.metadata["language"]
 
-        words = word_tokenize(text, TOKENIZER_LANGUAGES.get(lang, "english"))
+        tokenizer = get_word_tokenizer(lang)
+        words = tokenizer(text)
 
         # words < min_doc_words or words > max_doc_words
         n_words = len([w for w in words if w not in string.punctuation])

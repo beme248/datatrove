@@ -4,36 +4,12 @@ from collections import Counter
 
 from datatrove.io import DataFolderLike, get_datafolder
 from datatrove.pipeline.base import DocumentsPipeline, PipelineStep
-
-
-# TODO: unify tokenization
-# Language code -> NLTK Punkt tokenizer language mapping
-TOKENIZER_LANGUAGES = {
-    "cz": "czech",
-    "da": "danish",
-    "en": "english",
-    "et": "estonian",
-    "fi": "finnish",
-    "fr": "french",
-    "de": "german",
-    "el": "greek",
-    "it": "italian",
-    "ml": "malayalam",
-    "no": "norwegian",
-    "pl": "polish",
-    "pt": "portuguese",
-    "ru": "russian",
-    "si": "slovene",
-    "es": "spanish",
-    "sv": "swedish",
-    "tr": "turkish",
-}
+from datatrove.tools.word_tokenizers import get_word_tokenizer
 
 
 class LanguageStats(PipelineStep):
     type = "📊 - STATS"
     name = "🌐 Languages"
-    _requires_dependencies = ["nltk"]
 
     def __init__(
         self,
@@ -46,19 +22,18 @@ class LanguageStats(PipelineStep):
 
     def run(self, data: DocumentsPipeline, rank: int = 0, world_size: int = 1) -> DocumentsPipeline:
         stats = {}
-        from nltk.tokenize import word_tokenize
 
         # map and produce one output file per rank
         for doc in data:
             language = doc.metadata.get(self.language_field)
-            nltk_language = TOKENIZER_LANGUAGES.get(language, "english")
             if language not in stats:
                 stats[language] = {
                     "length_counter": Counter(),
                     "total_tokens": 0,
                     "total_docs": 0,
                 }
-            words = word_tokenize(doc.text, nltk_language)
+            tokenizer = get_word_tokenizer(language)
+            words = tokenizer(doc.text)
             words = [w for w in words if w not in string.punctuation]
             stats[language]["total_docs"] += 1
             stats[language]["total_tokens"] += len(words)

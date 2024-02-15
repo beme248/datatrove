@@ -23,6 +23,20 @@ class Languages:
     romanian = "ro"
     german = "de"
     latin = "la"
+    czech = "cs"
+    danish = "da"
+    estonian = "et"
+    finnish = "fi"
+    greek = "el"
+    malayalam = "ml"
+    norwegian = "no"
+    polish = "pl"
+    portuguese = "pt"
+    russian = "ru"
+    slovenian = "sl"
+    swedish = "sv"
+    turkish = "tr"
+    dutch = "nl"
 
 
 class StatHints:
