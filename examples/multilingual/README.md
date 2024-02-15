@@ -99,7 +99,7 @@ HF_TOKEN=your-huggingface-access-token python process_fineweb.py
 
 ## Results
 
-### fineweb_german ($mean \pm 1*std$ german statistics)
+### fineweb_german ($mean \pm 1\sigma$ german statistics)
 
 #### Pipeline
 ```python
@@ -114,10 +114,6 @@ ListFilter()
 JsonlWriter(f"{MAIN_OUTPUT_PATH}/output/{DATASET}")
 ]
 ```
-
-Run locally with 8 tasks (input total: 800k documents, output total: ~436k documents)
-
-MutilingualGopherFilter drops ~3.3k documents that are over the maximum average word length, almost no documents (6) that are under average word length, ~2.9k documents without enough stopwords
 
 #### Insights (based on 00000.jsonl)
 - Documents are mostly a mix of blogs/articles and business pages
@@ -134,7 +130,7 @@ MutilingualGopherFilter drops ~3.3k documents that are over the maximum average 
 
 
 
-### fineweb_french ($mean \pm 1*std$ french statistics)
+### fineweb_french ($mean \pm 1\sigma$ french statistics)
 
 #### Pipeline
 ```python
@@ -150,10 +146,6 @@ JsonlWriter(f"{MAIN_OUTPUT_PATH}/output/{DATASET}")
 ]
 ```
 
-Run locally with 8 tasks (input total: 800k documents, output total: ~452k documents)
-
-MutilingualGopherFilter drops ~4.1k documents that are over the maximum average word length, few documents (33) that are under average word length, ~900 documents without enough stopwords
-
 #### Insights (based on 00000.jsonl)
 - Most of the processed dataset seems to be good quality
 - There are some "Contact"/"About me" pages that contain information but may not be so useful for language modelling
@@ -163,3 +155,90 @@ MutilingualGopherFilter drops ~4.1k documents that are over the maximum average 
 - Similar as in German dataset, there is text about cookies
 - NSFW content may be found
 - Too much ellipsis filter sometimes produces FP (but very rarely)
+
+
+### fineweb_german ($mean \pm 2\sigma$ german statistics)
+
+#### Pipeline
+```python
+[
+HuggingFaceDatasetReader(DATASET, dataset_options={"token": HF_TOKEN, "split": "train"}, limit=DOC_LIMIT) # DOC_LIMIT = 100000
+GopherRepetitionFilter()
+MultilingualGopherQualityFilter(
+    max_avg_word_lengths=max_avg_word_lengths, # de = 14
+    min_avg_word_lengths=min_avg_word_lengths, # de = -2
+    stop_words=stopwords), # de = nltk.corpus.stopwords.words('german')
+ListFilter()
+JsonlWriter(f"{MAIN_OUTPUT_PATH}/output/{DATASET}")
+]
+```
+
+
+### fineweb_french ($mean \pm 2\sigma$ french statistics)
+
+#### Pipeline
+```python
+[
+HuggingFaceDatasetReader(DATASET, dataset_options={"token": HF_TOKEN, "split": "train"}, limit=DOC_LIMIT) # DOC_LIMIT = 100000
+GopherRepetitionFilter()
+MultilingualGopherQualityFilter(
+    max_avg_word_lengths=max_avg_word_lengths, # fr = 12
+    min_avg_word_lengths=min_avg_word_lengths, # fr = -1
+    stop_words=stopwords), # fr = nltk.corpus.stopwords.words('french')
+ListFilter()
+JsonlWriter(f"{MAIN_OUTPUT_PATH}/output/{DATASET}")
+]
+```
+
+### fineweb_german ($mean \pm 0.5\sigma$ german statistics)
+
+#### Pipeline
+```python
+[
+HuggingFaceDatasetReader(DATASET, dataset_options={"token": HF_TOKEN, "split": "train"}, limit=DOC_LIMIT) # DOC_LIMIT = 100000
+GopherRepetitionFilter()
+MultilingualGopherQualityFilter(
+    max_avg_word_lengths=max_avg_word_lengths, # de = 8
+    min_avg_word_lengths=min_avg_word_lengths, # de = 4
+    stop_words=stopwords), # de = nltk.corpus.stopwords.words('german')
+ListFilter()
+JsonlWriter(f"{MAIN_OUTPUT_PATH}/output/{DATASET}")
+]
+```
+
+### fineweb_french ($mean \pm 0.5\sigma$ french statistics)
+
+#### Pipeline
+```python
+[
+HuggingFaceDatasetReader(DATASET, dataset_options={"token": HF_TOKEN, "split": "train"}, limit=DOC_LIMIT) # DOC_LIMIT = 100000
+GopherRepetitionFilter()
+MultilingualGopherQualityFilter(
+    max_avg_word_lengths=max_avg_word_lengths, # fr = 7
+    min_avg_word_lengths=min_avg_word_lengths, # fr = 4
+    stop_words=stopwords), # fr = nltk.corpus.stopwords.words('french')
+ListFilter()
+JsonlWriter(f"{MAIN_OUTPUT_PATH}/output/{DATASET}")
+]
+```
+
+### Summary
+
+| Dataset | Average word length parameter | Input documents | Output (filtered) documents |
+|---------|-------------------------------|-----------------|-----------------------------|
+|  German |      $mean \pm 0.5\sigma$     |            800k |                       ~428k |
+|  German |       $mean \pm 1\sigma$      |            800k |                       ~436k |
+|  German |       $mean \pm 2\sigma$      |            800k |                       ~437k |
+|  French |      $mean \pm 0.5\sigma$     |            800k |                       ~444k |
+|  French |       $mean \pm 1\sigma$      |            800k |                       ~452k |
+|  French |       $mean \pm 2\sigma$      |            800k |                       ~454k |
+
+
+| Dataset | Average word length parameter | Below avg. word length | Above avg. word length | Not enough stopwords |
+|---------|-------------------------------|------------------------|------------------------|----------------------|
+|  German |      $mean \pm 0.5\sigma$     |                  ~0.6k |                 ~18.5k |                ~2.2k |
+|  German |       $mean \pm 1\sigma$      |                      6 |                  ~3.3k |                ~2.9k |
+|  German |       $mean \pm 2\sigma$      |                      0 |                  ~0.8k |                ~3.2k |
+|  French |      $mean \pm 0.5\sigma$     |                  ~9.4k |                  ~8.8k |                ~0.8k |
+|  French |       $mean \pm 1\sigma$      |                     33 |                  ~4.1k |                ~0.9k |
+|  French |       $mean \pm 2\sigma$      |                      0 |                    ~1k |                ~1.5k |
