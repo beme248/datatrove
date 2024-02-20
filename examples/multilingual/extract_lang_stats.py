@@ -11,7 +11,7 @@ from datatrove.pipeline.stats import LanguageStats, LanguageStatsReducer
 LANGUAGES = ["ru", "de", "es", "ja", "fr", "zh", "it", "pt", "nl", "pl"]
 MAIN_OUTPUT_PATH = "./language_stats"
 WIKI_VERSION = "20231101"  # See https://huggingface.co/datasets/wikimedia/wikipedia
-DOC_LIMIT = 50000  # Limit number of documents per dataset
+DOC_LIMIT = 500  # Limit number of documents per dataset
 EXECUTOR = os.environ.get("EXECUTOR", "slurm")  # local/slurm
 
 if __name__ == "__main__":
@@ -34,7 +34,7 @@ if __name__ == "__main__":
         LanguageStats(output_folder=f"{MAIN_OUTPUT_PATH}/lang_stats/"),
     ]
     executor = {
-        "local": LocalPipelineExecutor(pipeline=pipeline, logging_dir=f"{MAIN_OUTPUT_PATH}/logs/", tasks=8),
+        "local": LocalPipelineExecutor(pipeline=pipeline, logging_dir=f"{MAIN_OUTPUT_PATH}/logs/", tasks=2),
         "slurm": SlurmPipelineExecutor(
             pipeline=pipeline,
             logging_dir=f"{MAIN_OUTPUT_PATH}/logs/",
@@ -46,9 +46,11 @@ if __name__ == "__main__":
     executor.run()
 
     # Reduce token lengths into lang_stats.json file
-    def length_counter_reducer(length_counter):
+    def length_counter_reducer(language_stats):
         # Make sure to import np here for slurm executor
         import numpy as np
+
+        length_counter = language_stats["length_counter"]
 
         lengths = list(length_counter.keys())
         freqs = list(length_counter.values())
@@ -68,7 +70,7 @@ if __name__ == "__main__":
             input_folder=f"{MAIN_OUTPUT_PATH}/lang_stats/",
             output_folder=".",
             output_file_name="lang_stats.json",
-            length_counter_reducer=length_counter_reducer,
+            reduce_fn=length_counter_reducer,
         )
     ]
     executor_reduce = {

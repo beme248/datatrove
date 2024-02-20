@@ -44,7 +44,7 @@ WORD_TOKENIZERS = {
     Languages.malayalam: NLTKTokenizer("malayalam"),
     Languages.norwegian: NLTKTokenizer("norwegian"),
     Languages.polish: NLTKTokenizer("polish"),
-    Languages.portuguese: NLTKTokenizer("portugese"),
+    Languages.portuguese: NLTKTokenizer("portuguese"),
     Languages.russian: NLTKTokenizer("russian"),
     Languages.slovenian: NLTKTokenizer("slovene"),
     Languages.spanish: NLTKTokenizer("spanish"),
