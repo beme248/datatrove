@@ -1,10 +1,9 @@
 from abc import ABC, abstractmethod
 
+import stanza
 from nltk.tokenize import word_tokenize
 
 from datatrove.utils.typeshelper import Languages
-
-import stanza
 
 
 class WordTokenizer(ABC):
@@ -15,13 +14,11 @@ class WordTokenizer(ABC):
 
 class StanzaWordTokenizer(WordTokenizer):
     def __init__(self, stanza_language: str):
-        self.tokenizer = stanza.Pipeline(
-            stanza_language, processors="tokenize")
+        self.tokenizer = stanza.Pipeline(stanza_language, processors="tokenize")
 
     def tokenize(self, text) -> list[str]:
         doc = self.tokenizer(text)
-        tokens = [
-            token.text for sentence in doc.sentences for token in sentence.tokens]
+        tokens = [token.text for sentence in doc.sentences for token in sentence.tokens]
         return tokens
 
 
@@ -53,8 +50,8 @@ WORD_TOKENIZERS = {
     Languages.spanish: NLTKTokenizer("spanish"),
     Languages.swedish: NLTKTokenizer("swedish"),
     Languages.turkish: NLTKTokenizer("turkish"),
-    Languages.chinese: StanzaWordTokenizer('zh'),# TODO: lazy load stanza tokenizers
-    Languages.japanese: StanzaWordTokenizer('ja') # TODO: lazy load stanza tokenizers
+    Languages.chinese: StanzaWordTokenizer("zh"),  # TODO: lazy load stanza tokenizers
+    Languages.japanese: StanzaWordTokenizer("ja"),  # TODO: lazy load stanza tokenizers
 }
 
 

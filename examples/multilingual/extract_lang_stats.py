@@ -45,7 +45,6 @@ if __name__ == "__main__":
     }[EXECUTOR]
     executor.run()
 
-
     # Reduce token lengths into lang_stats.json file
     def length_counter_reducer(length_counter):
         # Make sure to import np here for slurm executor
@@ -60,10 +59,9 @@ if __name__ == "__main__":
         return {
             "min_avg_word_length": round(word_length_mean - word_length_std),
             "max_avg_word_length": round(word_length_mean + word_length_std),
-            'word_length_mean': word_length_mean,
-            'word_length_std': word_length_std,
+            "word_length_mean": word_length_mean,
+            "word_length_std": word_length_std,
         }
-
 
     pipeline_reduce = [
         LanguageStatsReducer(

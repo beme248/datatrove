@@ -28,7 +28,7 @@ stopwords = {
     "fr": stopwords.words("french"),
 }
 
-if __name__=="__main__":
+if __name__ == "__main__":
     # Process dataset
     pipeline = [
         HuggingFaceDatasetReader(DATASET, dataset_options={"token": HF_TOKEN, "split": "train"}, limit=DOC_LIMIT),
@@ -37,11 +37,9 @@ if __name__=="__main__":
             max_avg_word_lengths=max_avg_word_lengths,
             min_avg_word_lengths=min_avg_word_lengths,
             stop_words=stopwords,
-            exclusion_writer=JsonlWriter(f"{MAIN_OUTPUT_PATH}/removed/{DATASET}/quality/")
+            exclusion_writer=JsonlWriter(f"{MAIN_OUTPUT_PATH}/removed/{DATASET}/quality/"),
         ),
-        ListFilter(
-            exclusion_writer=JsonlWriter(f"{MAIN_OUTPUT_PATH}/removed/{DATASET}/list/")
-        ),
+        ListFilter(exclusion_writer=JsonlWriter(f"{MAIN_OUTPUT_PATH}/removed/{DATASET}/list/")),
         JsonlWriter(f"{MAIN_OUTPUT_PATH}/output/{DATASET}"),
     ]
 
