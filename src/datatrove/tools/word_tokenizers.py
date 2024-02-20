@@ -1,28 +1,60 @@
+from abc import ABC, abstractmethod
+
 from nltk.tokenize import word_tokenize
 
 from datatrove.utils.typeshelper import Languages
 
+import stanza
+
+
+class WordTokenizer(ABC):
+    @abstractmethod
+    def tokenize(self, text: str) -> list[str]:
+        pass
+
+
+class StanzaWordTokenizer(WordTokenizer):
+    def __init__(self, stanza_language: str):
+        self.tokenizer = stanza.Pipeline(
+            stanza_language, processors="tokenize")
+
+    def tokenize(self, text) -> list[str]:
+        doc = self.tokenizer(text)
+        tokens = [
+            token.text for sentence in doc.sentences for token in sentence.tokens]
+        return tokens
+
+
+class NLTKTokenizer(WordTokenizer):
+    def __init__(self, punkt_language: str):
+        self.punkt_language = punkt_language
+
+    def tokenize(self, text) -> list[str]:
+        return word_tokenize(text, language=self.punkt_language)
+
 
 WORD_TOKENIZERS = {
-    Languages.english: lambda t: word_tokenize(t, language="english"),
-    Languages.german: lambda t: word_tokenize(t, language="german"),
-    Languages.french: lambda t: word_tokenize(t, language="french"),
-    Languages.czech: lambda t: word_tokenize(t, language="czech"),
-    Languages.danish: lambda t: word_tokenize(t, language="danish"),
-    Languages.dutch: lambda t: word_tokenize(t, language="dutch"),
-    Languages.estonian: lambda t: word_tokenize(t, language="estonian"),
-    Languages.finnish: lambda t: word_tokenize(t, language="finnish"),
-    Languages.greek: lambda t: word_tokenize(t, language="greek"),
-    Languages.italian: lambda t: word_tokenize(t, language="italian"),
-    Languages.malayalam: lambda t: word_tokenize(t, language="malayalam"),
-    Languages.norwegian: lambda t: word_tokenize(t, language="norwegian"),
-    Languages.polish: lambda t: word_tokenize(t, language="polish"),
-    Languages.portuguese: lambda t: word_tokenize(t, language="portuguese"),
-    Languages.russian: lambda t: word_tokenize(t, language="russian"),
-    Languages.slovenian: lambda t: word_tokenize(t, language="slovene"),
-    Languages.spanish: lambda t: word_tokenize(t, language="spanish"),
-    Languages.swedish: lambda t: word_tokenize(t, language="swedish"),
-    Languages.turkish: lambda t: word_tokenize(t, language="turkish"),
+    Languages.english: NLTKTokenizer("english"),
+    Languages.german: NLTKTokenizer("german"),
+    Languages.french: NLTKTokenizer("french"),
+    Languages.czech: NLTKTokenizer("czech"),
+    Languages.danish: NLTKTokenizer("danish"),
+    Languages.dutch: NLTKTokenizer("dutch"),
+    Languages.estonian: NLTKTokenizer("estonian"),
+    Languages.finnish: NLTKTokenizer("finnish"),
+    Languages.greek: NLTKTokenizer("greek"),
+    Languages.italian: NLTKTokenizer("italian"),
+    Languages.malayalam: NLTKTokenizer("malayalam"),
+    Languages.norwegian: NLTKTokenizer("norwegian"),
+    Languages.polish: NLTKTokenizer("polish"),
+    Languages.portuguese: NLTKTokenizer("portugese"),
+    Languages.russian: NLTKTokenizer("russian"),
+    Languages.slovenian: NLTKTokenizer("slovene"),
+    Languages.spanish: NLTKTokenizer("spanish"),
+    Languages.swedish: NLTKTokenizer("swedish"),
+    Languages.turkish: NLTKTokenizer("turkish"),
+    Languages.chinese: StanzaWordTokenizer('zh'),# TODO: lazy load stanza tokenizers
+    Languages.japanese: StanzaWordTokenizer('ja') # TODO: lazy load stanza tokenizers
 }
 
 

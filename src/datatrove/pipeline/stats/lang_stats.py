@@ -33,7 +33,7 @@ class LanguageStats(PipelineStep):
                     "total_docs": 0,
                 }
             tokenizer = get_word_tokenizer(language)
-            words = tokenizer(doc.text)
+            words = tokenizer.tokenize(doc.text)
             words = [w for w in words if w not in string.punctuation]
             stats[language]["total_docs"] += 1
             stats[language]["total_tokens"] += len(words)

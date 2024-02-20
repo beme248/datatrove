@@ -53,7 +53,7 @@ class MultilingualGopherQualityFilter(BaseFilter):
         lang = doc.metadata["language"]
 
         tokenizer = get_word_tokenizer(lang)
-        words = tokenizer(text)
+        words = tokenizer.tokenize(text)
 
         # words < min_doc_words or words > max_doc_words
         n_words = len([w for w in words if w not in string.punctuation])

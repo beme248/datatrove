@@ -37,6 +37,8 @@ class Languages:
     swedish = "sv"
     turkish = "tr"
     dutch = "nl"
+    chinese = "zh"
+    japanese = "ja"
 
 
 class StatHints:

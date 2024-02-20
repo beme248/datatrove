@@ -8,7 +8,6 @@ from datatrove.pipeline.stats import LanguageStats, LanguageStatsReducer
 
 
 # Top 10 languages other than English in CommonCrawl according to (https://arxiv.org/pdf/2306.01116.pdf)
-# TODO: ja, zh don't have good tokenizers
 LANGUAGES = ["ru", "de", "es", "ja", "fr", "zh", "it", "pt", "nl", "pl"]
 MAIN_OUTPUT_PATH = "./language_stats"
 WIKI_VERSION = "20231101"  # See https://huggingface.co/datasets/wikimedia/wikipedia
