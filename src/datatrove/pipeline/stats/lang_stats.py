@@ -2,11 +2,11 @@ import json
 import string
 from collections import Counter
 
+import numpy as np
+
 from datatrove.io import DataFolderLike, get_datafolder
 from datatrove.pipeline.base import DocumentsPipeline, PipelineStep
 from datatrove.tools.word_tokenizers import get_word_tokenizer
-
-import numpy as np
 
 
 class LanguageStats(PipelineStep):
@@ -37,7 +37,7 @@ class LanguageStats(PipelineStep):
                     "ellipsis_word_ratio": [],
                     "bullet_start_ratio": [],
                     "ellipsis_end_ratio": [],
-                    "alpha_ratio": [],                
+                    "alpha_ratio": [],
                 }
 
             tokenizer = get_word_tokenizer(language)
@@ -61,9 +61,13 @@ class LanguageStats(PipelineStep):
 
             # Compute ratio of lines starting with a bullet and ratio of lines ending in an ellipsis
             lines = text.splitlines()
-            bullet_start_ratio = sum(s.lstrip().startswith("•") or s.lstrip().startswith("-") for s in lines) / len(lines)
+            bullet_start_ratio = sum(s.lstrip().startswith("•") or s.lstrip().startswith("-") for s in lines) / len(
+                lines
+            )
             stats[language]["bullet_start_ratio"].append(bullet_start_ratio)
-            ellipsis_end_ratio = sum(s.rstrip().endswith("...") or s.rstrip().endswith("…") for s in lines) / len(lines)
+            ellipsis_end_ratio = sum(s.rstrip().endswith("...") or s.rstrip().endswith("…") for s in lines) / len(
+                lines
+            )
             stats[language]["ellipsis_end_ratio"].append(ellipsis_end_ratio)
 
             # Compute ratio of words in the document that contain at least one alphabetic character
@@ -71,7 +75,7 @@ class LanguageStats(PipelineStep):
             stats[language]["alpha_ratio"].append(alpha_ratio)
 
             yield doc
-        
+
         for language in stats:
             stats[language]["hash_word_ratio"] = np.mean(stats[language]["hash_word_ratio"])
             stats[language]["ellipsis_word_ratio"] = np.mean(stats[language]["ellipsis_word_ratio"])
@@ -87,7 +91,6 @@ class LanguageStats(PipelineStep):
             )
 
 
-
 class LanguageStatsReducer(PipelineStep):
     type = "📊 - STATS"
     name = "🌐 Language stats reducer"
@@ -97,7 +100,7 @@ class LanguageStatsReducer(PipelineStep):
         input_folder: DataFolderLike,
         output_folder: DataFolderLike,
         output_file_name: str,
-        reduce_fn, # (stats of language: dict) -> dict
+        reduce_fn,  # (stats of language: dict) -> dict
     ):
         super().__init__()
         self.input_folder = get_datafolder(input_folder)
@@ -124,7 +127,7 @@ class LanguageStatsReducer(PipelineStep):
                             "ellipsis_word_ratio": [],
                             "bullet_start_ratio": [],
                             "ellipsis_end_ratio": [],
-                            "alpha_ratio": [],                
+                            "alpha_ratio": [],
                         }
                     if language not in doc_count:
                         doc_count[language] = []
@@ -140,10 +143,18 @@ class LanguageStatsReducer(PipelineStep):
                     doc_count[language].append(file_data[language]["total_docs"])
 
         for language in stats:
-            stats[language]["hash_word_ratio"] = np.average(stats[language]["hash_word_ratio"], weights=doc_count[language])
-            stats[language]["ellipsis_word_ratio"] = np.average(stats[language]["ellipsis_word_ratio"], weights=doc_count[language])
-            stats[language]["bullet_start_ratio"] = np.average(stats[language]["bullet_start_ratio"], weights=doc_count[language])
-            stats[language]["ellipsis_end_ratio"] = np.average(stats[language]["ellipsis_end_ratio"], weights=doc_count[language])
+            stats[language]["hash_word_ratio"] = np.average(
+                stats[language]["hash_word_ratio"], weights=doc_count[language]
+            )
+            stats[language]["ellipsis_word_ratio"] = np.average(
+                stats[language]["ellipsis_word_ratio"], weights=doc_count[language]
+            )
+            stats[language]["bullet_start_ratio"] = np.average(
+                stats[language]["bullet_start_ratio"], weights=doc_count[language]
+            )
+            stats[language]["ellipsis_end_ratio"] = np.average(
+                stats[language]["ellipsis_end_ratio"], weights=doc_count[language]
+            )
             stats[language]["alpha_ratio"] = np.average(stats[language]["alpha_ratio"], weights=doc_count[language])
 
         # Apply reduction function
