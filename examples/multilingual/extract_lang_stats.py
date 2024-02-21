@@ -45,6 +45,16 @@ if __name__ == "__main__":
     }[EXECUTOR]
     executor.run()
 
+    def q(counts, q):
+        import numpy as np
+
+        counts_sorted = sorted(counts)
+        xs = [d[0] for d in counts_sorted]
+        ys = [d[1] for d in counts_sorted]
+        ys_cumsum = np.cumsum(ys)
+        index = np.sum(ys_cumsum < q * ys_cumsum[-1])
+        return xs[index]
+
     # Reduce token lengths into lang_stats.json file
     def length_counter_reducer(language_stats):
         # Make sure to import np here for slurm executor
@@ -63,6 +73,7 @@ if __name__ == "__main__":
             "max_avg_word_length": round(word_length_mean + word_length_std),
             "word_length_mean": word_length_mean,
             "word_length_std": word_length_std,
+            "word_length_q": {f"{i/20:.2f}": q(length_counter.items(), i / 20) for i in range(21)},
         }
 
     pipeline_reduce = [
