@@ -45,20 +45,18 @@ if __name__ == "__main__":
     }[EXECUTOR]
     executor.run()
 
-    def q(counts, q):
-        import numpy as np
-
-        counts_sorted = sorted(counts)
-        xs = [d[0] for d in counts_sorted]
-        ys = [d[1] for d in counts_sorted]
-        ys_cumsum = np.cumsum(ys)
-        index = np.sum(ys_cumsum < q * ys_cumsum[-1])
-        return xs[index]
-
     # Reduce token lengths into lang_stats.json file
     def length_counter_reducer(language_stats):
         # Make sure to import np here for slurm executor
         import numpy as np
+
+        def q(counts, q):
+            counts_sorted = sorted(counts)
+            xs = [d[0] for d in counts_sorted]
+            ys = [d[1] for d in counts_sorted]
+            ys_cumsum = np.cumsum(ys)
+            index = np.sum(ys_cumsum < q * ys_cumsum[-1])
+            return xs[index]
 
         length_counter = language_stats["length_counter"]
 
