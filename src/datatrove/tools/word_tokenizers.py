@@ -14,7 +14,14 @@ class WordTokenizer(ABC):
 
 class StanzaWordTokenizer(WordTokenizer):
     def __init__(self, stanza_language: str):
-        self.tokenizer = stanza.Pipeline(stanza_language, processors="tokenize")
+        self.stanza_language = stanza_language
+        self._tokenizer = None
+
+    @property
+    def tokenizer(self):
+        if self._tokenizer is None:
+            self._tokenizer = stanza.Pipeline(self.stanza_language, processors="tokenize")
+        return self._tokenizer
 
     def tokenize(self, text) -> list[str]:
         doc = self.tokenizer(text)
@@ -50,8 +57,8 @@ WORD_TOKENIZERS = {
     Languages.spanish: NLTKTokenizer("spanish"),
     Languages.swedish: NLTKTokenizer("swedish"),
     Languages.turkish: NLTKTokenizer("turkish"),
-    Languages.chinese: StanzaWordTokenizer("zh"),  # TODO: lazy load stanza tokenizers
-    Languages.japanese: StanzaWordTokenizer("ja"),  # TODO: lazy load stanza tokenizers
+    Languages.chinese: StanzaWordTokenizer("zh"),
+    Languages.japanese: StanzaWordTokenizer("ja"),
 }
 
 
