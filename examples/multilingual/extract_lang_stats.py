@@ -7,11 +7,12 @@ from datatrove.pipeline.readers import HuggingFaceDatasetReader
 from datatrove.pipeline.stats import LanguageStats, LanguageStatsReducer
 
 
-# Top 10 languages other than English in CommonCrawl according to (https://arxiv.org/pdf/2306.01116.pdf)
-LANGUAGES = ["ru", "de", "es", "ja", "fr", "zh", "it", "pt", "nl", "pl"]
+# Top 10 languages in CommonCrawl according to (https://arxiv.org/pdf/2306.01116.pdf) + English
+LANGUAGES = ["en", "ru", "de", "es", "ja", "fr", "zh", "it", "pt", "nl", "pl"]
 MAIN_OUTPUT_PATH = "./language_stats"
 WIKI_VERSION = "20231101"  # See https://huggingface.co/datasets/wikimedia/wikipedia
-DOC_LIMIT = 500  # Limit number of documents per dataset
+DOC_LIMIT = 5000  # Limit number of documents per dataset
+TASKS = 8
 EXECUTOR = os.environ.get("EXECUTOR", "slurm")  # local/slurm
 
 if __name__ == "__main__":
@@ -34,19 +35,19 @@ if __name__ == "__main__":
         LanguageStats(output_folder=f"{MAIN_OUTPUT_PATH}/lang_stats/"),
     ]
     executor = {
-        "local": LocalPipelineExecutor(pipeline=pipeline, logging_dir=f"{MAIN_OUTPUT_PATH}/logs/", tasks=2),
+        "local": LocalPipelineExecutor(pipeline=pipeline, logging_dir=f"{MAIN_OUTPUT_PATH}/logs/", tasks=TASKS),
         "slurm": SlurmPipelineExecutor(
             pipeline=pipeline,
             logging_dir=f"{MAIN_OUTPUT_PATH}/logs/",
-            tasks=2,
-            time="00:30:00",
-            partition="clariden",
+            tasks=TASKS,
+            time="06:00:00",
+            partition="normal",
         ),
     }[EXECUTOR]
     executor.run()
 
-    # Reduce token lengths into lang_stats.json file
-    def length_counter_reducer(language_stats):
+    # Additional statistics to be added into lang_stats.json file
+    def stat_reducer(language_stats):
         # Make sure to import np here for slurm executor
         import numpy as np
 
@@ -65,13 +66,17 @@ if __name__ == "__main__":
 
         word_length_mean = np.average(lengths, weights=freqs)
         word_length_std = np.sqrt(np.cov(lengths, fweights=freqs))
+        word_length_q = {f"{i/20:.2f}": q(length_counter.items(), i / 20) for i in range(21)}
+
+        top_8_words = dict(language_stats["word_counter"].most_common(8))
 
         return {
             "min_avg_word_length": round(word_length_mean - word_length_std),
             "max_avg_word_length": round(word_length_mean + word_length_std),
             "word_length_mean": word_length_mean,
             "word_length_std": word_length_std,
-            "word_length_q": {f"{i/20:.2f}": q(length_counter.items(), i / 20) for i in range(21)},
+            "word_length_q": word_length_q,
+            "top_8_words": top_8_words,
         }
 
     pipeline_reduce = [
@@ -79,7 +84,7 @@ if __name__ == "__main__":
             input_folder=f"{MAIN_OUTPUT_PATH}/lang_stats/",
             output_folder=".",
             output_file_name="lang_stats.json",
-            reduce_fn=length_counter_reducer,
+            reduce_fn=stat_reducer,
         )
     ]
     executor_reduce = {
@@ -89,7 +94,7 @@ if __name__ == "__main__":
             logging_dir=f"{MAIN_OUTPUT_PATH}/logs_reduce/",
             tasks=1,
             time="00:30:00",
-            partition="clariden",
+            partition="normal",
             depends=executor,
         ),
     }[EXECUTOR]

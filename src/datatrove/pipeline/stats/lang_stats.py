@@ -17,10 +17,12 @@ class LanguageStats(PipelineStep):
         self,
         output_folder: DataFolderLike,
         language_field: str = "language",
+        word_count_prune=2,
     ):
         super().__init__()
         self.language_field = language_field
         self.output_folder = get_datafolder(output_folder)
+        self.word_count_prune = word_count_prune
 
     def run(self, data: DocumentsPipeline, rank: int = 0, world_size: int = 1) -> DocumentsPipeline:
         stats = {}
@@ -31,6 +33,7 @@ class LanguageStats(PipelineStep):
             if language not in stats:
                 stats[language] = {
                     "length_counter": Counter(),
+                    "word_counter": Counter(),
                     "total_words": 0,
                     "total_docs": 0,
                     "hash_word_ratio": [],
@@ -52,6 +55,7 @@ class LanguageStats(PipelineStep):
             # Distribution of word lengths
             for word in words:
                 stats[language]["length_counter"][len(word)] += 1
+                stats[language]["word_counter"][word] += 1
 
             # Compute hash to word ratio and ellipsis to word ratio
             hash_word_ratio = text.count("#") / n_words
@@ -82,6 +86,11 @@ class LanguageStats(PipelineStep):
             stats[language]["bullet_start_ratio"] = np.mean(stats[language]["bullet_start_ratio"])
             stats[language]["ellipsis_end_ratio"] = np.mean(stats[language]["ellipsis_end_ratio"])
             stats[language]["alpha_ratio"] = np.mean(stats[language]["alpha_ratio"])
+            # Prune word counter (include only words that appear at least word_count_prune times)
+            word_counter = stats[language]["word_counter"]
+            stats[language]["word_counter"] = Counter(
+                {k: v for k, v in word_counter.items() if v > self.word_count_prune}
+            )
 
         # save to disk
         with self.output_folder.open(f"{rank:05d}_lang_stats.json", "wt") as f:
@@ -100,13 +109,15 @@ class LanguageStatsReducer(PipelineStep):
         input_folder: DataFolderLike,
         output_folder: DataFolderLike,
         output_file_name: str,
-        reduce_fn,  # (stats of language: dict) -> dict
+        reduce_fn=None,  # (stats of language: dict) -> dict
+        word_common_prune=500,
     ):
         super().__init__()
         self.input_folder = get_datafolder(input_folder)
         self.output_folder = get_datafolder(output_folder)
         self.output_file_name = output_file_name
         self.reduce_fn = reduce_fn
+        self.word_common_prune = word_common_prune
 
     def run(self, data: DocumentsPipeline, rank: int = 0, world_size: int = 1) -> DocumentsPipeline:
         stats = {}
@@ -121,6 +132,7 @@ class LanguageStatsReducer(PipelineStep):
                     if language not in stats:
                         stats[language] = {
                             "length_counter": Counter(),
+                            "word_counter": Counter(),
                             "total_words": 0,
                             "total_docs": 0,
                             "hash_word_ratio": [],
@@ -135,6 +147,7 @@ class LanguageStatsReducer(PipelineStep):
                     stats[language]["total_docs"] += file_data[language]["total_docs"]
                     length_counter = Counter({int(k): v for k, v in file_data[language]["length_counter"].items()})
                     stats[language]["length_counter"] += length_counter
+                    stats[language]["word_counter"] += file_data[language]["word_counter"]
                     stats[language]["hash_word_ratio"].append((file_data[language]["hash_word_ratio"]))
                     stats[language]["ellipsis_word_ratio"].append((file_data[language]["ellipsis_word_ratio"]))
                     stats[language]["bullet_start_ratio"].append((file_data[language]["bullet_start_ratio"]))
@@ -143,6 +156,7 @@ class LanguageStatsReducer(PipelineStep):
                     doc_count[language].append(file_data[language]["total_docs"])
 
         for language in stats:
+            # Average statistics over documents
             stats[language]["hash_word_ratio"] = np.average(
                 stats[language]["hash_word_ratio"], weights=doc_count[language]
             )
@@ -156,10 +170,14 @@ class LanguageStatsReducer(PipelineStep):
                 stats[language]["ellipsis_end_ratio"], weights=doc_count[language]
             )
             stats[language]["alpha_ratio"] = np.average(stats[language]["alpha_ratio"], weights=doc_count[language])
+            # Prune word counter (include only top word_common_prune words)
+            word_counter = stats[language]["word_counter"]
+            stats[language]["word_counter"] = Counter(dict(word_counter.most_common(self.word_common_prune)))
 
         # Apply reduction function
-        for language in stats:
-            stats[language] = stats[language] | self.reduce_fn(stats[language])
+        if self.reduce_fn is not None:
+            for language in stats:
+                stats[language] = stats[language] | self.reduce_fn(stats[language])
 
         # save stats
         with self.output_folder.open(self.output_file_name, "wt") as f:
