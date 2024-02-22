@@ -55,7 +55,7 @@ class LanguageStats(PipelineStep):
             # Distribution of word lengths
             for word in words:
                 stats[language]["length_counter"][len(word)] += 1
-                stats[language]["word_counter"][word] += 1
+                stats[language]["word_counter"][word.lower()] += 1
 
             # Compute hash to word ratio and ellipsis to word ratio
             hash_word_ratio = text.count("#") / n_words
