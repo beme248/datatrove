@@ -89,7 +89,7 @@ class LanguageStats(PipelineStep):
             # Prune word counter (include only words that appear at least word_count_prune times)
             word_counter = stats[language]["word_counter"]
             stats[language]["word_counter"] = Counter(
-                {k: v for k, v in word_counter.items() if v > self.word_count_prune}
+                {k: v for k, v in word_counter.items() if v >= self.word_count_prune}
             )
 
         # save to disk
