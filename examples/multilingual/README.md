@@ -87,6 +87,7 @@ cd examples/multilingual
 
 To generate language statistics (optional, `lang_stats.json` is already provided), run
 ```bash
+export HF_DATASETS_CACHE="$SCRATCH/hf_datasets"
 python extract_lang_stats.py
 ```
 
@@ -95,6 +96,7 @@ To start the fineweb preprocessing pipeline, run
 HF_TOKEN=your-huggingface-access-token python process_fineweb.py
 ```
 
+Note that we change the HuggingFace datasets library cache to the `$SCRATCH` directory becuase the datasets will not fit in `$HOME` directory.
 
 
 ## Results
