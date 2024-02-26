@@ -52,6 +52,11 @@ class LanguageStats(PipelineStep):
             stats[language]["total_docs"] += 1
             stats[language]["total_words"] += n_words
 
+            # Skip if there are no valid words
+            if n_words == 0:
+                yield doc
+                continue
+
             # Distribution of word lengths
             for word in words:
                 stats[language]["length_counter"][len(word)] += 1
