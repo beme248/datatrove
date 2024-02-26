@@ -59,7 +59,7 @@ if __name__ == "__main__":
             return xs[index]
 
         def q_words(counts, q):
-            counts_sorted = sorted(counts.items(), key=lambda x: -x[1])
+            counts_sorted = sorted(counts, key=lambda x: -x[1])
             xs = [d[0] for d in counts_sorted]
             ys = [d[1] for d in counts_sorted]
             ys_cumsum = np.cumsum(ys)
@@ -67,7 +67,7 @@ if __name__ == "__main__":
             return xs[:index]
 
         def p_thresh_words(counts, p):
-            counts_sorted = sorted(counts.items(), key=lambda x: -x[1])
+            counts_sorted = sorted(counts, key=lambda x: -x[1])
             xs = [d[0] for d in counts_sorted]
             ys = [d[1] for d in counts_sorted]
             ys_cumsum = np.cumsum(ys)
@@ -86,7 +86,7 @@ if __name__ == "__main__":
 
         stopwords_q = {f"{q:.2f}": q_words(word_counter.items(), q) for q in [0.1, 0.2, 0.3]}
         stopwords_p_thresh = {f"{p:.3f}": p_thresh_words(word_counter.items(), p) for p in [0.008, 0.012, 0.016]}
-        stopwords_top_n = {f"{n}": dict(language_stats["word_counter"].most_common(8)).keys() for n in [6, 8, 10]}
+        stopwords_top_n = {f"{n}": list(dict(language_stats["word_counter"].most_common(n)).keys()) for n in [6, 8, 10]}
 
         return {
             "min_avg_word_length": round(word_length_mean - word_length_std),
