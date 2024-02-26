@@ -85,6 +85,7 @@ if __name__ == "__main__":
             output_folder=".",
             output_file_name="lang_stats.json",
             reduce_fn=stat_reducer,
+            word_common_prune=10000,
         )
     ]
     executor_reduce = {
