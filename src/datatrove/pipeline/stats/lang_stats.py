@@ -87,10 +87,11 @@ class LanguageStats(PipelineStep):
             stats[language]["ellipsis_end_ratio"] = np.mean(stats[language]["ellipsis_end_ratio"])
             stats[language]["alpha_ratio"] = np.mean(stats[language]["alpha_ratio"])
             # Prune word counter (include only words that appear at least word_count_prune times)
-            word_counter = stats[language]["word_counter"]
-            stats[language]["word_counter"] = Counter(
-                {k: v for k, v in word_counter.items() if v >= self.word_count_prune}
-            )
+            if self.word_count_prune is not None:
+                word_counter = stats[language]["word_counter"]
+                stats[language]["word_counter"] = Counter(
+                    {k: v for k, v in word_counter.items() if v >= self.word_count_prune}
+                )
 
         # save to disk
         with self.output_folder.open(f"{rank:05d}_lang_stats.json", "wt") as f:
@@ -171,8 +172,9 @@ class LanguageStatsReducer(PipelineStep):
             )
             stats[language]["alpha_ratio"] = np.average(stats[language]["alpha_ratio"], weights=doc_count[language])
             # Prune word counter (include only top word_common_prune words)
-            word_counter = stats[language]["word_counter"]
-            stats[language]["word_counter"] = Counter(dict(word_counter.most_common(self.word_common_prune)))
+            if self.word_common_prune is not None:
+                word_counter = stats[language]["word_counter"]
+                stats[language]["word_counter"] = Counter(dict(word_counter.most_common(self.word_common_prune)))
 
         # Apply reduction function
         if self.reduce_fn is not None:
