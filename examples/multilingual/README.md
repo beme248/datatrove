@@ -30,9 +30,9 @@ pip install -U datasets # Upgrade datasets library to a newer version
 cd examples/multilingual
 ```
 
-To generate language statistics (optional, `lang_stats.json` is already provided), run
+To generate language statistics (optional, `wiki_lang_stats.json` is already provided), run
 ```bash
-EXECUTOR=local python extract_lang_stats.py
+EXECUTOR=local python wiki_lang_stats.py
 ```
 
 To start the fineweb preprocessing pipeline, run
@@ -85,10 +85,10 @@ pip install -U datasets # Upgrade datasets library to a newer version
 cd examples/multilingual
 ```
 
-To generate language statistics (optional, `lang_stats.json` is already provided), run
+To generate language statistics (optional, `wiki_lang_stats.json` is already provided), run
 ```bash
 export HF_DATASETS_CACHE="$SCRATCH/hf_datasets"
-python extract_lang_stats.py
+python wiki_lang_stats.py
 ```
 
 To start the fineweb preprocessing pipeline, run
