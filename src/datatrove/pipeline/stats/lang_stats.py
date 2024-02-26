@@ -52,35 +52,35 @@ class LanguageStats(PipelineStep):
             stats[language]["total_docs"] += 1
             stats[language]["total_words"] += n_words
 
-            # Skip if there are no valid words
-            if n_words == 0:
-                yield doc
-                continue
-
             # Distribution of word lengths
             for word in words:
                 stats[language]["length_counter"][len(word)] += 1
                 stats[language]["word_counter"][word.lower()] += 1
 
             # Compute hash to word ratio and ellipsis to word ratio
-            hash_word_ratio = text.count("#") / n_words
+            hash_word_ratio = (text.count("#") / n_words) if n_words > 0 else 0
             stats[language]["hash_word_ratio"].append(hash_word_ratio)
-            ellipsis_word_ratio = (text.count("...") + text.count("…")) / n_words
+            ellipsis_word_ratio = ((text.count("...") + text.count("…")) / n_words) if n_words > 0 else 0
             stats[language]["ellipsis_word_ratio"].append(ellipsis_word_ratio)
 
             # Compute ratio of lines starting with a bullet and ratio of lines ending in an ellipsis
             lines = text.splitlines()
-            bullet_start_ratio = sum(s.lstrip().startswith("•") or s.lstrip().startswith("-") for s in lines) / len(
-                lines
+            n_lines = len(lines)
+            bullet_start_ratio = (
+                (sum(s.lstrip().startswith("•") or s.lstrip().startswith("-") for s in lines) / n_lines)
+                if n_lines > 0
+                else 0
             )
             stats[language]["bullet_start_ratio"].append(bullet_start_ratio)
-            ellipsis_end_ratio = sum(s.rstrip().endswith("...") or s.rstrip().endswith("…") for s in lines) / len(
-                lines
+            ellipsis_end_ratio = (
+                (sum(s.rstrip().endswith("...") or s.rstrip().endswith("…") for s in lines) / n_lines)
+                if n_lines > 0
+                else 0
             )
             stats[language]["ellipsis_end_ratio"].append(ellipsis_end_ratio)
 
             # Compute ratio of words in the document that contain at least one alphabetic character
-            alpha_ratio = sum([any((c.isalpha() for c in w)) for w in words]) / n_words
+            alpha_ratio = (sum([any((c.isalpha() for c in w)) for w in words]) / n_words) if n_words > 0 else 0
             stats[language]["alpha_ratio"].append(alpha_ratio)
 
             yield doc
