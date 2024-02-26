@@ -2,29 +2,28 @@ import os
 
 from datatrove.executor.local import LocalPipelineExecutor
 from datatrove.executor.slurm import SlurmPipelineExecutor
-from datatrove.pipeline.filters import LanguageFilter
-from datatrove.pipeline.readers import HuggingFaceDatasetReader
+from datatrove.pipeline.readers import ShuffledHFDatasetReader
 from datatrove.pipeline.stats import LanguageStats, LanguageStatsReducer
 
 
 # See https://huggingface.co/datasets/cc_news
 MAIN_OUTPUT_PATH = "./cc_news_language_stats"
-DOC_LIMIT = 5000  # Limit number of documents
-TASKS = 8
+DOC_LIMIT = 4000
+TASKS = 10
 EXECUTOR = os.environ.get("EXECUTOR", "slurm")  # local/slurm
 
 if __name__ == "__main__":
     # Count token lengths
 
     pipeline = [
-        HuggingFaceDatasetReader(
+        ShuffledHFDatasetReader(  # Use shuffled dataset when using DOC_LIMIT
             "cc_news",
-            limit=DOC_LIMIT,
             dataset_options={
                 "split": "train",
             },
+            limit=DOC_LIMIT,
+            default_metadata={"language": "en"},
         ),
-        LanguageFilter(languages=("en")),
         LanguageStats(output_folder=f"{MAIN_OUTPUT_PATH}/lang_stats/"),
     ]
     executor = {
@@ -80,7 +79,9 @@ if __name__ == "__main__":
 
         stopwords_q = {f"{q:.2f}": q_words(word_counter.items(), q) for q in [0.1, 0.2, 0.3]}
         stopwords_p_thresh = {f"{p:.3f}": p_thresh_words(word_counter.items(), p) for p in [0.008, 0.012, 0.016]}
-        stopwords_top_n = {f"{n}": list(dict(language_stats["word_counter"].most_common(n)).keys()) for n in [6, 8, 10]}
+        stopwords_top_n = {
+            f"{n}": list(dict(language_stats["word_counter"].most_common(n)).keys()) for n in [6, 8, 10]
+        }
 
         return {
             "min_avg_word_length": round(word_length_mean - word_length_std),
