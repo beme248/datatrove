@@ -19,7 +19,7 @@ class MultilingualGopherQualityFilter(BaseFilter):
         min_avg_word_lengths: dict[str, int] | None = None,
         max_avg_word_lengths: dict[str, int] | None = None,
         stop_words: dict[str, list[str]] | None = None,
-        min_stop_words: int | None = 2,
+        min_stop_words: dict[str, int] | None = None,
         max_symbol_word_ratio: float | None = 0.1,
         max_bullet_lines_ratio: float | None = 0.9,
         max_ellipsis_lines_ratio: float | None = 0.3,
@@ -111,7 +111,8 @@ class MultilingualGopherQualityFilter(BaseFilter):
             self.min_stop_words
             and self.stop_words is not None
             and lang in self.stop_words
-            and sum(w in self.stop_words[lang] for w in words) < self.min_stop_words
+            and lang in self.min_stop_words
+            and sum(w in self.stop_words[lang] for w in words) < self.min_stop_words[lang]
         ):
             return False, "gopher_enough_stop_words"
 

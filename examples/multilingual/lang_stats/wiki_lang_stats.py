@@ -50,7 +50,7 @@ if __name__ == "__main__":
         # Make sure to import np here for slurm executor
         import numpy as np
 
-        def q(counts, q):
+        def q_lengths(counts, q):
             counts_sorted = sorted(counts)
             xs = [d[0] for d in counts_sorted]
             ys = [d[1] for d in counts_sorted]
@@ -58,16 +58,35 @@ if __name__ == "__main__":
             index = np.sum(ys_cumsum < q * ys_cumsum[-1])
             return xs[index]
 
+        def q_words(counts, q):
+            counts_sorted = sorted(counts.items(), key=lambda x: -x[1])
+            xs = [d[0] for d in counts_sorted]
+            ys = [d[1] for d in counts_sorted]
+            ys_cumsum = np.cumsum(ys)
+            index = np.sum(ys_cumsum < q * ys_cumsum[-1])
+            return xs[:index]
+
+        def p_thresh_words(counts, p):
+            counts_sorted = sorted(counts.items(), key=lambda x: -x[1])
+            xs = [d[0] for d in counts_sorted]
+            ys = [d[1] for d in counts_sorted]
+            ys_cumsum = np.cumsum(ys)
+            index = np.sum(ys > p * ys_cumsum[-1])
+            return xs[:index]
+
         length_counter = language_stats["length_counter"]
+        word_counter = language_stats["word_counter"]
 
         lengths = list(length_counter.keys())
         freqs = list(length_counter.values())
 
         word_length_mean = np.average(lengths, weights=freqs)
         word_length_std = np.sqrt(np.cov(lengths, fweights=freqs))
-        word_length_q = {f"{i/20:.2f}": q(length_counter.items(), i / 20) for i in range(21)}
+        word_length_q = {f"{i/20:.2f}": q_lengths(length_counter.items(), i / 20) for i in range(21)}
 
-        top_8_words = dict(language_stats["word_counter"].most_common(8))
+        stopwords_q = {f"{q:.2f}": q_words(word_counter.items(), q) for q in [0.1, 0.2, 0.3]}
+        stopwords_p_thresh = {f"{p:.3f}": p_thresh_words(word_counter.items(), p) for p in [0.008, 0.012, 0.016]}
+        stopwords_top_n = {f"{n}": dict(language_stats["word_counter"].most_common(8)).keys() for n in [6, 8, 10]}
 
         return {
             "min_avg_word_length": round(word_length_mean - word_length_std),
@@ -75,7 +94,9 @@ if __name__ == "__main__":
             "word_length_mean": word_length_mean,
             "word_length_std": word_length_std,
             "word_length_q": word_length_q,
-            "top_8_words": top_8_words,
+            "stopwords_q": stopwords_q,
+            "stopwords_p_thresh": stopwords_p_thresh,
+            "stopwords_top_n": stopwords_top_n,
         }
 
     pipeline_reduce = [
