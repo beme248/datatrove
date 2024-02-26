@@ -6,7 +6,6 @@ from datatrove.pipeline.filters import LanguageFilter
 from datatrove.pipeline.readers import HuggingFaceDatasetReader
 from datatrove.pipeline.stats import LanguageStats, LanguageStatsReducer
 
-from util import stat_reducer
 
 # Top 10 languages in CommonCrawl according to (https://arxiv.org/pdf/2306.01116.pdf) + English
 LANGUAGES = ["en", "ru", "de", "es", "ja", "fr", "zh", "it", "pt", "nl", "pl"]
