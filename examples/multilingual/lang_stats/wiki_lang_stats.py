@@ -83,10 +83,10 @@ if __name__ == "__main__":
         word_length_std = np.sqrt(np.cov(lengths, fweights=freqs))
         word_length_q = {f"{i/20:.2f}": q_lengths(length_counter.items(), i / 20) for i in range(21)}
 
-        stopwords_q = {f"{q:.2f}": q_words(word_counter.items(), q) for q in [0.1, 0.2, 0.3]}
-        stopwords_p_thresh = {f"{p:.3f}": p_thresh_words(word_counter.items(), p) for p in [0.008, 0.012, 0.016]}
+        stopwords_q = {f"{q:.2f}": q_words(word_counter.items(), q) for q in [0.15, 0.2, 0.25, 0.3]}
+        stopwords_p_thresh = {f"{p:.3f}": p_thresh_words(word_counter.items(), p) for p in [0.008, 0.010, 0.012]}
         stopwords_top_n = {
-            f"{n}": list(dict(language_stats["word_counter"].most_common(n)).keys()) for n in [6, 8, 10]
+            f"{n}": list(dict(language_stats["word_counter"].most_common(n)).keys()) for n in [5, 10, 15]
         }
 
         return {
