@@ -85,7 +85,7 @@ if __name__ == "__main__":
         stopwords_q = {f"{q:.2f}": q_words(word_counter.items(), q) for q in [0.15, 0.2, 0.25, 0.3]}
         stopwords_p_thresh = {f"{p:.3f}": p_thresh_words(word_counter.items(), p) for p in [0.008, 0.010, 0.012]}
         stopwords_top_n = {
-            f"{n}": list(dict(language_stats["word_counter"].most_common(n)).keys()) for n in [5, 10, 15]
+            f"{n}": list(dict(language_stats["word_counter"].most_common(n)).keys()) for n in [5, 8, 10, 15]
         }
 
         return {

@@ -7,16 +7,21 @@ from datatrove.pipeline.filters import MultilingualGopherQualityFilter
 from datatrove.pipeline.readers import ShuffledHFDatasetReader
 from datatrove.pipeline.writers import JsonlWriter
 
+from nltk.corpus import stopwords
+from math import sqrt, floor
+
 
 # Top 10 languages in CommonCrawl according to (https://arxiv.org/pdf/2306.01116.pdf) + English
-LANGUAGES = ["en", "ru", "de", "es", "ja", "fr", "zh", "it", "pt", "nl", "pl"]
-MAIN_OUTPUT_PATH = "./sanity_check_wiki"
+# LANGUAGES = ["en", "ru", "de", "es", "ja", "fr", "zh", "it", "pt", "nl", "pl"]
+LANGUAGES = ["en"]
+WIKI_OUTPUT_PATH = "./sanity_check_wiki"
 WIKI_VERSION = "20231101"  # See https://huggingface.co/datasets/wikimedia/wikipedia
-DOC_LIMIT = 2000  # Limit number of documents per dataset
+PAPERS_OUTPUT_PATH = "./sanity_check_papers"
+DOC_LIMIT = 4000  # Limit number of documents per dataset
 TASKS = 10
 EXECUTOR = os.environ.get("EXECUTOR", "slurm")  # local/slurm
 STATS_FILE = "./wiki_lang_stats.json"
-STOPWORDS = "stopwords_top_n", "8"  # key for getting stopwords from statistics
+STOPWORDS = "stopwords_top_n", "15"  # key for getting stopwords from statistics
 
 # Load language-specific statistics and stopwords
 with open(STATS_FILE, "r") as f:
@@ -25,8 +30,20 @@ with open(STATS_FILE, "r") as f:
 # Set-up language specific statistics
 min_avg_word_lengths = {k: v["min_avg_word_length"] for k, v in language_stats.items()}
 max_avg_word_lengths = {k: v["max_avg_word_length"] for k, v in language_stats.items()}
-stopwords = {k: v[STOPWORDS[0]][STOPWORDS[1]] for k, v in language_stats.items()}
-min_stop_words = {k: len(v) // 4 for k, v in language_stats.items()}  # TODO: is // 4 good for min. stopwords?
+# stopwords = {k: v[STOPWORDS[0]][STOPWORDS[1]] for k, v in language_stats.items()}
+# min_stop_words = {k: len(v) // 4 for k, v in stopwords.items()}  # TODO: is // 4 good for min. stopwords?
+# # min_stop_words = {k: 2 for k, v in stopwords.items()}
+
+# Gopher stopwords for english
+# stopwords = {"en": ["the", "be", "to", "of", "and", "that", "have", "with"]}
+# min_stop_words = {"en": 2}
+
+# NLTK stopwords for english
+en_stopwords = stopwords.words("english")
+stopwords = {"en": en_stopwords}
+# min_stop_words = {"en": 2}
+# min_stop_words = {"en": len(en_stopwords) // 4}
+min_stop_words = {"en": floor(sqrt(len(en_stopwords)))}
 
 if __name__ == "__main__":
     readers = [
@@ -38,6 +55,7 @@ if __name__ == "__main__":
                 "split": "train",
             },
             default_metadata={"language": language},
+            shuffle_seed=43,
         )
         for language in LANGUAGES
     ]
@@ -56,7 +74,7 @@ if __name__ == "__main__":
             max_ellipsis_lines_ratio=None,
             max_non_alpha_words_ratio=None,
             exclusion_writer=JsonlWriter(
-                f"{MAIN_OUTPUT_PATH}/removed",
+                f"{WIKI_OUTPUT_PATH}/removed",
                 output_filename="${language}/${rank}.jsonl.gz",
             ),
         ),
@@ -65,14 +83,63 @@ if __name__ == "__main__":
     executor = {
         "slurm": SlurmPipelineExecutor(
             pipeline=pipeline,
-            logging_dir=f"{MAIN_OUTPUT_PATH}/logs/",
+            logging_dir=f"{WIKI_OUTPUT_PATH}/logs/",
             tasks=TASKS,
             time="06:00:00",
             partition="normal",
         ),
         "local": LocalPipelineExecutor(
             pipeline=pipeline,
-            logging_dir=f"{MAIN_OUTPUT_PATH}/logs/",
+            logging_dir=f"{WIKI_OUTPUT_PATH}/logs/",
+            tasks=TASKS,
+        ),
+    }[EXECUTOR]
+
+    executor.run()
+
+
+    # Scientific papers (en) pipeline
+    pipeline = [
+        ShuffledHFDatasetReader(
+            "scientific_papers",
+            limit=DOC_LIMIT,
+            dataset_options={
+                "name": "arxiv",
+                "split": "train",
+            },
+            default_metadata={"language": "en"},
+            shuffle_seed=43,
+            text_key="article",
+        ),
+        MultilingualGopherQualityFilter(  # turn off all other filters except stopwords
+            stop_words=stopwords,
+            min_stop_words=min_stop_words,
+            max_avg_word_lengths=None,
+            min_avg_word_lengths=None,
+            min_doc_words=None,
+            max_doc_words=None,
+            max_symbol_word_ratio=None,
+            max_bullet_lines_ratio=None,
+            max_ellipsis_lines_ratio=None,
+            max_non_alpha_words_ratio=None,
+            exclusion_writer=JsonlWriter(
+                f"{PAPERS_OUTPUT_PATH}/removed",
+                output_filename="${language}/${rank}.jsonl.gz",
+            ),
+        ),
+    ]
+
+    executor = {
+        "slurm": SlurmPipelineExecutor(
+            pipeline=pipeline,
+            logging_dir=f"{PAPERS_OUTPUT_PATH}/logs/",
+            tasks=TASKS,
+            time="06:00:00",
+            partition="normal",
+        ),
+        "local": LocalPipelineExecutor(
+            pipeline=pipeline,
+            logging_dir=f"{PAPERS_OUTPUT_PATH}/logs/",
             tasks=TASKS,
         ),
     }[EXECUTOR]
