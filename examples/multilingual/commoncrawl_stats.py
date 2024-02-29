@@ -7,7 +7,7 @@ from datatrove.pipeline.filters import (
     URLFilter,
 )
 from datatrove.pipeline.readers import WarcReader
-from datatrove.pipeline.stats import LanguageStats, LanguageStatsReducer
+from datatrove.pipeline.stats import DocumentStats, DocumentStatsReducer
 
 
 # 176 languages supported by fasttext, see https://fasttext.cc/docs/en/language-identification.html
@@ -35,7 +35,7 @@ executor = SlurmPipelineExecutor(
         URLFilter(),
         Trafilatura(favour_precision=True),
         LanguageFilter(languages=LANGUAGES),
-        LanguageStats(output_folder=f"{MAIN_OUTPUT_PATH}/stats/{DUMP}"),
+        DocumentStats(output_folder=f"{MAIN_OUTPUT_PATH}/stats/{DUMP}"),
     ],
     tasks=TASKS,
     time="24:00:00",
@@ -50,7 +50,7 @@ executor.run()
 executor_reduce = SlurmPipelineExecutor(
     job_name=f"cc_stats_{DUMP}",
     pipeline=[
-        LanguageStatsReducer(
+        DocumentStatsReducer(
             f"{MAIN_OUTPUT_PATH}/stats/",
             output_folder=f"{MAIN_OUTPUT_PATH}/stats_reduce/{DUMP}",
             output_file_name=f"{DUMP}.json",
