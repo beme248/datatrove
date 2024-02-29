@@ -36,6 +36,7 @@ class LanguageStats(PipelineStep):
                     "word_counter": Counter(),
                     "total_words": 0,
                     "total_docs": 0,
+                    "total_bytes": 0,
                     "hash_word_ratio": [],
                     "ellipsis_word_ratio": [],
                     "bullet_start_ratio": [],
@@ -51,6 +52,7 @@ class LanguageStats(PipelineStep):
 
             stats[language]["total_docs"] += 1
             stats[language]["total_words"] += n_words
+            stats[language]["total_bytes"] += len(text.encode('utf-8'))
 
             # Distribution of word lengths
             for word in words:
@@ -141,6 +143,7 @@ class LanguageStatsReducer(PipelineStep):
                             "word_counter": Counter(),
                             "total_words": 0,
                             "total_docs": 0,
+                            "total_bytes": 0,
                             "hash_word_ratio": [],
                             "ellipsis_word_ratio": [],
                             "bullet_start_ratio": [],
@@ -151,6 +154,7 @@ class LanguageStatsReducer(PipelineStep):
                         doc_count[language] = []
                     stats[language]["total_words"] += file_data[language]["total_words"]
                     stats[language]["total_docs"] += file_data[language]["total_docs"]
+                    stats[language]["total_bytes"] += file_data[language]["total_bytes"]
                     length_counter = Counter({int(k): v for k, v in file_data[language]["length_counter"].items()})
                     stats[language]["length_counter"] += length_counter
                     stats[language]["word_counter"] += file_data[language]["word_counter"]
