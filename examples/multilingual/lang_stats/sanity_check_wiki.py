@@ -1,14 +1,14 @@
 import json
 import os
+from math import e, floor, log
+
+from nltk.corpus import stopwords as nltk_stopwords
 
 from datatrove.executor.local import LocalPipelineExecutor
 from datatrove.executor.slurm import SlurmPipelineExecutor
 from datatrove.pipeline.filters import MultilingualGopherQualityFilter
 from datatrove.pipeline.readers import ShuffledHFDatasetReader
 from datatrove.pipeline.writers import JsonlWriter
-
-from nltk.corpus import stopwords as nltk_stopwords
-from math import sqrt, floor, log, e
 
 
 # Top 10 languages in CommonCrawl according to (https://arxiv.org/pdf/2306.01116.pdf) + English
@@ -46,7 +46,7 @@ nltk_stopwords = {"en": en_stopwords, "fr": fr_stopwords, "de": de_stopwords, "e
 # stopwords = nltk_stopwords
 
 # Intersection between NLTK and language stats stopwords
-stopwords = {k: list(set(v).intersection(set(language_stats[k][STOPWORDS[0]][STOPWORDS[1]]))) for k, v in nltk_stopwords.items()} 
+stopwords = {k: list(set(v).intersection(set(language_stats[k][STOPWORDS[0]][STOPWORDS[1]]))) for k, v in nltk_stopwords.items()}
 
 # Min. stopwords strategies
 # min_stop_words = {k: 2 for k, v in stopwords.items()}
