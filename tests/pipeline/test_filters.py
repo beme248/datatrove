@@ -6,6 +6,7 @@ from datatrove.pipeline.filters import (
     GopherRepetitionFilter,
     LambdaFilter,
     LanguageFilter,
+    MultilingualGopherQualityFilter,
     RegexFilter,
     UnigramLogProbFilter,
     URLFilter,
@@ -34,8 +35,8 @@ TEXT_LF_4 = (
 )
 
 
-def get_doc(text, url=None):
-    return Document(text, id="0", metadata={"url": url})
+def get_doc(text, url=None, language=None):
+    return Document(text, id="0", metadata={"url": url, "language": language})
 
 
 class TestFilters(unittest.TestCase):
@@ -72,6 +73,84 @@ class TestFilters(unittest.TestCase):
         text = "the ./!*?<><> apple <?////> orange  ++ interconnection !<>??? have" * 20
         self.check_filter(gopher_quality, get_doc(text), "gopher_below_alpha_threshold")
         self.assertTrue(gopher_quality(get_doc(TEXT_LF_1)))
+
+    def test_multilingual_gopher_quality(self):
+        min_avg_word_lengths = {"en": 2, "fr": 3}
+        max_avg_word_lengths = {"en": 7, "fr": 9}
+        stop_words = {"en": ["the", "of", "in"], "fr": ["le", "la", "des", "du", "en", "l'"]}
+        min_stop_words = {"en": 1, "fr": 2}
+
+        gopher_quality = MultilingualGopherQualityFilter(
+            min_doc_words=10,
+            max_doc_words=1000,
+            min_avg_word_lengths=min_avg_word_lengths,
+            max_avg_word_lengths=max_avg_word_lengths,
+            stop_words=stop_words,
+            min_stop_words=min_stop_words,
+        )
+
+        self.check_filter(gopher_quality, get_doc("I am too small...", language="en"), "gopher_short_doc")
+        self.check_filter(gopher_quality, get_doc("I am too small...", language="fr"), "gopher_short_doc")
+
+        self.check_filter(gopher_quality, get_doc("hi " * 20 + "h", language="en"), "gopher_below_avg_threshold")
+        self.check_filter(gopher_quality, get_doc("des " * 20 + "la", language="fr"), "gopher_below_avg_threshold")
+
+        self.check_filter(
+            gopher_quality, get_doc("dynamic " * 20 + " computer", language="en"), "gopher_above_avg_threshold"
+        )
+        self.check_filter(
+            gopher_quality, get_doc("mangeront " * 20 + " mangeronts", language="fr"), "gopher_above_avg_threshold"
+        )
+
+        self.check_filter(gopher_quality, get_doc("# comment " * 20, language="en"), "gopher_too_many_hashes")
+        self.check_filter(gopher_quality, get_doc("# comment " * 20, language="fr"), "gopher_too_many_hashes")
+
+        self.check_filter(gopher_quality, get_doc("... comment " * 20, language="en"), "gopher_too_many_ellipsis")
+        self.check_filter(gopher_quality, get_doc("... comment " * 20, language="fr"), "gopher_too_many_ellipsis")
+
+        self.check_filter(gopher_quality, get_doc("• comment\n" * 20, language="en"), "gopher_too_many_bullets")
+        self.check_filter(gopher_quality, get_doc("• comment\n" * 20, language="fr"), "gopher_too_many_bullets")
+        self.check_filter(gopher_quality, get_doc("- comment\n" * 20, language="en"), "gopher_too_many_bullets")
+        self.check_filter(gopher_quality, get_doc("- comment\n" * 20, language="fr"), "gopher_too_many_bullets")
+
+        self.check_filter(
+            gopher_quality,
+            get_doc("text text text text text text text text text text text text…\n" * 20, language="en"),
+            "gopher_too_many_end_ellipsis",
+        )
+        self.check_filter(
+            gopher_quality,
+            get_doc(
+                "comment comment comment comment comment comment comment comment comment comment comment comment…\n"
+                * 20,
+                language="fr",
+            ),
+            "gopher_too_many_end_ellipsis",
+        )
+        self.check_filter(
+            gopher_quality,
+            get_doc("text text text text text text text text text text text text...\n" * 20, language="en"),
+            "gopher_too_many_end_ellipsis",
+        )
+        self.check_filter(
+            gopher_quality,
+            get_doc(
+                "comment comment comment comment comment comment comment comment comment comment comment comment...\n"
+                * 20,
+                language="fr",
+            ),
+            "gopher_too_many_end_ellipsis",
+        )
+
+        text = "the ./!*?<><> apple <?////> orange  ++ interconnection !<>??? have" * 20
+        self.check_filter(gopher_quality, get_doc(text, language="en"), "gopher_below_alpha_threshold")
+        self.check_filter(gopher_quality, get_doc(text, language="fr"), "gopher_below_alpha_threshold")
+
+        self.check_filter(gopher_quality, get_doc("le la des du " * 20, language="en"), "gopher_enough_stop_words")
+        self.check_filter(gopher_quality, get_doc("the of in salut " * 20, language="fr"), "gopher_enough_stop_words")
+
+        self.assertTrue(gopher_quality.filter(get_doc(TEXT_LF_1, language="en")) is True)
+        self.assertTrue(gopher_quality.filter(get_doc(TEXT_LF_2, language="fr")) is True)
 
     def test_lambda(self):
         doc = Document(text=TEXT_LF_1, id="0", metadata={"test": 1})
