@@ -46,16 +46,18 @@ nltk_stopwords = {"en": en_stopwords, "fr": fr_stopwords, "de": de_stopwords, "e
 # stopwords = nltk_stopwords
 
 # Intersection between NLTK and language stats stopwords
-stopwords = {k: list(set(v).intersection(set(language_stats[k][STOPWORDS[0]][STOPWORDS[1]]))) for k, v in nltk_stopwords.items()}
+stopwords = {
+    k: list(set(v).intersection(set(language_stats[k][STOPWORDS[0]][STOPWORDS[1]]))) for k, v in nltk_stopwords.items()
+}
 
 # Min. stopwords strategies
 # min_stop_words = {k: 2 for k, v in stopwords.items()}
 # min_stop_words = {k: len(v) // 4 for k, v in stopwords.items()}
 # min_stop_words = {k: floor(sqrt(len(v))) for k,v in stopwords.items()}
-min_stop_words = {k: floor(log(len(v), e)) for k,v in stopwords.items()}
+min_stop_words = {k: floor(log(len(v), e)) for k, v in stopwords.items()}
 
 print(stopwords)
-print({k: len(v) for k,v in stopwords.items()})
+print({k: len(v) for k, v in stopwords.items()})
 print(min_stop_words)
 
 if __name__ == "__main__":
@@ -109,7 +111,6 @@ if __name__ == "__main__":
     }[EXECUTOR]
 
     executor.run()
-
 
     # Scientific papers (en) pipeline
     # pipeline = [

@@ -13,9 +13,7 @@ class DocumentStats(PipelineStep):
         self.language_field = language_field
         self.output_folder = get_datafolder(output_folder)
 
-    def run(
-        self, data: DocumentsPipeline, rank: int = 0, world_size: int = 1
-    ) -> DocumentsPipeline:
+    def run(self, data: DocumentsPipeline, rank: int = 0, world_size: int = 1) -> DocumentsPipeline:
         stats = {}
 
         # map and produce one output file per rank
@@ -54,15 +52,11 @@ class DocumentStatsReducer(PipelineStep):
         self.output_folder = get_datafolder(output_folder)
         self.output_file_name = output_file_name
 
-    def run(
-        self, data: DocumentsPipeline, rank: int = 0, world_size: int = 1
-    ) -> DocumentsPipeline:
+    def run(self, data: DocumentsPipeline, rank: int = 0, world_size: int = 1) -> DocumentsPipeline:
         stats = {}
 
         # combine all json files with stats
-        assert (
-            world_size == 1
-        ), "world_size must be 1 when getting the input from an input_folder"
+        assert world_size == 1, "world_size must be 1 when getting the input from an input_folder"
         for file in self.input_folder.list_files(glob_pattern="**.json"):
             with self.input_folder.open(file, "rt") as f:
                 file_data = json.load(f)

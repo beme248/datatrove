@@ -52,7 +52,7 @@ class LanguageStats(PipelineStep):
 
             stats[language]["total_docs"] += 1
             stats[language]["total_words"] += n_words
-            stats[language]["total_bytes"] += len(text.encode('utf-8'))
+            stats[language]["total_bytes"] += len(text.encode("utf-8"))
 
             # Distribution of word lengths
             for word in words:
