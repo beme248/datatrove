@@ -115,5 +115,4 @@ class MultilingualGopherQualityFilter(BaseFilter):
             and sum(w in self.stop_words[lang] for w in words) < self.min_stop_words[lang]
         ):
             return False, "gopher_enough_stop_words"
-
         return True
