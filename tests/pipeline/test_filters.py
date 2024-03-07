@@ -6,6 +6,7 @@ from datatrove.pipeline.filters import (
     GopherRepetitionFilter,
     LambdaFilter,
     LanguageFilter,
+    ListFilter,
     RegexFilter,
     UnigramLogProbFilter,
     URLFilter,
@@ -127,3 +128,10 @@ class TestFilters(unittest.TestCase):
                 assert url_filter.filter(doc)
             else:
                 self.check_filter(url_filter, doc, result)
+
+    def test_list(self):
+        list_filter = ListFilter()
+        self.check_filter(list_filter, get_doc("List\n" * 5), "Suspected list")
+        self.check_filter(list_filter, get_doc("Also list\n" * 5), "Suspected list")
+        self.check_filter(list_filter, get_doc("And another list\n" * 5), "Suspected list")
+        self.assertTrue(list_filter.filter(get_doc("Not a list anymore\n" * 5)) is True)
