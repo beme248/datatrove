@@ -65,12 +65,20 @@ class TestFilters(unittest.TestCase):
     def test_gopher_quality(self):
         gopher_quality = GopherQualityFilter(min_doc_words=10, max_doc_words=1000)
         self.check_filter(gopher_quality, get_doc("I am too small..."), "gopher_short_doc")
+        self.check_filter(gopher_quality, get_doc("Very long document. " * 400), "gopher_long_doc")
         self.check_filter(gopher_quality, get_doc("I am " * 20), "gopher_below_avg_threshold")
         self.check_filter(gopher_quality, get_doc("interconnection " * 20), "gopher_above_avg_threshold")
         self.check_filter(gopher_quality, get_doc("# comment " * 20), "gopher_too_many_hashes")
         self.check_filter(gopher_quality, get_doc("... comment " * 20), "gopher_too_many_ellipsis")
+        self.check_filter(gopher_quality, get_doc("• comment\n" * 20), "gopher_too_many_bullets")
+        self.check_filter(
+            gopher_quality,
+            get_doc("comment comment comment comment comment comment comment comment comment...\n" * 20),
+            "gopher_too_many_end_ellipsis",
+        )
         text = "the ./!*?<><> apple <?////> orange  ++ interconnection !<>??? have" * 20
         self.check_filter(gopher_quality, get_doc(text), "gopher_below_alpha_threshold")
+        self.check_filter(gopher_quality, get_doc("No stopwords. " * 10), "gopher_enough_stop_words")
         self.assertTrue(gopher_quality(get_doc(TEXT_LF_1)))
 
     def test_lambda(self):
