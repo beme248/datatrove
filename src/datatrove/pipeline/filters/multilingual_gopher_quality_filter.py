@@ -20,10 +20,10 @@ class MultilingualGopherQualityFilter(BaseFilter):
         max_avg_word_lengths: dict[str, int] | None = None,
         stop_words: dict[str, list[str]] | None = None,
         min_stop_words: dict[str, int] | None = None,
+        max_non_alpha_words_ratio: dict[str, float] | None = None,
         max_symbol_word_ratio: float | None = 0.1,
         max_bullet_lines_ratio: float | None = 0.9,
         max_ellipsis_lines_ratio: float | None = 0.3,
-        max_non_alpha_words_ratio: float | None = 0.8,
         exclusion_writer: DiskWriter = None,
     ):
         super().__init__(exclusion_writer)
@@ -102,14 +102,15 @@ class MultilingualGopherQualityFilter(BaseFilter):
         # that 80 % of words in a document contain at least one alphabetic character
         if (
             self.max_non_alpha_words_ratio
-            and sum([any((c.isalpha() for c in w)) for w in words]) / n_words < self.max_non_alpha_words_ratio
+            and lang in self.max_non_alpha_words_ratio
+            and sum([any((c.isalpha() for c in w)) for w in words]) / n_words < self.max_non_alpha_words_ratio[lang]
         ):
             return False, "gopher_below_alpha_threshold"
 
         # stop word filter
         if (
             self.min_stop_words
-            and self.stop_words is not None
+            and self.stop_words
             and lang in self.stop_words
             and lang in self.min_stop_words
             and sum(w in self.stop_words[lang] for w in words) < self.min_stop_words[lang]

@@ -8,10 +8,23 @@ from datatrove.executor.local import LocalPipelineExecutor
 from datatrove.executor.slurm import SlurmPipelineExecutor
 from datatrove.pipeline.filters import MultilingualGopherQualityFilter
 from datatrove.pipeline.readers import ShuffledHFDatasetReader
-from datatrove.pipeline.writers import JsonlWriter
 from datatrove.pipeline.stats import DocumentStats, DocumentStatsReducer
+from datatrove.pipeline.writers import JsonlWriter
 
-LANGUAGES = ["en", "ru", "de", "es", "ja", "fr", "zh", "it", "pt", "nl", "pl"] # Top 10 languages in CommonCrawl according to (https://arxiv.org/pdf/2306.01116.pdf) + English
+
+LANGUAGES = [
+    "en",
+    "ru",
+    "de",
+    "es",
+    "ja",
+    "fr",
+    "zh",
+    "it",
+    "pt",
+    "nl",
+    "pl",
+]  # Top 10 languages in CommonCrawl according to (https://arxiv.org/pdf/2306.01116.pdf) + English
 WIKI_OUTPUT_PATH = "./sanity_check_wiki"
 WIKI_VERSION = "20231101"  # See https://huggingface.co/datasets/wikimedia/wikipedia
 PAPERS_OUTPUT_PATH = "./sanity_check_papers"
@@ -32,8 +45,7 @@ nltk_stopwords = {
     "es": nltk_stopwords.words("spanish"),
 }
 stopwords = {
-    k: list(set(v).intersection(set(language_stats[k]["stopwords_top_n"]["15"])))
-    for k, v in nltk_stopwords.items()
+    k: list(set(v).intersection(set(language_stats[k]["stopwords_top_n"]["15"]))) for k, v in nltk_stopwords.items()
 }
 # Min. stopwords: floor(ln(num_stopwords))
 min_stop_words = {k: floor(log(len(v), e)) for k, v in stopwords.items()}
@@ -97,11 +109,7 @@ if __name__ == "__main__":
 
     executor.run()
 
-    pipeline_reduce = [
-        DocumentStatsReducer(
-            f"{WIKI_OUTPUT_PATH}/doc_stats/", f"{WIKI_OUTPUT_PATH}", "doc_stats.json"
-        )
-    ]
+    pipeline_reduce = [DocumentStatsReducer(f"{WIKI_OUTPUT_PATH}/doc_stats/", f"{WIKI_OUTPUT_PATH}", "doc_stats.json")]
 
     executor_reduce = {
         "slurm": SlurmPipelineExecutor(
@@ -120,7 +128,6 @@ if __name__ == "__main__":
     }[EXECUTOR]
 
     executor_reduce.run()
-
 
     # Scientific papers (en) pipeline
     pipeline = [
@@ -161,11 +168,8 @@ if __name__ == "__main__":
 
     executor.run()
 
-
     pipeline_reduce = [
-        DocumentStatsReducer(
-            f"{PAPERS_OUTPUT_PATH}/doc_stats/", f"{PAPERS_OUTPUT_PATH}", "doc_stats.json"
-        )
+        DocumentStatsReducer(f"{PAPERS_OUTPUT_PATH}/doc_stats/", f"{PAPERS_OUTPUT_PATH}", "doc_stats.json")
     ]
 
     executor_reduce = {
@@ -185,4 +189,3 @@ if __name__ == "__main__":
     }[EXECUTOR]
 
     executor_reduce.run()
-

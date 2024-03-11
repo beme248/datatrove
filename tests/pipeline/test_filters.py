@@ -79,6 +79,7 @@ class TestFilters(unittest.TestCase):
         max_avg_word_lengths = {"en": 7, "fr": 9}
         stop_words = {"en": ["the", "of", "in"], "fr": ["le", "la", "des", "du", "en", "l'"]}
         min_stop_words = {"en": 1, "fr": 2}
+        max_non_alpha_word_ratios = {"en": 0.8, "fr": 0.9}
 
         gopher_quality = MultilingualGopherQualityFilter(
             min_doc_words=10,
@@ -87,6 +88,7 @@ class TestFilters(unittest.TestCase):
             max_avg_word_lengths=max_avg_word_lengths,
             stop_words=stop_words,
             min_stop_words=min_stop_words,
+            max_non_alpha_words_ratio=max_non_alpha_word_ratios,
         )
 
         self.check_filter(gopher_quality, get_doc("I am too small...", language="en"), "gopher_short_doc")
