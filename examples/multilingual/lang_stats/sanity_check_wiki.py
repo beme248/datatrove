@@ -149,6 +149,7 @@ if __name__ == "__main__":
             ),
             **gopher_args,
         ),
+        DocumentStats(output_folder=f"{PAPERS_OUTPUT_PATH}/doc_stats/"),
     ]
 
     executor = {
