@@ -57,7 +57,7 @@ class DocumentStatsReducer(PipelineStep):
 
         # combine all json files with stats
         assert world_size == 1, "world_size must be 1 when getting the input from an input_folder"
-        for file in self.input_folder.list_files(glob_pattern="**.json"):
+        for file in self.input_folder.list_files(glob_pattern="*.json"):
             with self.input_folder.open(file, "rt") as f:
                 file_data = json.load(f)
                 for language in file_data:
