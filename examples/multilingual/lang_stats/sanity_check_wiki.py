@@ -56,7 +56,7 @@ gopher_args = {
     "min_stop_words": min_stop_words,
     "max_avg_word_lengths": None,
     "min_avg_word_lengths": None,
-    "min_doc_words": None,
+    "min_doc_words": 1,
     "max_doc_words": None,
     "max_symbol_word_ratio": None,
     "max_bullet_lines_ratio": None,
