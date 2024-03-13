@@ -20,12 +20,14 @@ if len(sys.argv) != 2:
     sys.exit(-1)
 
 DUMP = sys.argv[1]
-DOC_LIMIT = 50000
+DOC_LIMIT = 5000
 NUM_TASKS = 20
 STATS_FILE = "./examples/multilingual/lang_stats/wiki_lang_stats.json"
+STOPWORDS_FILE = "./examples/multilingual/lang_stats/stopwords.json"
 # LANGUAGES = [Languages.russian, Languages.german, Languages.spanish, "ja", Languages.french, "zh", Languages.italian, Languages.polish, Languages.dutch, "pl"]
 # LANGUAGES = [ Languages.russian, Languages.german, Languages.spanish, Languages.french, Languages.italian, Languages.portuguese, Languages.dutch, Languages.polish ]
-LANGUAGES = [ Languages.russian, Languages.german, Languages.spanish, Languages.french, Languages.italian, Languages.portuguese, Languages.dutch ]
+# LANGUAGES = [ Languages.russian, Languages.german, Languages.spanish, Languages.french, Languages.italian, Languages.portuguese, Languages.dutch ]
+LANGUAGES = [ Languages.chinese ]
 EN_LANGUAGES = {
     Languages.english: "english",
     Languages.russian: "russian",
@@ -38,7 +40,8 @@ EN_LANGUAGES = {
 }
 
 # STOP_WORDS = "stopwords_p_thresh_0_008"
-STOP_WORDS = "stopwords_nltk"
+STOP_WORDS = "stopwords_ud"
+# STOP_WORDS = "stopwords_nltk"
 
 scratch = os.getenv('SCRATCH')
 
@@ -46,21 +49,21 @@ scratch = os.getenv('SCRATCH')
 with open(STATS_FILE, "r") as f:
     language_stats = json.load(f)
 
+with open(STOPWORDS_FILE, "r") as f:
+    stop_words = json.load(f)
+
 def to_clean_stopwords(k, v):
-    if k not in EN_LANGUAGES:
-        return []
+    # if k not in EN_LANGUAGES:
+    #     return []
     # clean_stopwords = stopwords.words(EN_LANGUAGES[k])
     # return [ word for word in v["stopwords_p_thresh"]["0.008"] if word in clean_stopwords ]
-    return stopwords.words(EN_LANGUAGES[k])
+    # return stopwords.words(EN_LANGUAGES[k])
+    return [ word for word in v["stopwords_p_thresh"]["0.008"] ]
 
 min_avg_word_lengths = {k: v["min_avg_word_length"] for k, v in language_stats.items()}
 max_avg_word_lengths = {k: v["max_avg_word_length"] for k, v in language_stats.items()}
-stop_words = {k: to_clean_stopwords(k, v) for k, v in language_stats.items()}
+# stop_words = {k: to_clean_stopwords(k, v) for k, v in language_stats.items()}
 min_stop_words = {k: 2 for k, _ in language_stats.items()}
-
-print(f"======> {stop_words}")
-
-breakpoint()
 
 for lang in LANGUAGES:
     additional_data_path = f'data/datatrove/multi_lingual_{DOC_LIMIT}_{STOP_WORDS}/base_processing/{lang}'
@@ -70,8 +73,9 @@ for lang in LANGUAGES:
     MAIN_OUTPUT_PATH = os.path.join(scratch, additional_data_path)
     SLURM_LOGS = os.path.join(scratch, additional_logs_path)
 
+    breakpoint()
     executor = SlurmPipelineExecutor(
-        job_name=f"cc_{DUMP}",
+        job_name=f"cc_{DUMP}_{lang}",
         pipeline=[
             JsonlReader(
                 data_path,
@@ -85,6 +89,7 @@ for lang in LANGUAGES:
                 min_avg_word_lengths=min_avg_word_lengths,
                 stop_words=stop_words,
                 min_stop_words=min_stop_words,
+                max_non_alpha_words_ratio=0.6,
                 exclusion_writer=JsonlWriter(f"{MAIN_OUTPUT_PATH}/removed/quality/{DUMP}"),
             ),
             ListFilter(exclusion_writer=JsonlWriter(f"{MAIN_OUTPUT_PATH}/removed/list/{DUMP}")),
@@ -97,6 +102,7 @@ for lang in LANGUAGES:
         randomize_start=True,
         mem_per_cpu_gb=2,
         partition="normal",
+        mail_user="bettina.messmer@epfl.ch"
     )
     executor.run()
 

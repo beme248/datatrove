@@ -1,7 +1,7 @@
 import json
 import os
 
-base_path = "/iopsstor/scratch/cscs/bmessmer/data/datatrove/multi_lingual_50000_stopwords_p_thresh_0_008/base_processing"
+base_path = "/iopsstor/scratch/cscs/bmessmer/data/datatrove/multi_lingual_50000_stopwords_nltk/base_processing"
 languages = ["ru", "de", "es", "fr", "it", "pt", "nl", "pl"]
 DUMP = "CC-MAIN-2023-50"
 
