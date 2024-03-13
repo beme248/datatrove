@@ -1,6 +1,8 @@
 from abc import ABC, abstractmethod
 
 import stanza
+from anbani.nlp.preprocessing import word_tokenize as ka_word_tokenize
+from etnltk.tokenize.am import word_tokenize as am_word_tokenize
 from nltk.tokenize import word_tokenize
 
 from datatrove.utils.typeshelper import Languages
@@ -35,6 +37,16 @@ class NLTKTokenizer(WordTokenizer):
 
     def tokenize(self, text) -> list[str]:
         return word_tokenize(text, language=self.punkt_language)
+
+
+class AmharicTokenizer(WordTokenizer):
+    def tokenize(self, text) -> list[str]:
+        return am_word_tokenize(text)
+
+
+class GeorgianTokenizer(WordTokenizer):
+    def tokenize(self, text) -> list[str]:
+        return ka_word_tokenize(text)
 
 
 WORD_TOKENIZERS = {
@@ -86,7 +98,18 @@ WORD_TOKENIZERS = {
     Languages.galician: StanzaWordTokenizer("gl"),
     Languages.armenian: StanzaWordTokenizer("hy"),
     Languages.basque: StanzaWordTokenizer("eu"),
-}  # Missing: th, bn, gu, kn, tl, sw, pa, am, jv, yo, bh, sq, az, mk, ka, ms
+    Languages.thai: StanzaWordTokenizer("th"),
+    Languages.tagalog: NLTKTokenizer("english"),  # Proxy language
+    Languages.albanian: StanzaWordTokenizer("sr"),  # Proxy language
+    Languages.macedonian: StanzaWordTokenizer("sr"),  # Proxy language
+    Languages.azerbaijani: NLTKTokenizer("turkish"),  # Proxy language
+    Languages.georgian: GeorgianTokenizer(),
+    Languages.amharic: AmharicTokenizer(),
+}
+# Missing: bn, gu, kn, pa
+# Missing: sw, yo
+# Missing: jv, ms
+# Missing: bh (deprecated in ISO-639)
 
 
 def get_word_tokenizer(language: Languages | str):

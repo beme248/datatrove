@@ -54,7 +54,11 @@ processing = [
     "tldextract",
     "trafilatura",
     "tokenizers",
+
+    # Multilingual tokenization
     "stanza",
+    "etnltk",
+    "anbani",
 ]
 quality = [
   "ruff>=0.1.5"
