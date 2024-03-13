@@ -6,8 +6,71 @@ from datatrove.pipeline.readers import ShuffledHFDatasetReader
 from datatrove.pipeline.stats import LanguageStats, LanguageStatsReducer
 
 
-# Top 10 languages in CommonCrawl according to (https://arxiv.org/pdf/2306.01116.pdf) + English
-LANGUAGES = ["en", "ru", "de", "es", "ja", "fr", "zh", "it", "pt", "nl", "pl"]
+LANGUAGES = [
+    "en",
+    "de",
+    "ru",
+    "fr",
+    "ja",
+    "es",
+    "zh",
+    "it",
+    "pt",
+    "vi",
+    "id",
+    "tr",
+    "fa",
+    "ko",
+    "ar",
+    "th",
+    "hi",
+    "bn",
+    "ta",
+    "ur",
+    "mr",
+    "te",
+    "gu",
+    "kn",
+    "tl",
+    "sw",
+    "pa",
+    "am",
+    "jv",
+    "yo",
+    "bh",
+    "nl",
+    "pl",
+    "cs",
+    "sv",
+    "hu",
+    "el",
+    "ro",
+    "da",
+    "fi",
+    "uk",
+    "sk",
+    "no",
+    "bg",
+    "ca",
+    "hr",
+    "la",
+    "sr",
+    "sl",
+    "lt",
+    "et",
+    "he",
+    "lv",
+    "sh",
+    "sq",
+    "az",
+    "is",
+    "mk",
+    "ka",
+    "gl",
+    "hy",
+    "eu",
+    "ms",
+]
 MAIN_OUTPUT_PATH = "./wiki_language_stats"
 WIKI_VERSION = "20231101"  # See https://huggingface.co/datasets/wikimedia/wikipedia
 DOC_LIMIT = 4000
@@ -83,15 +146,19 @@ if __name__ == "__main__":
         word_length_std = np.sqrt(np.cov(lengths, fweights=freqs))
         word_length_q = {f"{i/20:.2f}": q_lengths(length_counter.items(), i / 20) for i in range(21)}
 
+        alpha_ratio_mean = language_stats["alpha_ratio_mean"]
+        alpha_ratio_std = language_stats["alpha_ratio_std"]
+
         stopwords_q = {f"{q:.2f}": q_words(word_counter.items(), q) for q in [0.15, 0.2, 0.25, 0.3]}
         stopwords_p_thresh = {f"{p:.3f}": p_thresh_words(word_counter.items(), p) for p in [0.008, 0.010, 0.012]}
         stopwords_top_n = {
             f"{n}": list(dict(language_stats["word_counter"].most_common(n)).keys()) for n in [5, 8, 10, 15]
         }
 
-        return {
+        return language_stats | {
             "min_avg_word_length": round(word_length_mean - word_length_std),
             "max_avg_word_length": round(word_length_mean + word_length_std),
+            "max_non_alpha_words_ratio": round(alpha_ratio_mean - 3 * alpha_ratio_std, 1),
             "word_length_mean": word_length_mean,
             "word_length_std": word_length_std,
             "word_length_q": word_length_q,

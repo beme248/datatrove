@@ -88,7 +88,7 @@ if __name__ == "__main__":
             f"{n}": list(dict(language_stats["word_counter"].most_common(n)).keys()) for n in [5, 8, 10, 15]
         }
 
-        return {
+        return language_stats | {
             "min_avg_word_length": round(word_length_mean - word_length_std),
             "max_avg_word_length": round(word_length_mean + word_length_std),
             "word_length_mean": word_length_mean,
