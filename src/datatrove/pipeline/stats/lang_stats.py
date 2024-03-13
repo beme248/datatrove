@@ -202,7 +202,7 @@ class LanguageStatsReducer(PipelineStep):
         # Apply reduction function
         if self.reduce_fn is not None:
             for language in stats:
-                stats[language] = stats[language] | self.reduce_fn(stats[language])
+                stats[language] = self.reduce_fn(stats[language])
 
         # save stats
         with self.output_folder.open(self.output_file_name, "wt") as f:
