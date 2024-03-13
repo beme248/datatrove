@@ -23,25 +23,8 @@ DUMP = sys.argv[1]
 DOC_LIMIT = 5000
 NUM_TASKS = 20
 STATS_FILE = "./examples/multilingual/lang_stats/wiki_lang_stats.json"
-STOPWORDS_FILE = "./examples/multilingual/lang_stats/stopwords.json"
-# LANGUAGES = [Languages.russian, Languages.german, Languages.spanish, "ja", Languages.french, "zh", Languages.italian, Languages.polish, Languages.dutch, "pl"]
-# LANGUAGES = [ Languages.russian, Languages.german, Languages.spanish, Languages.french, Languages.italian, Languages.portuguese, Languages.dutch, Languages.polish ]
-# LANGUAGES = [ Languages.russian, Languages.german, Languages.spanish, Languages.french, Languages.italian, Languages.portuguese, Languages.dutch ]
-LANGUAGES = [ Languages.chinese ]
-EN_LANGUAGES = {
-    Languages.english: "english",
-    Languages.russian: "russian",
-    Languages.german: "german",
-    Languages.spanish: "spanish",
-    Languages.french: "french",
-    Languages.italian: "italian",
-    Languages.portuguese: "portuguese",
-    Languages.dutch: "dutch"
-}
-
-# STOP_WORDS = "stopwords_p_thresh_0_008"
-STOP_WORDS = "stopwords_ud"
-# STOP_WORDS = "stopwords_nltk"
+LANGUAGES = [ Languages.english, Languages.spanish, Languages.portuguese, Languages.italian, Languages.french, Languages.romanian, Languages.german, Languages.latin, Languages.czech, Languages.danish, Languages.finnish, Languages.greek, Languages.norwegian, Languages.polish, Languages.russian, Languages.slovenian, Languages.swedish, Languages.turkish, Languages.dutch, Languages.chinese, Languages.japanese, Languages.vietnamese, Languages.indonesian, Languages.persian, Languages.korean, Languages.arabic, Languages.thai, Languages.hindi, Languages.bengali, Languages.tamil, Languages.hungarian, Languages.ukrainian, Languages.slovak, Languages.bulgarian, Languages.catalan, Languages.croatian, Languages.serbian, Languages.lithuanian, Languages.estonian, Languages.hebrew, Languages.latvian, Languages.serbocroatian, Languages.albanian, Languages.azerbaijani, Languages.icelandic, Languages.macedonian, Languages.georgian, Languages.galician, Languages.armenian, Languages.basque ]
+STOP_WORDS = "stopwords_p_thresh_0_008"
 
 scratch = os.getenv('SCRATCH')
 
@@ -49,21 +32,17 @@ scratch = os.getenv('SCRATCH')
 with open(STATS_FILE, "r") as f:
     language_stats = json.load(f)
 
-with open(STOPWORDS_FILE, "r") as f:
-    stop_words = json.load(f)
+def to_stopwords(_, v):
+    return v["stopwords_p_thresh"]["0.008"]
 
-def to_clean_stopwords(k, v):
-    # if k not in EN_LANGUAGES:
-    #     return []
-    # clean_stopwords = stopwords.words(EN_LANGUAGES[k])
-    # return [ word for word in v["stopwords_p_thresh"]["0.008"] if word in clean_stopwords ]
-    # return stopwords.words(EN_LANGUAGES[k])
-    return [ word for word in v["stopwords_p_thresh"]["0.008"] ]
+def to_alpha_ratio(_, v):
+    return v["max_non_alpha_words_ratio"]["0.008"]
 
 min_avg_word_lengths = {k: v["min_avg_word_length"] for k, v in language_stats.items()}
 max_avg_word_lengths = {k: v["max_avg_word_length"] for k, v in language_stats.items()}
-# stop_words = {k: to_clean_stopwords(k, v) for k, v in language_stats.items()}
-min_stop_words = {k: 2 for k, _ in language_stats.items()}
+stop_words = { k: to_stopwords(k, v) for k, v in language_stats.items() }
+min_stop_words = { k: 2 for k, _ in language_stats.items() }
+alpha_ration = { }
 
 for lang in LANGUAGES:
     additional_data_path = f'data/datatrove/multi_lingual_{DOC_LIMIT}_{STOP_WORDS}/base_processing/{lang}'
