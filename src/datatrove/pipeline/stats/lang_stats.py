@@ -124,7 +124,7 @@ class LanguageStatsReducer(PipelineStep):
         input_folder: DataFolderLike,
         output_folder: DataFolderLike,
         output_file_name: str,
-        reduce_fn=None,  # (stats of language: dict) -> dict
+        reduce_fn=lambda x: x,  # (stats of language: dict) -> dict
         word_common_prune=500,
     ):
         super().__init__()
