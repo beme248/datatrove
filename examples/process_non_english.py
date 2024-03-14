@@ -20,12 +20,12 @@ if len(sys.argv) != 2:
     sys.exit(-1)
 
 DUMP = sys.argv[1]
-DOC_LIMIT = 5000
-NUM_TASKS = 20
+DOC_LIMIT = 1000
+NUM_TASKS = 5
 STATS_FILE = "./examples/multilingual/lang_stats/wiki_lang_stats.json"
 # LANGUAGES = [ Languages.english, Languages.spanish, Languages.portuguese, Languages.italian, Languages.french, Languages.romanian, Languages.german, Languages.latin, Languages.czech, Languages.danish, Languages.finnish, Languages.greek, Languages.norwegian, Languages.polish, Languages.russian, Languages.slovenian, Languages.swedish, Languages.turkish, Languages.dutch, Languages.chinese, Languages.japanese, Languages.vietnamese, Languages.indonesian, Languages.persian, Languages.korean, Languages.arabic, Languages.thai, Languages.hindi, Languages.bengali, Languages.tamil, Languages.hungarian, Languages.ukrainian, Languages.slovak, Languages.bulgarian, Languages.catalan, Languages.croatian, Languages.serbian, Languages.lithuanian, Languages.estonian, Languages.hebrew, Languages.latvian, Languages.serbocroatian, Languages.albanian, Languages.azerbaijani, Languages.icelandic, Languages.macedonian, Languages.georgian, Languages.galician, Languages.armenian, Languages.basque ]
-LANGUAGES = [  Languages.korean, Languages.bengali, Languages.serbian ]
-RUN_NAME = "top50_stopwords_p_thresh_0_008"
+LANGUAGES = [  Languages.korean, Languages.bengali, Languages.serbian, Languages.german ]
+RUN_NAME = "top50_stopwords_p_thresh_0_005"
 
 scratch = os.getenv('SCRATCH')
 
@@ -34,7 +34,7 @@ with open(STATS_FILE, "r") as f:
     language_stats = json.load(f)
 
 def to_stopwords(_, v):
-    return v["stopwords_p_thresh"]["0.008"]
+    return v["stopwords_p_thresh"]["0.005"]
 
 def to_alpha_ratio(_, v):
     return v["max_non_alpha_words_ratio"]
