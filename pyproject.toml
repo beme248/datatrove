@@ -57,7 +57,14 @@ processing = [
 
     # Multilingual tokenization
     "stanza",
-    "etnltk",
+    "spacy",
+    "spacy[ja]",
+    "pyvi",
+    "mecab-ko",
+    "mecab-ko-dic",
+    "natto-py",
+    "pythainlp",
+    "jieba",
     "anbani",
 ]
 quality = [
