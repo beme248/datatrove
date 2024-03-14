@@ -48,7 +48,8 @@ class SpaCyTokenizer(WordTokenizer):
             self.tokenizer = spacy.blank(spacy_language, config=config)
 
     def tokenize(self, text) -> list[str]:
-        return [str(token) for token in self.tokenizer(text)]
+        self.tokenizer.max_length = len(text) + 10
+        return [token.text for token in self.tokenizer(text, disable=["parser", "tagger", "ner"])]
 
 
 class GeorgianTokenizer(WordTokenizer):
