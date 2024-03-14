@@ -3,6 +3,7 @@ from abc import ABC, abstractmethod
 import spacy
 import stanza
 from anbani.nlp.preprocessing import word_tokenize as ka_word_tokenize
+from indicnlp.tokenize.indic_tokenize import trivial_tokenize as indicnlp_trivial_tokenize
 from nlpashto import Tokenizer as PsTokenizer
 from nltk.tokenize import word_tokenize
 
@@ -65,7 +66,15 @@ class PashtoTokenizer(WordTokenizer):
         return [tok for sent in self.tokenizer.tokenize(text) for tok in sent]
 
 
-WORD_TOKENIZERS = {
+class IndicNLPTokenizer(WordTokenizer):
+    def __init__(self, language: str):
+        self.language = language
+
+    def tokenize(self, text) -> list[str]:
+        return indicnlp_trivial_tokenize(text, self.language)
+
+
+WORD_TOKENIZERS: dict[str, WordTokenizer] = {
     Languages.english: NLTKTokenizer("english"),
     Languages.german: NLTKTokenizer("german"),
     Languages.french: NLTKTokenizer("french"),
@@ -139,6 +148,11 @@ WORD_TOKENIZERS = {
     Languages.yoruba: SpaCyTokenizer("yo"),
     Languages.pashto: PashtoTokenizer(),
     Languages.serbocroatian: SpaCyTokenizer("sr"),
+    Languages.oriya: IndicNLPTokenizer("or"),
+    Languages.punjabi: IndicNLPTokenizer("sa"),
+    Languages.assamese: IndicNLPTokenizer("as"),
+    Languages.war: IndicNLPTokenizer("war"),
+    Languages.sindhi: IndicNLPTokenizer("sd"),
     Languages.bosnian: SpaCyTokenizer("hr"),  # Proxy
     Languages.belarusian: SpaCyTokenizer("uk"),  # Proxy
     Languages.galician: NLTKTokenizer("portuguese"),  # Proxy
@@ -147,17 +161,18 @@ WORD_TOKENIZERS = {
     Languages.cebuano: NLTKTokenizer("english"),  # Proxy
     Languages.swahili: NLTKTokenizer("english"),  # Proxy
     Languages.javanese: NLTKTokenizer("english"),  # Proxy
-    Languages.uzbek: SpaCyTokenizer("tr"),  # Proxy, alternative ru
+    Languages.uzbek: NLTKTokenizer("turkish"),  # Proxy, alternative ru
     Languages.tajik: SpaCyTokenizer("ru"),  # Proxy
-    Languages.punjabi: SpaCyTokenizer("sa"),  # Proxy, multiple scripts!
     Languages.kurdish: NLTKTokenizer("english"),  # Proxy, multiple scripts!
     Languages.sorani: SpaCyTokenizer("fa"),  # Proxy
     Languages.south_azerbaijani: SpaCyTokenizer("fa"),  # Proxy
     Languages.bashkir: SpaCyTokenizer("tt"),  # Proxy
     Languages.western_frisian: NLTKTokenizer("dutch"),  # Proxy
     Languages.breton: StanzaWordTokenizer("cy"),  # Proxy
-    Languages.assamese: SpaCyTokenizer("bn"),  # Proxy
     Languages.malagasy: NLTKTokenizer("english"),  # Proxy
+    Languages.yiddish: SpaCyTokenizer("he"),  # Proxy
+    Languages.somali: NLTKTokenizer("english"),  # Proxy
+    Languages.turkmen: NLTKTokenizer("turkish"),  # Proxy
 }
 
 

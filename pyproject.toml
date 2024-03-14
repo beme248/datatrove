@@ -58,15 +58,11 @@ processing = [
     # Multilingual tokenization
     "stanza",
     "spacy",
-    "spacy[ja]",
     "pyvi",
-    "mecab-ko",
-    "mecab-ko-dic",
-    "natto-py",
-    "pythainlp",
     "jieba",
     "anbani",
     "nlpashto",
+    "indic-nlp-library",
 ]
 quality = [
   "ruff>=0.1.5"

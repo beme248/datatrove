@@ -115,6 +115,7 @@ class Languages:
     south_azerbaijani = "azb"
     sorani = "ckb"
     cebuano = "ceb"
+    war = "war"
 
 
 class StatHints:
