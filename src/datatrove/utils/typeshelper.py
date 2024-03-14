@@ -113,6 +113,8 @@ class Languages:
     sindhi = "sd"
     turkmen = "tk"
     south_azerbaijani = "azb"
+    sorani = "ckb"
+    cebuano = "ceb"
 
 
 class StatHints:

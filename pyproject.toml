@@ -66,6 +66,7 @@ processing = [
     "pythainlp",
     "jieba",
     "anbani",
+    "nlpashto",
 ]
 quality = [
   "ruff>=0.1.5"

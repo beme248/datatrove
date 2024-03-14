@@ -3,6 +3,7 @@ from abc import ABC, abstractmethod
 import spacy
 import stanza
 from anbani.nlp.preprocessing import word_tokenize as ka_word_tokenize
+from nlpashto import Tokenizer as PsTokenizer
 from nltk.tokenize import word_tokenize
 
 from datatrove.utils.typeshelper import Languages
@@ -53,6 +54,14 @@ class SpaCyTokenizer(WordTokenizer):
 class GeorgianTokenizer(WordTokenizer):
     def tokenize(self, text) -> list[str]:
         return ka_word_tokenize(text)
+
+
+class PashtoTokenizer(WordTokenizer):
+    def __init__(self):
+        self.tokenizer = PsTokenizer()
+
+    def tokenize(self, text) -> list[str]:
+        return [tok for sent in self.tokenizer.tokenize(text) for tok in sent]
 
 
 WORD_TOKENIZERS = {
@@ -114,7 +123,6 @@ WORD_TOKENIZERS = {
     Languages.urdu: SpaCyTokenizer("ur"),
     Languages.nepali: SpaCyTokenizer("ne"),
     Languages.kazakh: StanzaWordTokenizer("kk"),
-    Languages.belarusian: StanzaWordTokenizer("be"),
     Languages.gujarati: SpaCyTokenizer("gu"),
     Languages.kannada: SpaCyTokenizer("kn"),
     Languages.welsh: StanzaWordTokenizer("cy"),
@@ -128,18 +136,27 @@ WORD_TOKENIZERS = {
     Languages.maltese: StanzaWordTokenizer("mt"),
     Languages.sanskrit: SpaCyTokenizer("sa"),
     Languages.yoruba: SpaCyTokenizer("yo"),
-    Languages.south_azerbaijani: SpaCyTokenizer("az"),
+    Languages.pashto: PashtoTokenizer(),
     Languages.serbocroatian: SpaCyTokenizer("sr"),
-    Languages.bosnian: SpaCyTokenizer("hr"),  # Proxy language
-    Languages.swahili: NLTKTokenizer("english"),  # Proxy language
-    Languages.javanese: NLTKTokenizer("english"),  # Proxy language
-    Languages.esperanto: NLTKTokenizer("english"),  # Proxy language
-    Languages.uzbek: SpaCyTokenizer("tr"),  # Proxy language, alternative ru
-    Languages.tajik: SpaCyTokenizer("ru"),  # Proxy language
-    Languages.punjabi: SpaCyTokenizer("sa"),  # Proxy language
-    Languages.occitan: NLTKTokenizer("italian"),  # Proxy language
-    Languages.kurdish: NLTKTokenizer("english"),  # Proxy language, multiple scripts
-    Languages.galician: NLTKTokenizer("portuguese"),  # Proxy language
+    Languages.bosnian: SpaCyTokenizer("hr"),  # Proxy
+    Languages.belarusian: SpaCyTokenizer("uk"),  # Proxy
+    Languages.galician: NLTKTokenizer("portuguese"),  # Proxy
+    Languages.esperanto: NLTKTokenizer("english"),  # Proxy
+    Languages.occitan: NLTKTokenizer("italian"),  # Proxy
+    Languages.cebuano: NLTKTokenizer("english"),  # Proxy
+    Languages.swahili: NLTKTokenizer("english"),  # Proxy
+    Languages.javanese: NLTKTokenizer("english"),  # Proxy
+    Languages.uzbek: SpaCyTokenizer("tr"),  # Proxy, alternative ru
+    Languages.tajik: SpaCyTokenizer("ru"),  # Proxy
+    Languages.punjabi: SpaCyTokenizer("sa"),  # Proxy, multiple scripts!
+    Languages.kurdish: NLTKTokenizer("english"),  # Proxy, multiple scripts!
+    Languages.sorani: SpaCyTokenizer("fa"),  # Proxy
+    Languages.south_azerbaijani: SpaCyTokenizer("fa"),  # Proxy
+    Languages.bashkir: SpaCyTokenizer("tt"),  # Proxy
+    Languages.western_frisian: NLTKTokenizer("dutch"),  # Proxy
+    Languages.breton: StanzaWordTokenizer("cy"),  # Proxy
+    Languages.assamese: SpaCyTokenizer("bn"),  # Proxy
+    Languages.malagasy: NLTKTokenizer("english"),  # Proxy
 }
 
 
