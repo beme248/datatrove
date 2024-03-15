@@ -46,25 +46,41 @@ def is_clean(word):
             word != "'" and \
             word != '``' and \
             word != '`' and \
+            word != '‘' and \
             word != '„' and \
             word != '“' and \
+            word != '”' and \
             word != '«' and \
             word != '»' and \
             word != '|-' and \
             word != ':' and \
-            word != '》' and \
+            word != '《' and \
             word != '》' and \
             word != '，' and \
             word != '(' and \
-            word != ')'
+            word != ')' and \
+            word != '（' and \
+            word != '）' and \
+            word != '//' and \
+            word != '/' and \
+            word != '\\' and \
+            word != '\\\\' and \
+            "=" not in word and \
+            "\u200d" not in word and \
+            not word.isdigit()
 
 def to_clean(stopwords):
     return [ w for w in stopwords if is_clean(w) ]
 
 def to_clean_stopwords(k, v):
+    if "align" in v["stopwords_p_thresh"]["0.003"]:
+        test = v["stopwords_p_thresh"]["0.003"]
+        print (f"***********> {k}: {test}")
     stopwords = to_clean(v["stopwords_p_thresh"]["0.008"])
     if len(stopwords) < 8 or k == "sr":
+        print(f"====> {k}: {stopwords}")
         stopwords = to_clean(v["stopwords_p_thresh"]["0.003"])
+        print(f"----> {k}: {stopwords}")
     return stopwords
 
 def to_alpha_ratio(_, v):
