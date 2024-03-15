@@ -20,12 +20,12 @@ if len(sys.argv) != 2:
     sys.exit(-1)
 
 DUMP = sys.argv[1]
-DOC_LIMIT = 1000
-NUM_TASKS = 5
-STATS_FILE = "./examples/multilingual/lang_stats/wiki_lang_stats.json"
-# LANGUAGES = [ Languages.english, Languages.spanish, Languages.portuguese, Languages.italian, Languages.french, Languages.romanian, Languages.german, Languages.latin, Languages.czech, Languages.danish, Languages.finnish, Languages.greek, Languages.norwegian, Languages.polish, Languages.russian, Languages.slovenian, Languages.swedish, Languages.turkish, Languages.dutch, Languages.chinese, Languages.japanese, Languages.vietnamese, Languages.indonesian, Languages.persian, Languages.korean, Languages.arabic, Languages.thai, Languages.hindi, Languages.bengali, Languages.tamil, Languages.hungarian, Languages.ukrainian, Languages.slovak, Languages.bulgarian, Languages.catalan, Languages.croatian, Languages.serbian, Languages.lithuanian, Languages.estonian, Languages.hebrew, Languages.latvian, Languages.serbocroatian, Languages.albanian, Languages.azerbaijani, Languages.icelandic, Languages.macedonian, Languages.georgian, Languages.galician, Languages.armenian, Languages.basque ]
-LANGUAGES = [  Languages.korean, Languages.bengali, Languages.serbian, Languages.german ]
-RUN_NAME = "top50_stopwords_p_thresh_0_005"
+DOC_LIMIT = 5000
+NUM_TASKS = 20
+STATS_FILE = "./examples/multilingual/lang_stats/wiki_lang_stats_100.json"
+TOP50_LANGUAGES = [ Languages.english, Languages.spanish, Languages.portuguese, Languages.italian, Languages.french, Languages.romanian, Languages.german, Languages.latin, Languages.czech, Languages.danish, Languages.finnish, Languages.greek, Languages.norwegian, Languages.polish, Languages.russian, Languages.slovenian, Languages.swedish, Languages.turkish, Languages.dutch, Languages.chinese, Languages.japanese, Languages.vietnamese, Languages.indonesian, Languages.persian, Languages.korean, Languages.arabic, Languages.thai, Languages.hindi, Languages.bengali, Languages.tamil, Languages.hungarian, Languages.ukrainian, Languages.slovak, Languages.bulgarian, Languages.catalan, Languages.croatian, Languages.serbian, Languages.lithuanian, Languages.estonian, Languages.hebrew, Languages.latvian, Languages.serbocroatian, Languages.albanian, Languages.azerbaijani, Languages.icelandic, Languages.macedonian, Languages.georgian, Languages.galician, Languages.armenian, Languages.basque ]
+TOP100_LANGUAGES = [ Languages.swahili, Languages.malay, Languages.tagalog, Languages.javanese, Languages.punjabi, Languages.bihari,Languages.gujarati, Languages.yoruba, Languages.marathi, Languages.urdu, Languages.amharic, Languages.telugu, Languages.malayalam, Languages.kannada, Languages.nepali, Languages.kazakh, Languages.belarusian, Languages.burmese, Languages.esperanto, Languages.uzbek, Languages.khmer, Languages.tajik, Languages.welsh, Languages.norwegian_nynorsk, Languages.bosnian, Languages.sinhala, Languages.tatar, Languages.afrikaans, Languages.oriya, Languages.kirghiz, Languages.irish, Languages.occitan, Languages.kurdish, Languages.lao, Languages.luxembourgish, Languages.bashkir, Languages.western_frisian, Languages.pashto, Languages.maltese, Languages.breton, Languages.assamese, Languages.malagasy, Languages.divehi, Languages.yiddish, Languages.somali, Languages.sanskrit, Languages.sindhi, Languages.turkmen, Languages.south_azerbaijani, Languages.sorani, Languages.cebuano, Languages.war ]
+RUN_NAME = "top50_stopwords_p_thresh_0_008_cleaned"
 
 scratch = os.getenv('SCRATCH')
 
@@ -33,22 +33,52 @@ scratch = os.getenv('SCRATCH')
 with open(STATS_FILE, "r") as f:
     language_stats = json.load(f)
 
-def to_stopwords(_, v):
-    return v["stopwords_p_thresh"]["0.005"]
+def is_clean(word):
+    word = word.strip() 
+    return "\n" not in word and \
+            word != "" and \
+            word != '–' and \
+            word != '—' and \
+            word != '’' and \
+            word != '’’' and \
+            word != '||' and \
+            word != '|' and \
+            word != '।' and \
+            word != "''" and \
+            word != "'" and \
+            word != '``' and \
+            word != '`' and \
+            word != '„' and \
+            word != '“' and \
+            word != '«' and \
+            word != '»' and \
+            word != '|-' and \
+            word != ':' and \
+            word != '》' and \
+            word != '》' and \
+            word != '，' and \
+            word != '(' and \
+            word != ')'
+
+def to_clean(stopwords):
+    return [ w for w in stopwords if is_clean(w) ]
+
+def to_clean_stopwords(k, v):
+    stopwords = to_clean(v["stopwords_p_thresh"]["0.008"])
+    if len(stopwords) < 8 or k == "sr":
+        stopwords = to_clean(v["stopwords_p_thresh"]["0.003"])
+    return stopwords
 
 def to_alpha_ratio(_, v):
     return v["max_non_alpha_words_ratio"]
 
 min_avg_word_lengths = {k: v["min_avg_word_length"] for k, v in language_stats.items()}
 max_avg_word_lengths = {k: v["max_avg_word_length"] for k, v in language_stats.items()}
-stop_words = { k: to_stopwords(k, v) for k, v in language_stats.items() }
+stop_words = { k: to_clean_stopwords(k, v) for k, v in language_stats.items() }
 alpha_ratio = { k: to_alpha_ratio(k, v) for k, v in language_stats.items() }
 min_stop_words = { k: 2 for k, _ in language_stats.items() }
-alpha_ration = { }
 
-breakpoint()
-
-for lang in LANGUAGES:
+for lang in TOP50_LANGUAGES + TOP100_LANGUAGES:
     additional_data_path = f'data/datatrove/multi_lingual_{DOC_LIMIT}_{RUN_NAME}/base_processing/{lang}'
     additional_logs_path = f'logs/datatrove/multi_lingual_{DOC_LIMIT}_{RUN_NAME}/base_processing/{lang}'
     data_path = f"s3://fineweb-data-processing-us-east-1/base_processing/non_english/{lang}/{DUMP}"

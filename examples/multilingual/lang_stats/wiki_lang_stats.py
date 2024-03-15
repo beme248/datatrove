@@ -6,7 +6,7 @@ from datatrove.pipeline.readers import ShuffledHFDatasetReader
 from datatrove.pipeline.stats import LanguageStats, LanguageStatsReducer
 
 
-LANGUAGES = [
+LANGUAGES_TOP50 = [
     "en",
     "de",
     "ru",
@@ -15,38 +15,23 @@ LANGUAGES = [
     "es",
     "zh",
     "it",
+    "nl",
+    "pl",
     "pt",
+    "cs",
     "vi",
     "id",
     "tr",
+    "sv",
     "fa",
     "ko",
-    "ar",
-    "th",
-    "hi",
-    "bn",
-    "ta",
-    "ur",
-    "mr",
-    "te",
-    "gu",
-    "kn",
-    "tl",
-    "sw",
-    "pa",
-    "am",
-    "jv",
-    "yo",
-    "bh",
-    "nl",
-    "pl",
-    "cs",
-    "sv",
     "hu",
+    "ar",
     "el",
     "ro",
     "da",
     "fi",
+    "th",
     "uk",
     "sk",
     "no",
@@ -55,22 +40,77 @@ LANGUAGES = [
     "hr",
     "la",
     "sr",
+    "hi",
     "sl",
     "lt",
     "et",
     "he",
+    "bn",
     "lv",
     "sh",
     "sq",
     "az",
+    "ta",
     "is",
     "mk",
     "ka",
     "gl",
     "hy",
     "eu",
-    "ms",
 ]
+LANGUAGES_PLUS50 = [
+    "ms",
+    "ur",
+    "ne",
+    "mr",
+    "ml",
+    "kk",
+    "te",
+    "mn",
+    "be",
+    "gu",
+    "kn",
+    "tl",
+    "my",
+    "eo",
+    "uz",
+    "km",
+    "tg",
+    "cy",
+    "nn",
+    "bs",
+    "si",
+    "sw",
+    "pa",
+    "tt",
+    "ckb",
+    "af",
+    "or",
+    "ky",
+    "ga",
+    "am",
+    "oc",
+    "ku",
+    "lo",
+    "lb",
+    "ba",
+    "ceb",
+    "fy",
+    "ps",
+    "mt",
+    "br",
+    "as",
+    "mg",
+    "war",
+    "dv",
+    "yi",
+    "so",
+    "sa",
+    "sd",
+    "azb",
+    "tk",
+]
+
 MAIN_OUTPUT_PATH = "./wiki_language_stats"
 WIKI_VERSION = "20231101"  # See https://huggingface.co/datasets/wikimedia/wikipedia
 DOC_LIMIT = 4000
@@ -89,7 +129,7 @@ if __name__ == "__main__":
             limit=DOC_LIMIT,
             default_metadata={"language": language},
         )
-        for language in LANGUAGES
+        for language in LANGUAGES_TOP50
     ]
 
     pipeline = [
@@ -150,7 +190,10 @@ if __name__ == "__main__":
         alpha_ratio_std = language_stats["alpha_ratio_std"]
 
         stopwords_q = {f"{q:.2f}": q_words(word_counter.items(), q) for q in [0.15, 0.2, 0.25, 0.3]}
-        stopwords_p_thresh = {f"{p:.3f}": p_thresh_words(word_counter.items(), p) for p in [0.008, 0.010, 0.012]}
+        stopwords_p_thresh = {
+            f"{p:.3f}": p_thresh_words(word_counter.items(), p)
+            for p in [0.003, 0.004, 0.005, 0.006, 0.007, 0.008, 0.010, 0.012]
+        }
         stopwords_top_n = {
             f"{n}": list(dict(language_stats["word_counter"].most_common(n)).keys()) for n in [5, 8, 10, 15]
         }

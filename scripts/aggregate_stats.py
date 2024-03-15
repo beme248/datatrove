@@ -5,7 +5,8 @@ from datatrove.utils.typeshelper import Languages
 
 
 DOC_LIMIT = 5000
-RUN_SUFFIX = "top50_stopwords_p_thresh_0_008"
+# multi_lingual_1000_top50_stopwords_p_thresh_0_005
+RUN_SUFFIX = "top50_stopwords_p_thresh_0_008_cleaned"
 RUN_NAME = f"multi_lingual_{DOC_LIMIT}_{RUN_SUFFIX}"
 
 # Define your CSV file name

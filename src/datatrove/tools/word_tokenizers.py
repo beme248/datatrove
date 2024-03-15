@@ -1,8 +1,10 @@
 from abc import ABC, abstractmethod
 
+import spacy
 import stanza
 from anbani.nlp.preprocessing import word_tokenize as ka_word_tokenize
-from etnltk.tokenize.am import word_tokenize as am_word_tokenize
+from indicnlp.tokenize.indic_tokenize import trivial_tokenize as indicnlp_trivial_tokenize
+from nlpashto import Tokenizer as PsTokenizer
 from nltk.tokenize import word_tokenize
 
 from datatrove.utils.typeshelper import Languages
@@ -39,9 +41,16 @@ class NLTKTokenizer(WordTokenizer):
         return word_tokenize(text, language=self.punkt_language)
 
 
-class AmharicTokenizer(WordTokenizer):
+class SpaCyTokenizer(WordTokenizer):
+    def __init__(self, spacy_language: str, config=None):
+        if config is None:
+            self.tokenizer = spacy.blank(spacy_language)
+        else:
+            self.tokenizer = spacy.blank(spacy_language, config=config)
+
     def tokenize(self, text) -> list[str]:
-        return am_word_tokenize(text)
+        self.tokenizer.max_length = len(text) + 10
+        return [token.text for token in self.tokenizer(text, disable=["parser", "tagger", "ner"])]
 
 
 class GeorgianTokenizer(WordTokenizer):
@@ -49,7 +58,23 @@ class GeorgianTokenizer(WordTokenizer):
         return ka_word_tokenize(text)
 
 
-WORD_TOKENIZERS = {
+class PashtoTokenizer(WordTokenizer):
+    def __init__(self):
+        self.tokenizer = PsTokenizer()
+
+    def tokenize(self, text) -> list[str]:
+        return [tok for sent in self.tokenizer.tokenize(text) for tok in sent]
+
+
+class IndicNLPTokenizer(WordTokenizer):
+    def __init__(self, language: str):
+        self.language = language
+
+    def tokenize(self, text) -> list[str]:
+        return indicnlp_trivial_tokenize(text, self.language)
+
+
+WORD_TOKENIZERS: dict[str, WordTokenizer] = {
     Languages.english: NLTKTokenizer("english"),
     Languages.german: NLTKTokenizer("german"),
     Languages.french: NLTKTokenizer("french"),
@@ -69,47 +94,86 @@ WORD_TOKENIZERS = {
     Languages.spanish: NLTKTokenizer("spanish"),
     Languages.swedish: NLTKTokenizer("swedish"),
     Languages.turkish: NLTKTokenizer("turkish"),
-    Languages.chinese: StanzaWordTokenizer("zh"),
+    Languages.chinese: SpaCyTokenizer("zh", {"nlp": {"tokenizer": {"segmenter": "jieba"}}}),
     Languages.japanese: StanzaWordTokenizer("ja"),
-    Languages.vietnamese: StanzaWordTokenizer("vi"),
-    Languages.indonesian: StanzaWordTokenizer("id"),
-    Languages.persian: StanzaWordTokenizer("fa"),
+    Languages.vietnamese: SpaCyTokenizer("vi"),
+    Languages.indonesian: SpaCyTokenizer("id"),
+    Languages.persian: SpaCyTokenizer("fa"),
     Languages.korean: StanzaWordTokenizer("ko"),
-    Languages.arabic: StanzaWordTokenizer("ar"),
-    Languages.hindi: StanzaWordTokenizer("hi"),
-    Languages.tamil: StanzaWordTokenizer("ta"),
-    Languages.urdu: StanzaWordTokenizer("ur"),
-    Languages.marathi: StanzaWordTokenizer("mr"),
-    Languages.telugu: StanzaWordTokenizer("te"),
-    Languages.hungarian: StanzaWordTokenizer("hu"),
-    Languages.romanian: StanzaWordTokenizer("ro"),
-    Languages.ukrainian: StanzaWordTokenizer("uk"),
-    Languages.slovak: StanzaWordTokenizer("sk"),
-    Languages.bulgarian: StanzaWordTokenizer("bg"),
-    Languages.catalan: StanzaWordTokenizer("ca"),
-    Languages.croatian: StanzaWordTokenizer("hr"),
-    Languages.latin: StanzaWordTokenizer("la"),
-    Languages.serbian: StanzaWordTokenizer("sr"),
-    Languages.lithuanian: StanzaWordTokenizer("lt"),
-    Languages.hebrew: StanzaWordTokenizer("he"),
-    Languages.latvian: StanzaWordTokenizer("lv"),
-    Languages.serbocroatian: StanzaWordTokenizer("sr"),
-    Languages.icelandic: StanzaWordTokenizer("is"),
-    Languages.galician: StanzaWordTokenizer("gl"),
-    Languages.armenian: StanzaWordTokenizer("hy"),
-    Languages.basque: StanzaWordTokenizer("eu"),
+    Languages.arabic: SpaCyTokenizer("ar"),
+    Languages.hindi: SpaCyTokenizer("hi"),
+    Languages.tamil: SpaCyTokenizer("ta"),
+    Languages.urdu: SpaCyTokenizer("ur"),
+    Languages.marathi: SpaCyTokenizer("mr"),
+    Languages.telugu: SpaCyTokenizer("te"),
+    Languages.hungarian: SpaCyTokenizer("hu"),
+    Languages.romanian: SpaCyTokenizer("ro"),
+    Languages.ukrainian: SpaCyTokenizer("uk"),
+    Languages.slovak: SpaCyTokenizer("sk"),
+    Languages.bulgarian: SpaCyTokenizer("bg"),
+    Languages.catalan: SpaCyTokenizer("ca"),
+    Languages.croatian: SpaCyTokenizer("hr"),
+    Languages.latin: SpaCyTokenizer("la"),
+    Languages.serbian: SpaCyTokenizer("sr"),
+    Languages.lithuanian: SpaCyTokenizer("lt"),
+    Languages.hebrew: SpaCyTokenizer("he"),
+    Languages.latvian: SpaCyTokenizer("lv"),
+    Languages.icelandic: SpaCyTokenizer("is"),
+    Languages.armenian: SpaCyTokenizer("hy"),
+    Languages.basque: SpaCyTokenizer("eu"),
     Languages.thai: StanzaWordTokenizer("th"),
-    Languages.tagalog: NLTKTokenizer("english"),  # Proxy language
-    Languages.albanian: StanzaWordTokenizer("sr"),  # Proxy language
-    Languages.macedonian: StanzaWordTokenizer("sr"),  # Proxy language
-    Languages.azerbaijani: NLTKTokenizer("turkish"),  # Proxy language
     Languages.georgian: GeorgianTokenizer(),
-    Languages.amharic: AmharicTokenizer(),
+    Languages.tagalog: SpaCyTokenizer("tl"),
+    Languages.albanian: SpaCyTokenizer("sq"),
+    Languages.macedonian: SpaCyTokenizer("mk"),
+    Languages.azerbaijani: SpaCyTokenizer("az"),
+    Languages.amharic: SpaCyTokenizer("am"),
+    Languages.bengali: SpaCyTokenizer("bn"),
+    Languages.malay: SpaCyTokenizer("ms"),
+    Languages.urdu: SpaCyTokenizer("ur"),
+    Languages.nepali: SpaCyTokenizer("ne"),
+    Languages.kazakh: StanzaWordTokenizer("kk"),
+    Languages.gujarati: SpaCyTokenizer("gu"),
+    Languages.kannada: SpaCyTokenizer("kn"),
+    Languages.welsh: StanzaWordTokenizer("cy"),
+    Languages.norwegian_nynorsk: NLTKTokenizer("norwegian"),
+    Languages.sinhala: SpaCyTokenizer("si"),
+    Languages.tatar: SpaCyTokenizer("tt"),
+    Languages.afrikaans: SpaCyTokenizer("af"),
+    Languages.kirghiz: SpaCyTokenizer("ky"),
+    Languages.irish: SpaCyTokenizer("ga"),
+    Languages.luxembourgish: SpaCyTokenizer("lb"),
+    Languages.maltese: StanzaWordTokenizer("mt"),
+    Languages.sanskrit: SpaCyTokenizer("sa"),
+    Languages.yoruba: SpaCyTokenizer("yo"),
+    Languages.pashto: PashtoTokenizer(),
+    Languages.serbocroatian: SpaCyTokenizer("sr"),
+    Languages.oriya: IndicNLPTokenizer("or"),
+    Languages.punjabi: IndicNLPTokenizer("sa"),
+    Languages.assamese: IndicNLPTokenizer("as"),
+    Languages.war: IndicNLPTokenizer("war"),
+    Languages.sindhi: IndicNLPTokenizer("sd"),
+    Languages.bosnian: SpaCyTokenizer("hr"),  # Proxy
+    Languages.belarusian: SpaCyTokenizer("uk"),  # Proxy
+    Languages.galician: NLTKTokenizer("portuguese"),  # Proxy
+    Languages.esperanto: NLTKTokenizer("english"),  # Proxy
+    Languages.occitan: NLTKTokenizer("italian"),  # Proxy
+    Languages.cebuano: NLTKTokenizer("english"),  # Proxy
+    Languages.swahili: NLTKTokenizer("english"),  # Proxy
+    Languages.javanese: NLTKTokenizer("english"),  # Proxy
+    Languages.uzbek: NLTKTokenizer("turkish"),  # Proxy, alternative ru
+    Languages.tajik: SpaCyTokenizer("ru"),  # Proxy
+    Languages.kurdish: NLTKTokenizer("english"),  # Proxy, multiple scripts!
+    Languages.sorani: SpaCyTokenizer("fa"),  # Proxy
+    Languages.south_azerbaijani: SpaCyTokenizer("fa"),  # Proxy
+    Languages.bashkir: SpaCyTokenizer("tt"),  # Proxy
+    Languages.western_frisian: NLTKTokenizer("dutch"),  # Proxy
+    Languages.breton: StanzaWordTokenizer("cy"),  # Proxy
+    Languages.malagasy: NLTKTokenizer("english"),  # Proxy
+    Languages.yiddish: SpaCyTokenizer("he"),  # Proxy
+    Languages.somali: NLTKTokenizer("english"),  # Proxy
+    Languages.turkmen: NLTKTokenizer("turkish"),  # Proxy
 }
-# Missing: bn, gu, kn, pa
-# Missing: sw, yo
-# Missing: jv, ms
-# Missing: bh (deprecated in ISO-639)
 
 
 def get_word_tokenizer(language: Languages | str):
