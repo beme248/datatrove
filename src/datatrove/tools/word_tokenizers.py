@@ -50,7 +50,7 @@ class SpaCyTokenizer(WordTokenizer):
 
     def tokenize(self, text) -> list[str]:
         self.tokenizer.max_length = len(text) + 10
-        return [token.text for token in self.tokenizer(text, disable=["parser", "tagger", "ner"])]
+        return [token.text for token in self.tokenizer(text, disable=["parser", "tagger", "ner"]) if len(token.text.strip()) > 0]
 
 
 class GeorgianTokenizer(WordTokenizer):
