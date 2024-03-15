@@ -75,7 +75,7 @@ class IndicNLPTokenizer(WordTokenizer):
         self.language = language
 
     def tokenize(self, text) -> list[str]:
-        return indicnlp_trivial_tokenize(text, self.language)
+        return [token.strip() for token in indicnlp_trivial_tokenize(text, self.language) if len(token.strip()) > 0]
 
 
 WORD_TOKENIZERS: dict[str, WordTokenizer] = {
