@@ -123,7 +123,7 @@ for lang in TOP50_LANGUAGES + TOP100_LANGUAGES:
             JsonlWriter(f"{MAIN_OUTPUT_PATH}/output/{DUMP}"),
         ],
         tasks=NUM_TASKS,
-        time="00:30:00",
+        time="04:00:00",
         logging_dir=f"{MAIN_OUTPUT_PATH}/logs/base_processing/{DUMP}",
         slurm_logs_folder=f"{SLURM_LOGS}/{DUMP}/slurm_logs",
         randomize_start=True,
