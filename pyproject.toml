@@ -59,6 +59,7 @@ processing = [
     "stanza",
     "spacy",
     "pyvi",
+    "pythainlp",
     "jieba",
     "anbani",
     "nlpashto",

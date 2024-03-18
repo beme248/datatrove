@@ -6,6 +6,7 @@ from anbani.nlp.preprocessing import word_tokenize as ka_word_tokenize
 from indicnlp.tokenize.indic_tokenize import trivial_tokenize as indicnlp_trivial_tokenize
 from nlpashto import Tokenizer as PsTokenizer
 from nltk.tokenize import word_tokenize
+from pythainlp.tokenize import word_tokenize as th_word_tokenize
 
 from datatrove.utils.typeshelper import Languages
 
@@ -57,6 +58,15 @@ class SpaCyTokenizer(WordTokenizer):
         ]
 
 
+class ThaiTokenizer(WordTokenizer):
+    def tokenize(self, text) -> list[str]:
+        return [
+            token.strip()
+            for token in th_word_tokenize(text, keep_whitespace=False, engine="newmm-safe")
+            if len(token.strip()) > 0
+        ]
+
+
 class GeorgianTokenizer(WordTokenizer):
     def tokenize(self, text) -> list[str]:
         return ka_word_tokenize(text)
@@ -103,7 +113,7 @@ WORD_TOKENIZERS: dict[str, WordTokenizer] = {
     Languages.vietnamese: SpaCyTokenizer("vi"),
     Languages.indonesian: SpaCyTokenizer("id"),
     Languages.persian: SpaCyTokenizer("fa"),
-    Languages.korean: StanzaWordTokenizer("ko"),
+    Languages.korean: SpaCyTokenizer("ko", {"nlp": {"tokenizer": {"@tokenizers": "spacy.Tokenizer.v1"}}}),
     Languages.arabic: SpaCyTokenizer("ar"),
     Languages.hindi: SpaCyTokenizer("hi"),
     Languages.tamil: SpaCyTokenizer("ta"),
@@ -125,7 +135,7 @@ WORD_TOKENIZERS: dict[str, WordTokenizer] = {
     Languages.icelandic: SpaCyTokenizer("is"),
     Languages.armenian: SpaCyTokenizer("hy"),
     Languages.basque: SpaCyTokenizer("eu"),
-    Languages.thai: StanzaWordTokenizer("th"),
+    Languages.thai: ThaiTokenizer(),
     Languages.georgian: GeorgianTokenizer(),
     Languages.tagalog: SpaCyTokenizer("tl"),
     Languages.albanian: SpaCyTokenizer("sq"),
