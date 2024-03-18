@@ -108,11 +108,12 @@ class LanguageStats(PipelineStep):
                 )
 
         # save to disk
-        with self.output_folder.open(f"{rank:05d}_lang_stats.json", "wt") as f:
-            json.dump(
-                stats,
-                f,
-            )
+        for language in stats:
+            with self.output_folder.open(f"/{language}/{rank:05d}.json", "wt") as f:
+                json.dump(
+                    {language: stats[language]},
+                    f,
+                )
 
 
 class LanguageStatsReducer(PipelineStep):
@@ -123,16 +124,12 @@ class LanguageStatsReducer(PipelineStep):
         self,
         input_folder: DataFolderLike,
         output_folder: DataFolderLike,
-        output_file_name: str,
-        reduce_fn=lambda x: x,  # (stats of language: dict) -> dict
-        word_common_prune=500,
+        map_fn=None,  # (stats of language: dict) -> dict
     ):
         super().__init__()
         self.input_folder = get_datafolder(input_folder)
         self.output_folder = get_datafolder(output_folder)
-        self.output_file_name = output_file_name
-        self.reduce_fn = reduce_fn
-        self.word_common_prune = word_common_prune
+        self.map_fn = map_fn
 
     def run(self, data: DocumentsPipeline, rank: int = 0, world_size: int = 1) -> DocumentsPipeline:
         stats = {}
@@ -140,7 +137,7 @@ class LanguageStatsReducer(PipelineStep):
 
         # combine all json files with stats
         assert world_size == 1, "world_size must be 1 when getting the input from an input_folder"
-        for file in self.input_folder.list_files(glob_pattern="*.json"):
+        for file in self.input_folder.list_files(glob_pattern="**/*.json"):
             with self.input_folder.open(file, "rt") as f:
                 file_data = json.load(f)
                 for language in file_data:
@@ -182,7 +179,6 @@ class LanguageStatsReducer(PipelineStep):
 
         for language in stats:
             # Average statistics over documents
-
             for key in [
                 "hash_word_ratio",
                 "ellipsis_word_ratio",
@@ -194,19 +190,16 @@ class LanguageStatsReducer(PipelineStep):
                 E_X2 = np.average(stats[language][f"{key}_std"], weights=doc_count[language])
                 stats[language][f"{key}_mean"] = E_X
                 stats[language][f"{key}_std"] = np.sqrt(E_X2 - (E_X**2))
-            # Prune word counter (include only top word_common_prune words)
-            if self.word_common_prune is not None:
-                word_counter = stats[language]["word_counter"]
-                stats[language]["word_counter"] = Counter(dict(word_counter.most_common(self.word_common_prune)))
 
         # Apply reduction function
-        if self.reduce_fn is not None:
+        if self.map_fn is not None:
             for language in stats:
-                stats[language] = self.reduce_fn(stats[language])
+                stats[language] = self.map_fn(stats[language])
 
         # save stats
-        with self.output_folder.open(self.output_file_name, "wt") as f:
-            json.dump(
-                stats,
-                f,
-            )
+        for language in stats:
+            with self.output_folder.open(f"/{language}.json", "wt") as f:
+                json.dump(
+                    {language: stats[language]},
+                    f,
+                )

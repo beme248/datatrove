@@ -148,7 +148,7 @@ if __name__ == "__main__":
     }[EXECUTOR]
     executor.run()
 
-    def stat_reducer(language_stats):
+    def stat_mapper(language_stats):
         # Make sure to import np here for slurm executor
         import numpy as np
 
@@ -213,10 +213,8 @@ if __name__ == "__main__":
     pipeline_reduce = [
         LanguageStatsReducer(
             input_folder=f"{MAIN_OUTPUT_PATH}/lang_stats/",
-            output_folder=".",
-            output_file_name="wiki_lang_stats.json",
-            reduce_fn=stat_reducer,
-            word_common_prune=10000,
+            output_folder="language_statistics",
+            map_fn=stat_mapper,
         )
     ]
     executor_reduce = {
