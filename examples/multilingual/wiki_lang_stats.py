@@ -109,6 +109,8 @@ LANGUAGES = [
     "tk",
 ]
 
+LANGUAGES = ["bt"]
+
 MAIN_OUTPUT_PATH = "./wiki_stats_pipeline"
 WIKI_VERSION = "20231101"  # See https://huggingface.co/datasets/wikimedia/wikipedia
 DOC_LIMIT = 4000

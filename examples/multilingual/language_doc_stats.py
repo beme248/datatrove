@@ -1,13 +1,9 @@
+import os
 import sys
 
 from datatrove.executor.slurm import SlurmPipelineExecutor
-from datatrove.pipeline.filters import (
-    LanguageFilter,
-    URLFilter,
-)
-from datatrove.pipeline.stats import DocumentStats, DocumentStatsReducer
 from datatrove.pipeline.readers import JsonlReader
-import os
+from datatrove.pipeline.stats import DocumentStats, DocumentStatsReducer
 
 
 # 176 languages supported by fasttext, see https://fasttext.cc/docs/en/language-identification.html
@@ -22,11 +18,11 @@ if len(sys.argv) != 2:
     sys.exit(-1)
 DUMP = sys.argv[1]
 
-scratch = os.getenv('SCRATCH')
+scratch = os.getenv("SCRATCH")
 
 for lang in LANGUAGES:
-    additional_data_path = f'data/datatrove/multi_lingual_stats/base_processing/{lang}'
-    additional_logs_path = f'logs/datatrove/multi_lingual_stats/base_processing/{lang}'
+    additional_data_path = f"data/datatrove/multi_lingual_stats/base_processing/{lang}"
+    additional_logs_path = f"logs/datatrove/multi_lingual_stats/base_processing/{lang}"
     data_path = f"s3://fineweb-data-processing-us-east-1/base_processing/non_english/{lang}/{DUMP}"
     MAIN_OUTPUT_PATH = os.path.join(scratch, additional_data_path)
     SLURM_LOGS = os.path.join(scratch, additional_logs_path)
@@ -47,7 +43,7 @@ for lang in LANGUAGES:
         randomize_start=True,
         mem_per_cpu_gb=2,
         partition="normal",
-        mail_user="bettina.messmer@epfl.ch"
+        mail_user="bettina.messmer@epfl.ch",
     )
     executor.run()
 
@@ -65,6 +61,6 @@ for lang in LANGUAGES:
         logging_dir=f"{SLURM_LOGS}/reduce/{DUMP}/",
         partition="normal",
         depends=executor,
-        mail_user="bettina.messmer@epfl.ch"
+        mail_user="bettina.messmer@epfl.ch",
     )
     executor_reduce.run()
