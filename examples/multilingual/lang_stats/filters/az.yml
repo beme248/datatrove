@@ -1,0 +1,24 @@
+max_avg_word_length: 10
+max_non_alpha_words_ratio: 0.8
+min_avg_word_length: 3
+stopwords:
+- "v\u0259"
+- "il\u0259"
+- "ild\u0259"
+- bir
+- bu
+- "az\u0259rbaycan"
+- olan
+- "\xFC\xE7\xFCn"
+- sonra
+- "d\u0259"
+- "i\u0307stinadlar"
+- il
+- kimi
+- "is\u0259"
+- o
+- "g\xF6r\u0259"
+- da
+- "t\u0259r\u0259find\u0259n"
+- "\xE7ox"
+- ki

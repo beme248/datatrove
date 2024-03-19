@@ -1,0 +1,22 @@
+max_avg_word_length: 10
+max_non_alpha_words_ratio: 0.7
+min_avg_word_length: 3
+stopwords:
+- ja
+- 'on'
+- oli
+- eesti
+- ta
+- aastal
+- ka
+- ning
+- et
+- mis
+- kui
+- ei
+- aasta
+- "v\xF5i"
+- see
+- viited
+- oma
+- tema

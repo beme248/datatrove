@@ -1,0 +1,25 @@
+max_avg_word_length: 29
+max_non_alpha_words_ratio: 0.5
+min_avg_word_length: -3
+stopwords:
+- "\u0EC1\u0EA5\u0EB0"
+- the
+- of
+- "\u0E84.\u0EAA"
+- "\u0EAB\u0EBC\u0EB7"
+- and
+- "\u0E9B\u0EB5"
+- "\u0EAD\u0EC9\u0EB2\u0E87\u0EAD\u0EB5\u0E87"
+- in
+- a
+- "\u0E1E.\u0E28"
+- "\u0EC1\u0EA1\u0EC8\u0E99"
+- to
+- "\u0EC1\u0EAB\u0EBC\u0EC8\u0E87\u0E82\u0ECD\u0EC9\u0EA1\u0EB9\u0E99\u0EAD\u0EB7\u0EC8\
+  \u0E99"
+- "\u0EC3\u0E99"
+- "\u0E82\u0EAD\u0E87"
+- "\u0E97\u0EC8\u0EB2\u0E99"
+- "\u0EAB\u0EA5\u0EB7"
+- "\u0EC0\u0E8A\u0EB1\u0EC8\u0E99"
+- "\u0EC3\u0E99\u0E9B\u0EB5"

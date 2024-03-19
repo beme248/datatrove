@@ -1,0 +1,26 @@
+max_avg_word_length: 3
+max_non_alpha_words_ratio: 0.6
+min_avg_word_length: 1
+stopwords:
+- "\u7684"
+- "\u3002"
+- "\u5E74"
+- "\u3001"
+- "\u5728"
+- "\u6708"
+- "\u662F"
+- "\u548C"
+- "\u65E5"
+- "\u4E86"
+- "\u65BC"
+- "\xB7"
+- "\u70BA"
+- "\u300D"
+- "\u300C"
+- "\u4EBA"
+- "\u6709"
+- "\u88AB"
+- "\u4E3A"
+- "\u4E2D"
+- "\u8207"
+- "\u4ED6"

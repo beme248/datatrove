@@ -1,0 +1,19 @@
+max_avg_word_length: 10
+max_non_alpha_words_ratio: 0.8
+min_avg_word_length: 2
+stopwords:
+- der
+- und
+- die
+- in
+- von
+- im
+- den
+- des
+- mit
+- das
+- er
+- dem
+- als
+- "f\xFCr"
+- wurde

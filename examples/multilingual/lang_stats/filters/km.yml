@@ -1,0 +1,20 @@
+max_avg_word_length: 34
+max_non_alpha_words_ratio: 0.6
+min_avg_word_length: -2
+stopwords:
+- "\u17D4"
+- "\u1793\u17B7\u1784"
+- the
+- of
+- and
+- in
+- to
+- a
+- "\u17AC"
+- "\u17AF\u1780\u179F\u17B6\u179A\u1799\u17C4\u1784"
+- "\u17D6"
+- "\u1786\u17D2\u1793\u17B6\u17C6"
+- level
+- is
+- "\u200B"
+- "\u179B\u17C4\u1780"

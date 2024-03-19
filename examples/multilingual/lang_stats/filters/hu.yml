@@ -1,0 +1,17 @@
+max_avg_word_length: 10
+max_non_alpha_words_ratio: 0.8
+min_avg_word_length: 3
+stopwords:
+- a
+- az
+- "\xE9s"
+- is
+- egy
+- hogy
+- volt
+- nem
+- magyar
+- meg
+- de
+- "els\u0151"
+- el

@@ -1,0 +1,18 @@
+max_avg_word_length: 7
+max_non_alpha_words_ratio: 0.9
+min_avg_word_length: 3
+stopwords:
+- "\u05E9\u05DC"
+- "\u05D0\u05EA"
+- "\u05E2\u05DC"
+- "\u05D4\u05D5\u05D0"
+- "\u05E2\u05DD"
+- "\u05D1\u05E9\u05E0\u05EA"
+- "\u05D2\u05DD"
+- "\u05D4\u05D9\u05D4"
+- "\u05D4\u05D9\u05D0"
+- "\u05DC\u05D0\u05D7\u05E8"
+- "\u05D9\u05D3\u05D9"
+- "\u05DC\u05D0"
+- "\u05D1\u05D9\u05DF"
+- "\u05D0\u05D5"

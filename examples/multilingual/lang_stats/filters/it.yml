@@ -1,0 +1,21 @@
+max_avg_word_length: 9
+max_non_alpha_words_ratio: 0.7
+min_avg_word_length: 2
+stopwords:
+- di
+- e
+- il
+- la
+- in
+- a
+- del
+- che
+- della
+- "\xE8"
+- un
+- per
+- nel
+- con
+- i
+- da
+- una

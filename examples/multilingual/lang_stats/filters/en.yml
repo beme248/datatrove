@@ -1,0 +1,15 @@
+max_avg_word_length: 8
+max_non_alpha_words_ratio: 0.8
+min_avg_word_length: 2
+stopwords:
+- the
+- of
+- in
+- and
+- a
+- to
+- was
+- is
+- for
+- as
+- 'on'

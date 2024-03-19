@@ -1,0 +1,13 @@
+max_avg_word_length: 6
+max_non_alpha_words_ratio: 0.7
+min_avg_word_length: 1
+stopwords:
+- "\u062C\u064A"
+- "\u06FE"
+- "\u06FD"
+- "\u062C\u0648"
+- "\u0622\u0647\u064A"
+- "\u06A9\u064A"
+- "\u062A\u064A"
+- "\u06A9\u0627\u0646"
+- "\u0633\u0627\u0646"

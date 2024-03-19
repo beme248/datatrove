@@ -1,0 +1,20 @@
+max_avg_word_length: 8
+max_non_alpha_words_ratio: 0.8
+min_avg_word_length: 2
+stopwords:
+- de
+- la
+- en
+- el
+- y
+- a
+- que
+- del
+- los
+- se
+- por
+- un
+- con
+- las
+- una
+- su

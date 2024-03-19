@@ -1,0 +1,12 @@
+max_avg_word_length: 8
+max_non_alpha_words_ratio: 0.8
+min_avg_word_length: 2
+stopwords:
+- "\u0930"
+- "\u091B"
+- "\u0925\u093F\u092F\u094B"
+- "\u0939\u094B"
+- "\u092A\u0928\u093F"
+- "\u092F\u094B"
+- "\u092E\u093E"
+- "\u090F\u0915"

@@ -1,0 +1,15 @@
+max_avg_word_length: 8
+max_non_alpha_words_ratio: 0.7
+min_avg_word_length: 2
+stopwords:
+- die
+- van
+- in
+- en
+- is
+- n
+- het
+- wat
+- the
+- sy
+- op

@@ -109,7 +109,7 @@ LANGUAGES = [
     "tk",
 ]
 
-MAIN_OUTPUT_PATH = "./wiki_language_stats"
+MAIN_OUTPUT_PATH = "./wiki_stats_pipeline"
 WIKI_VERSION = "20231101"  # See https://huggingface.co/datasets/wikimedia/wikipedia
 DOC_LIMIT = 4000
 TASKS = 10
@@ -132,7 +132,7 @@ if __name__ == "__main__":
 
     pipeline = [
         *readers,
-        LanguageStatsCalculator(output_folder=f"{MAIN_OUTPUT_PATH}/lang_stats/"),
+        LanguageStatsCalculator(output_folder=f"{MAIN_OUTPUT_PATH}/lang_stats_per_rank/"),
     ]
     executor = {
         "local": LocalPipelineExecutor(pipeline=pipeline, logging_dir=f"{MAIN_OUTPUT_PATH}/logs/", tasks=TASKS),
@@ -148,8 +148,8 @@ if __name__ == "__main__":
 
     pipeline_stats = [
         LanguageStatsReducer(
-            input_folder=f"{MAIN_OUTPUT_PATH}/lang_stats/",
-            output_folder="language_statistics",
+            input_folder=f"{MAIN_OUTPUT_PATH}/lang_stats_per_rank/",
+            output_folder="./statistics",
         )
     ]
     executor_stats = {
@@ -248,16 +248,16 @@ if __name__ == "__main__":
 
     pipeline_params = [
         LanguageStatsReducer(
-            input_folder=f"{MAIN_OUTPUT_PATH}/lang_stats/",
-            output_folder="filter_parameters",
+            input_folder=f"{MAIN_OUTPUT_PATH}/lang_stats_per_rank/",
+            output_folder="./filters",
             map_fn=params_mapper,
         )
     ]
     executor_params = {
-        "local": LocalPipelineExecutor(pipeline=pipeline_params, logging_dir=f"{MAIN_OUTPUT_PATH}/logs_params/"),
+        "local": LocalPipelineExecutor(pipeline=pipeline_params, logging_dir=f"{MAIN_OUTPUT_PATH}/logs_filters/"),
         "slurm": SlurmPipelineExecutor(
             pipeline=pipeline_params,
-            logging_dir=f"{MAIN_OUTPUT_PATH}/logs_params/",
+            logging_dir=f"{MAIN_OUTPUT_PATH}/logs_filters/",
             tasks=1,
             time="00:30:00",
             partition="normal",

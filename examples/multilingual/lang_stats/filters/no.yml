@@ -1,0 +1,22 @@
+max_avg_word_length: 9
+max_non_alpha_words_ratio: 0.7
+min_avg_word_length: 2
+stopwords:
+- i
+- og
+- av
+- som
+- en
+- er
+- til
+- "p\xE5"
+- for
+- med
+- ble
+- den
+- det
+- fra
+- var
+- han
+- de
+- "\xE5"

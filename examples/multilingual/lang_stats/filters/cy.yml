@@ -1,0 +1,18 @@
+max_avg_word_length: 8
+max_non_alpha_words_ratio: 0.8
+min_avg_word_length: 2
+stopwords:
+- y
+- yn
+- o
+- ffilmiau
+- a
+- ffilm
+- gan
+- '''r'
+- ar
+- mae
+- yw
+- cyfarwyddwr
+- ei
+- i

@@ -1,0 +1,18 @@
+max_avg_word_length: 8
+max_non_alpha_words_ratio: 0.8
+min_avg_word_length: 2
+stopwords:
+- "t\xEB"
+- e
+- "n\xEB"
+- dhe
+- i
+- "nj\xEB"
+- me
+- nga
+- "p\xEBr"
+- "\xEBsht\xEB"
+- "q\xEB"
+- "m\xEB"
+- u
+- si

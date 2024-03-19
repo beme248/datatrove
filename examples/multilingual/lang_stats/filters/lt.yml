@@ -1,0 +1,22 @@
+max_avg_word_length: 9
+max_non_alpha_words_ratio: 0.7
+min_avg_word_length: 3
+stopwords:
+- m
+- ir
+- buvo
+- "\u012F"
+- nuo
+- lietuvos
+- "i\u0161"
+- d
+- su
+- yra
+- a
+- "\u0161altiniai"
+- iki
+- o
+- rajono
+- apie
+- kaip
+- kad

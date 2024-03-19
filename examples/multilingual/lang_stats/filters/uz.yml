@@ -1,0 +1,23 @@
+max_avg_word_length: 10
+max_non_alpha_words_ratio: 0.7
+min_avg_word_length: 3
+stopwords:
+- va
+- bilan
+- u
+- uchun
+- manbalar
+- joylashgan
+- bu
+- bir
+- "bo\u02BBlgan"
+- ham
+- aholi
+- uning
+- birinchi
+- edi
+- eng
+- "bo\u02BBlib"
+- tomonidan
+- qiladi
+- nafar

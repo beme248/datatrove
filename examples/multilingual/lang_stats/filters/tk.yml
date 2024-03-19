@@ -1,0 +1,23 @@
+max_avg_word_length: 10
+max_non_alpha_words_ratio: 0.7
+min_avg_word_length: 3
+stopwords:
+- we
+- bilen
+- bu
+- hem
+- "\xFC\xE7in"
+- bir
+- ol
+- "bo\xFDun\xE7a"
+- "\xFDylda"
+- bolsa
+- "onu\u0148"
+- bolup
+- bolan
+- "\xF6z"
+- uly
+- "d\xFCn\xFD\xE4"
+- "\u015Fol"
+- "\xFDaly"
+- "\xFDyly\u0148"
