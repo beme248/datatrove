@@ -1,11 +1,10 @@
 import os
+from collections import Counter
 
 from datatrove.executor.local import LocalPipelineExecutor
 from datatrove.executor.slurm import SlurmPipelineExecutor
 from datatrove.pipeline.readers import ShuffledHFDatasetReader
 from datatrove.pipeline.stats import LanguageStats, LanguageStatsReducer
-from collections import Counter
-
 
 
 LANGUAGES = [
@@ -109,10 +108,6 @@ LANGUAGES = [
     "sd",
     "azb",
     "tk",
-]
-
-LANGUAGES = [
-    "de"
 ]
 
 MAIN_OUTPUT_PATH = "./wiki_language_stats"
