@@ -1,6 +1,7 @@
 import json
 import string
 from collections import Counter
+from typing import Callable
 
 import numpy as np
 
@@ -124,7 +125,7 @@ class LanguageStatsReducer(PipelineStep):
         self,
         input_folder: DataFolderLike,
         output_folder: DataFolderLike,
-        map_fn=None,  # (stats of language: dict) -> dict
+        map_fn: Callable[[str, dict], dict] = None,
     ):
         super().__init__()
         self.input_folder = get_datafolder(input_folder)
@@ -191,12 +192,12 @@ class LanguageStatsReducer(PipelineStep):
                 stats[language][f"{key}_mean"] = E_X
                 stats[language][f"{key}_std"] = np.sqrt(E_X2 - (E_X**2))
 
-        # Apply reduction function
+        # Apply mapping function
         if self.map_fn is not None:
             for language in stats:
-                stats[language] = self.map_fn(stats[language])
+                stats[language] = self.map_fn(language, stats[language])
 
-        # save stats
+        # Save stats
         for language in stats:
             with self.output_folder.open(f"{language}.json", "wt") as f:
                 json.dump(
