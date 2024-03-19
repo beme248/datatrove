@@ -110,10 +110,6 @@ LANGUAGES = [
     "tk",
 ]
 
-LANGUAGES=[
-    "de"
-]
-
 MAIN_OUTPUT_PATH = "./wiki_language_stats"
 WIKI_VERSION = "20231101"  # See https://huggingface.co/datasets/wikimedia/wikipedia
 DOC_LIMIT = 4000

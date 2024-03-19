@@ -5,6 +5,7 @@ from dataclasses import dataclass
 from typing import Callable
 
 import numpy as np
+import yaml
 
 from datatrove.io import DataFolderLike, get_datafolder
 from datatrove.pipeline.base import DocumentsPipeline, PipelineStep
@@ -256,12 +257,11 @@ class LanguageStatsReducer(PipelineStep):
 
         # Apply mapping function
         stats = {k: self.map_fn(v) for k, v in stats.items()}
-        
 
         # Save stats
         for language in stats:
-            with self.output_folder.open(f"{language}.json", "wt") as f:
-                json.dump(
+            with self.output_folder.open(f"{language}.yml", "wt") as f:
+                yaml.safe_dump(
                     stats[language],
                     f,
                 )

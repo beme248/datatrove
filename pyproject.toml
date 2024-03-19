@@ -54,6 +54,7 @@ processing = [
     "tldextract",
     "trafilatura",
     "tokenizers",
+    "pyyaml",
 
     # Multilingual tokenization
     "stanza",
