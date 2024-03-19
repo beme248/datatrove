@@ -1,48 +1,81 @@
-# Multilingual preprocessing pipeline
+# Multilingual CommonCrawl cleaning pipeline
 
-## Running locally
+To extend the [RefinedWeb](https://arxiv.org/pdf/2306.01116.pdf) CommonCrawl cleaning pipeline to support multilingual data, we extend the `datatrove` Python library. To effectively process multilingual data, we use per-language word tokenizers and adjust the Gopher quality filter thresholds for each language. Our implementation and filter thresholds are outlined in further sections.
 
-### Install conda
+
+## Language-specific word tokenizers
+
+To support multiple languages and scripts, we use different word tokenization libraries availble for different languages.
+
+To further analyze the implementation of word tokenizers, inspect the [word tokenizer source code](https://github.com/beme248/datatrove/blob/multilingual/src/datatrove/tools/word_tokenizers.py).
+
+
+## Multilingual Gopher quality filter: language-specific adjustments
+
+In our multilingual implementation of the Gopher quality filter, we made language-specific adjustments based on the statistical analysis of the Wikipedia data for the top 100 high-resource languages.
+
+We [extracted the statistics](https://github.com/beme248/datatrove/blob/multilingual/examples/multilingual/lang_stats/wiki_lang_stats.py) for each language from their respective [Wikipedia dataset](https://huggingface.co/datasets/wikimedia/wikipedia). Using the [language statistics visualization tool](https://huggingface.co/spaces/ZR0zNqSGMI/mlo-language-statistics), we analyzed the statistics. By comparing the statistic values among different languages, we identified that the following filter values should be tweaked per-language: `stop_words`, `min_avg_word_length`, `max_avg_word_length` and `max_non_alpha_words_ratio`.
+
+Further subsections explain the choice for filter threshold values. Other filter threshold values are set to the default values from the original Gopher quality filter.
+
+To further analyze the implementation of the filters, inspect the [Gopher quality filter source code](https://github.com/beme248/datatrove/blob/multilingual/src/datatrove/pipeline/filters/gopher_quality_filter.py) and [multilingual Gopher quality filter source code](https://github.com/beme248/datatrove/blob/multilingual/src/datatrove/pipeline/filters/multilingual_gopher_quality_filter.py).
+
+### `stop_words`
+
+To obtain stop words for each language, we counted the occurrences of each word in the Wikipedia dataset. We chose stop word candidates as the highest frequency words. To account for differences among languages (e.g., English uses "the", while German uses "der", "die" and "das"), we selected words with a frequency higher than 0.8% of the total word count frequency instead of a fixed number of stop words with the highest frequencies. We also removed whitespaces and symbols (e.g. "«" and "»") from the stop words.
+
+To reduce the risk of overfiltering the data, if there were less than 8 stop words in the cleaned stop words list, we chose words that appeared more frequently than 0.3% of the total word count frequency. We removed whitespaces and symbols for them as well.
+
+To further analyze word frequencies, use the [language statistics visualization tool](https://huggingface.co/spaces/ZR0zNqSGMI/mlo-language-statistics) (tab *Word frequency*).
+
+
+### `min_avg_word_length` and `max_avg_word_length`
+
+We calculated the language-specific thresholds for `min_avg_word_length` and `max_avg_word_length` as one standard deviation below (for minimum) and one standard deviation above (for maximum) the mean word length value rounded to the closest integer. When computed for the English language, these values are equal to the original Gopher quality filter thresholds: 2 (for minimum) and 8 (for maximum).
+
+
+### `max_non_alpha_words_ratio`
+
+We calculated the `max_non_alpha_words_ratio` filter threshold for each language as three standard deviations below the mean `alpha_ratio` rounded to one decimal place. When computed for the English language, the value was equal to the default Gopher quality filter threshold: 0.8.
+
+# Running the pipeline
+
+## Install conda
 
 Follow [Quick command line install](https://docs.anaconda.com/free/miniconda/#quick-command-line-install) tutorial for Linux to set up `conda`.
 
 Restart your shell after running `~/miniconda3/bin/conda init bash` to be able to use `conda`.
 
-### Clone the repository
+## Clone the repository
 
 ```bash
 git clone -b multilingual https://github.com/beme248/datatrove
 cd datatrove
 ```
 
-### Set up conda environment
+## Set up conda environment
 
 ```bash
 conda create -n datatrove python=3.11
 conda activate datatrove
 pip install -e ".[all]" # Install dependencies
-pip install -U datasets # Upgrade datasets library to a newer version
 ```
 
-### Run the pipeline
+## Run the pipeline
 
 ```bash
 cd examples/multilingual
 ```
 
-To generate language statistics (optional, `wiki_lang_stats.json` is already provided), run
+To generate language statistics (optional, language statistics are already provided), run
 ```bash
-EXECUTOR=local python wiki_lang_stats.py
+python wiki_lang_stats.py
 ```
 
-To start the fineweb preprocessing pipeline, run
-```bash
-EXECUTOR=local HF_TOKEN=your-huggingface-access-token python process_fineweb.py
-```
+TODO: add details about running the pipeline.
 
 
-
-## Running on the CSCS Slurm cluster
+<!-- ## Running on the CSCS Slurm cluster
 
 ### Set up access to CSCS Clariden cluster
 
@@ -55,8 +88,6 @@ ssh clariden
 
 ### Install conda
 
-Since launching Slurm jobs in a container environment [isn't supported at the moment](https://confluence.cscs.ch/pages/viewpage.action?pageId=776306695#UsingContainerImagesonClariden(ContainerEngine)-Usingcontainerizedenvironmentsinbatchscripts), we will use `conda` to launch our preprocessing pipeline.
-
 Follow [Quick command line install](https://docs.anaconda.com/free/miniconda/#quick-command-line-install) tutorial for Linux to set up `conda` under your user on the cluster.
 
 Restart your shell after running `~/miniconda3/bin/conda init bash` to be able to use `conda`.
@@ -64,7 +95,6 @@ Restart your shell after running `~/miniconda3/bin/conda init bash` to be able t
 ### Clone the repository
 
 ```bash
-cd $SCRATCH
 git clone -b multilingual https://github.com/beme248/datatrove
 cd datatrove
 ```
@@ -75,7 +105,6 @@ cd datatrove
 conda create -n datatrove python=3.11
 conda activate datatrove
 pip install -e ".[all]" # Install dependencies
-pip install -U datasets # Upgrade datasets library to a newer version
 ```
 
 ### Run the pipeline
@@ -85,162 +114,10 @@ pip install -U datasets # Upgrade datasets library to a newer version
 cd examples/multilingual
 ```
 
-To generate language statistics (optional, `wiki_lang_stats.json` is already provided), run
+To generate language statistics (optional, language statistics are already provided), run
 ```bash
 export HF_DATASETS_CACHE="$SCRATCH/hf_datasets"
 python wiki_lang_stats.py
 ```
 
-To start the fineweb preprocessing pipeline, run
-```bash
-HF_TOKEN=your-huggingface-access-token python process_fineweb.py
-```
-
-Note that we change the HuggingFace datasets library cache to the `$SCRATCH` directory becuase the datasets will not fit in `$HOME` directory.
-
-
-## Results
-
-### fineweb_german ($mean \pm 1\sigma$ german statistics)
-
-#### Pipeline
-```python
-[
-HuggingFaceDatasetReader(DATASET, dataset_options={"token": HF_TOKEN, "split": "train"}, limit=DOC_LIMIT) # DOC_LIMIT = 100000
-GopherRepetitionFilter()
-MultilingualGopherQualityFilter(
-    max_avg_word_lengths=max_avg_word_lengths, # de = 10
-    min_avg_word_lengths=min_avg_word_lengths, # de = 2
-    stop_words=stopwords), # de = nltk.corpus.stopwords.words('german')
-ListFilter()
-JsonlWriter(f"{MAIN_OUTPUT_PATH}/output/{DATASET}")
-]
-```
-
-#### Insights (based on 00000.jsonl)
-- Documents are mostly a mix of blogs/articles and business pages
-- There are some "About (business/event/person)"/"Privacy policy" pages that contain information but may not be so useful for language modelling
-- Most of the processed dataset seems to be good quality
-- Filtered documents make sense to be filtered
-
-#### Issues (based on 00000.jsonl)
-- There are multiple pages where the text processed is about cookies (sometimes containing same text in English)
-- Sports results table was not filtered (little text, only results)
-- NSFW urls might escape the previous filter
-- Some documents are login/register/order pages
-- Too much ellipsis filter sometimes produces FP (but very rarely)
-
-
-
-### fineweb_french ($mean \pm 1\sigma$ french statistics)
-
-#### Pipeline
-```python
-[
-HuggingFaceDatasetReader(DATASET, dataset_options={"token": HF_TOKEN, "split": "train"}, limit=DOC_LIMIT) # DOC_LIMIT = 100000
-GopherRepetitionFilter()
-MultilingualGopherQualityFilter(
-    max_avg_word_lengths=max_avg_word_lengths, # fr = 8
-    min_avg_word_lengths=min_avg_word_lengths, # fr = 2
-    stop_words=stopwords), # fr = nltk.corpus.stopwords.words('french')
-ListFilter()
-JsonlWriter(f"{MAIN_OUTPUT_PATH}/output/{DATASET}")
-]
-```
-
-#### Insights (based on 00000.jsonl)
-- Most of the processed dataset seems to be good quality
-- There are some "Contact"/"About me" pages that contain information but may not be so useful for language modelling
-- Filtered documents make sense to be filtered
-
-#### Issues (based on 00000.jsonl)
-- Similar as in German dataset, there is text about cookies
-- NSFW content may be found
-- Too much ellipsis filter sometimes produces FP (but very rarely)
-
-
-### fineweb_german ($mean \pm 2\sigma$ german statistics)
-
-#### Pipeline
-```python
-[
-HuggingFaceDatasetReader(DATASET, dataset_options={"token": HF_TOKEN, "split": "train"}, limit=DOC_LIMIT) # DOC_LIMIT = 100000
-GopherRepetitionFilter()
-MultilingualGopherQualityFilter(
-    max_avg_word_lengths=max_avg_word_lengths, # de = 14
-    min_avg_word_lengths=min_avg_word_lengths, # de = -2
-    stop_words=stopwords), # de = nltk.corpus.stopwords.words('german')
-ListFilter()
-JsonlWriter(f"{MAIN_OUTPUT_PATH}/output/{DATASET}")
-]
-```
-
-
-### fineweb_french ($mean \pm 2\sigma$ french statistics)
-
-#### Pipeline
-```python
-[
-HuggingFaceDatasetReader(DATASET, dataset_options={"token": HF_TOKEN, "split": "train"}, limit=DOC_LIMIT) # DOC_LIMIT = 100000
-GopherRepetitionFilter()
-MultilingualGopherQualityFilter(
-    max_avg_word_lengths=max_avg_word_lengths, # fr = 12
-    min_avg_word_lengths=min_avg_word_lengths, # fr = -1
-    stop_words=stopwords), # fr = nltk.corpus.stopwords.words('french')
-ListFilter()
-JsonlWriter(f"{MAIN_OUTPUT_PATH}/output/{DATASET}")
-]
-```
-
-### fineweb_german ($mean \pm 0.5\sigma$ german statistics)
-
-#### Pipeline
-```python
-[
-HuggingFaceDatasetReader(DATASET, dataset_options={"token": HF_TOKEN, "split": "train"}, limit=DOC_LIMIT) # DOC_LIMIT = 100000
-GopherRepetitionFilter()
-MultilingualGopherQualityFilter(
-    max_avg_word_lengths=max_avg_word_lengths, # de = 8
-    min_avg_word_lengths=min_avg_word_lengths, # de = 4
-    stop_words=stopwords), # de = nltk.corpus.stopwords.words('german')
-ListFilter()
-JsonlWriter(f"{MAIN_OUTPUT_PATH}/output/{DATASET}")
-]
-```
-
-### fineweb_french ($mean \pm 0.5\sigma$ french statistics)
-
-#### Pipeline
-```python
-[
-HuggingFaceDatasetReader(DATASET, dataset_options={"token": HF_TOKEN, "split": "train"}, limit=DOC_LIMIT) # DOC_LIMIT = 100000
-GopherRepetitionFilter()
-MultilingualGopherQualityFilter(
-    max_avg_word_lengths=max_avg_word_lengths, # fr = 7
-    min_avg_word_lengths=min_avg_word_lengths, # fr = 4
-    stop_words=stopwords), # fr = nltk.corpus.stopwords.words('french')
-ListFilter()
-JsonlWriter(f"{MAIN_OUTPUT_PATH}/output/{DATASET}")
-]
-```
-
-### Summary
-
-| Dataset | Average word length parameter | Input documents | Output (filtered) documents |
-|---------|-------------------------------|-----------------|-----------------------------|
-|  German |      $mean \pm 0.5\sigma$     |            800k |                       ~428k |
-|  German |       $mean \pm 1\sigma$      |            800k |                       ~436k |
-|  German |       $mean \pm 2\sigma$      |            800k |                       ~437k |
-|  French |      $mean \pm 0.5\sigma$     |            800k |                       ~444k |
-|  French |       $mean \pm 1\sigma$      |            800k |                       ~452k |
-|  French |       $mean \pm 2\sigma$      |            800k |                       ~454k |
-
-
-| Dataset | Average word length parameter | Below avg. word length | Above avg. word length | Not enough stopwords |
-|---------|-------------------------------|------------------------|------------------------|----------------------|
-|  German |      $mean \pm 0.5\sigma$     |                  ~0.6k |                 ~18.5k |                ~2.2k |
-|  German |       $mean \pm 1\sigma$      |                      6 |                  ~3.3k |                ~2.9k |
-|  German |       $mean \pm 2\sigma$      |                      0 |                  ~0.8k |                ~3.2k |
-|  French |      $mean \pm 0.5\sigma$     |                  ~9.4k |                  ~8.8k |                ~0.8k |
-|  French |       $mean \pm 1\sigma$      |                     33 |                  ~4.1k |                ~0.9k |
-|  French |       $mean \pm 2\sigma$      |                      0 |                    ~1k |                ~1.5k |
+Note that we change the HuggingFace datasets library cache to the `$SCRATCH` directory becuase the datasets will not fit in `$HOME` directory. -->
