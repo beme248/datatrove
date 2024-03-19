@@ -6,7 +6,7 @@ from datatrove.pipeline.readers import ShuffledHFDatasetReader
 from datatrove.pipeline.stats import LanguageStats, LanguageStatsReducer
 
 
-LANGUAGES_TOP50 = [
+LANGUAGES = [
     "en",
     "de",
     "ru",
@@ -57,8 +57,6 @@ LANGUAGES_TOP50 = [
     "gl",
     "hy",
     "eu",
-]
-LANGUAGES_PLUS50 = [
     "ms",
     "ur",
     "ne",
@@ -111,10 +109,15 @@ LANGUAGES_PLUS50 = [
     "tk",
 ]
 
+LANGUAGES = [
+    "fr",
+    "de",
+]
+
 MAIN_OUTPUT_PATH = "./wiki_language_stats"
 WIKI_VERSION = "20231101"  # See https://huggingface.co/datasets/wikimedia/wikipedia
-DOC_LIMIT = 4000
-TASKS = 10
+DOC_LIMIT = 500
+TASKS = 2
 EXECUTOR = os.environ.get("EXECUTOR", "slurm")  # local/slurm
 
 if __name__ == "__main__":
@@ -129,7 +132,7 @@ if __name__ == "__main__":
             limit=DOC_LIMIT,
             default_metadata={"language": language},
         )
-        for language in LANGUAGES_TOP50
+        for language in LANGUAGES
     ]
 
     pipeline = [
@@ -210,17 +213,17 @@ if __name__ == "__main__":
             "stopwords_top_n": stopwords_top_n,
         }
 
-    pipeline_reduce = [
+    pipeline_stats = [
         LanguageStatsReducer(
             input_folder=f"{MAIN_OUTPUT_PATH}/lang_stats/",
             output_folder="language_statistics",
             map_fn=stat_mapper,
         )
     ]
-    executor_reduce = {
-        "local": LocalPipelineExecutor(pipeline=pipeline_reduce, logging_dir=f"{MAIN_OUTPUT_PATH}/logs_reduce/"),
+    executor_stats = {
+        "local": LocalPipelineExecutor(pipeline=pipeline_stats, logging_dir=f"{MAIN_OUTPUT_PATH}/logs_reduce/"),
         "slurm": SlurmPipelineExecutor(
-            pipeline=pipeline_reduce,
+            pipeline=pipeline_stats,
             logging_dir=f"{MAIN_OUTPUT_PATH}/logs_reduce/",
             tasks=1,
             time="00:30:00",
@@ -228,4 +231,4 @@ if __name__ == "__main__":
             depends=executor,
         ),
     }[EXECUTOR]
-    executor_reduce.run()
+    executor_stats.run()

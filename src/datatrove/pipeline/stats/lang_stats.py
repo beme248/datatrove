@@ -198,8 +198,8 @@ class LanguageStatsReducer(PipelineStep):
 
         # save stats
         for language in stats:
-            with self.output_folder.open(f"/{language}.json", "wt") as f:
+            with self.output_folder.open(f"{language}.json", "wt") as f:
                 json.dump(
-                    {language: stats[language]},
+                    stats[language],
                     f,
                 )
