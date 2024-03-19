@@ -1,5 +1,4 @@
 import os
-from collections import Counter
 
 from datatrove.executor.local import LocalPipelineExecutor
 from datatrove.executor.slurm import SlurmPipelineExecutor
@@ -235,7 +234,6 @@ if __name__ == "__main__":
             return [w for w in stopwords if is_clean(w)]
 
         def to_clean_stopwords(lang, word_counter):
-            word_counter = Counter(word_counter).most_common(10000)
             stopwords = to_clean(p_thresh_words(word_counter, 0.008))
             if len(stopwords) < 8 or lang == "sr":
                 stopwords = p_thresh_words(word_counter, 0.003)

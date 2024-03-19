@@ -233,7 +233,9 @@ class LanguageStatsReducer(PipelineStep):
         stats = {
             k: LanguageStatistics(
                 language=k,
-                word_counter=Counter(v["word_counter"]),
+                word_counter=Counter(v["word_counter"]).most_common(
+                    10_000
+                ),  # 10000 most common words pruning, TODO: remove
                 length_counter=Counter(v["length_counter"]),
                 total_bytes=int(v["total_bytes"]),
                 total_docs=int(v["total_docs"]),
