@@ -1,6 +1,7 @@
 import json
 import string
 from collections import Counter
+from dataclasses import dataclass
 from typing import Callable
 
 import numpy as np
@@ -10,7 +11,43 @@ from datatrove.pipeline.base import DocumentsPipeline, PipelineStep
 from datatrove.tools.word_tokenizers import get_word_tokenizer
 
 
-class LanguageStats(PipelineStep):
+@dataclass
+class MeanStdFloat:
+    mean: float
+    std: float
+
+
+@dataclass
+class LanguageStatistics:
+    language: str
+    word_counter: Counter
+    length_counter: Counter
+    total_words: int
+    total_docs: int
+    total_bytes: int
+    hash_word_ratio: MeanStdFloat
+    ellipsis_word_ratio: MeanStdFloat
+    bullet_start_ratio: MeanStdFloat
+    ellipsis_end_ratio: MeanStdFloat
+    alpha_ratio: MeanStdFloat
+
+    def to_dict(self) -> dict:
+        return {
+            "language": self.language,
+            "word_counter": dict(self.word_counter),
+            "length_counter": dict(self.length_counter),
+            "total_words": self.total_words,
+            "total_docs": self.total_docs,
+            "total_bytes": self.total_bytes,
+            "hash_word_ratio": {"mean": self.hash_word_ratio.mean, "std": self.hash_word_ratio.std},
+            "ellipsis_word_ratio": {"mean": self.ellipsis_word_ratio.mean, "std": self.ellipsis_word_ratio.std},
+            "bullet_start_ratio": {"mean": self.bullet_start_ratio.mean, "std": self.bullet_start_ratio.std},
+            "ellipsis_end_ratio": {"mean": self.ellipsis_end_ratio.mean, "std": self.ellipsis_end_ratio.std},
+            "alpha_ratio": {"mean": self.alpha_ratio.mean, "std": self.alpha_ratio.std},
+        }
+
+
+class LanguageStatsCalculator(PipelineStep):
     type = "📊 - STATS"
     name = "🌐 Languages"
 
@@ -125,7 +162,7 @@ class LanguageStatsReducer(PipelineStep):
         self,
         input_folder: DataFolderLike,
         output_folder: DataFolderLike,
-        map_fn: Callable[[str, dict], dict] = None,
+        map_fn: Callable[[LanguageStatistics], dict] = lambda ls: ls.to_dict(),
     ):
         super().__init__()
         self.input_folder = get_datafolder(input_folder)
@@ -192,10 +229,34 @@ class LanguageStatsReducer(PipelineStep):
                 stats[language][f"{key}_mean"] = E_X
                 stats[language][f"{key}_std"] = np.sqrt(E_X2 - (E_X**2))
 
+        stats = {
+            k: LanguageStatistics(
+                language=k,
+                word_counter=Counter(v["word_counter"]),
+                length_counter=Counter(v["length_counter"]),
+                total_bytes=int(v["total_bytes"]),
+                total_docs=int(v["total_docs"]),
+                total_words=int(v["total_words"]),
+                alpha_ratio=MeanStdFloat(mean=float(v["alpha_ratio_mean"]), std=float(v["alpha_ratio_std"])),
+                bullet_start_ratio=MeanStdFloat(
+                    mean=float(v["bullet_start_ratio_mean"]), std=float(v["bullet_start_ratio_std"])
+                ),
+                ellipsis_end_ratio=MeanStdFloat(
+                    mean=float(v["ellipsis_end_ratio_mean"]), std=float(v["ellipsis_end_ratio_std"])
+                ),
+                ellipsis_word_ratio=MeanStdFloat(
+                    mean=float(v["ellipsis_word_ratio_mean"]), std=float(v["ellipsis_word_ratio_std"])
+                ),
+                hash_word_ratio=MeanStdFloat(
+                    mean=float(v["hash_word_ratio_mean"]), std=float(v["hash_word_ratio_std"])
+                ),
+            )
+            for k, v in stats.items()
+        }
+
         # Apply mapping function
-        if self.map_fn is not None:
-            for language in stats:
-                stats[language] = self.map_fn(language, stats[language])
+        stats = {k: self.map_fn(v) for k, v in stats.items()}
+        
 
         # Save stats
         for language in stats:

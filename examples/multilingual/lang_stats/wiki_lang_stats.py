@@ -4,7 +4,7 @@ from collections import Counter
 from datatrove.executor.local import LocalPipelineExecutor
 from datatrove.executor.slurm import SlurmPipelineExecutor
 from datatrove.pipeline.readers import ShuffledHFDatasetReader
-from datatrove.pipeline.stats import LanguageStats, LanguageStatsReducer
+from datatrove.pipeline.stats import LanguageStatistics, LanguageStatsCalculator, LanguageStatsReducer
 
 
 LANGUAGES = [
@@ -110,6 +110,10 @@ LANGUAGES = [
     "tk",
 ]
 
+LANGUAGES=[
+    "de"
+]
+
 MAIN_OUTPUT_PATH = "./wiki_language_stats"
 WIKI_VERSION = "20231101"  # See https://huggingface.co/datasets/wikimedia/wikipedia
 DOC_LIMIT = 4000
@@ -133,7 +137,7 @@ if __name__ == "__main__":
 
     pipeline = [
         *readers,
-        LanguageStats(output_folder=f"{MAIN_OUTPUT_PATH}/lang_stats/"),
+        LanguageStatsCalculator(output_folder=f"{MAIN_OUTPUT_PATH}/lang_stats/"),
     ]
     executor = {
         "local": LocalPipelineExecutor(pipeline=pipeline, logging_dir=f"{MAIN_OUTPUT_PATH}/logs/", tasks=TASKS),
@@ -147,74 +151,10 @@ if __name__ == "__main__":
     }[EXECUTOR]
     executor.run()
 
-    # Compute all language statistics
-    def stat_mapper(language, language_stats):
-        # Make sure to import np here for slurm executor
-        import numpy as np
-
-        def q_lengths(counts, q):
-            counts_sorted = sorted(counts)
-            xs = [d[0] for d in counts_sorted]
-            ys = [d[1] for d in counts_sorted]
-            ys_cumsum = np.cumsum(ys)
-            index = np.sum(ys_cumsum < q * ys_cumsum[-1])
-            return xs[index]
-
-        def q_words(counts, q):
-            counts_sorted = sorted(counts, key=lambda x: -x[1])
-            xs = [d[0] for d in counts_sorted]
-            ys = [d[1] for d in counts_sorted]
-            ys_cumsum = np.cumsum(ys)
-            index = np.sum(ys_cumsum < q * ys_cumsum[-1])
-            return xs[:index]
-
-        def p_thresh_words(counts, p):
-            counts_sorted = sorted(counts, key=lambda x: -x[1])
-            xs = [d[0] for d in counts_sorted]
-            ys = [d[1] for d in counts_sorted]
-            ys_cumsum = np.cumsum(ys)
-            index = np.sum(ys > p * ys_cumsum[-1])
-            return xs[:index]
-
-        length_counter = language_stats["length_counter"]
-        word_counter = language_stats["word_counter"]
-
-        lengths = list(length_counter.keys())
-        freqs = list(length_counter.values())
-
-        word_length_mean = np.average(lengths, weights=freqs)
-        word_length_std = np.sqrt(np.cov(lengths, fweights=freqs))
-        word_length_q = {f"{i/20:.2f}": q_lengths(length_counter.items(), i / 20) for i in range(21)}
-
-        alpha_ratio_mean = language_stats["alpha_ratio_mean"]
-        alpha_ratio_std = language_stats["alpha_ratio_std"]
-
-        stopwords_q = {f"{q:.2f}": q_words(word_counter.items(), q) for q in [0.15, 0.2, 0.25, 0.3]}
-        stopwords_p_thresh = {
-            f"{p:.3f}": p_thresh_words(word_counter.items(), p)
-            for p in [0.003, 0.004, 0.005, 0.006, 0.007, 0.008, 0.010, 0.012]
-        }
-        stopwords_top_n = {
-            f"{n}": list(dict(language_stats["word_counter"].most_common(n)).keys()) for n in [5, 8, 10, 15]
-        }
-
-        return language_stats | {
-            "min_avg_word_length": round(word_length_mean - word_length_std),
-            "max_avg_word_length": round(word_length_mean + word_length_std),
-            "max_non_alpha_words_ratio": round(alpha_ratio_mean - 3 * alpha_ratio_std, 1),
-            "word_length_mean": word_length_mean,
-            "word_length_std": word_length_std,
-            "word_length_q": word_length_q,
-            "stopwords_q": stopwords_q,
-            "stopwords_p_thresh": stopwords_p_thresh,
-            "stopwords_top_n": stopwords_top_n,
-        }
-
     pipeline_stats = [
         LanguageStatsReducer(
             input_folder=f"{MAIN_OUTPUT_PATH}/lang_stats/",
             output_folder="language_statistics",
-            map_fn=stat_mapper,
         )
     ]
     executor_stats = {
@@ -231,7 +171,7 @@ if __name__ == "__main__":
     executor_stats.run()
 
     # Compute language filter parameters
-    def params_mapper(language, language_stats):
+    def params_mapper(language_stats: LanguageStatistics):
         # Make sure to import np here for slurm executor
         import numpy as np
 
@@ -243,8 +183,8 @@ if __name__ == "__main__":
             index = np.sum(ys > p * ys_cumsum[-1])
             return xs[:index]
 
-        length_counter = language_stats["length_counter"]
-        word_counter = language_stats["word_counter"]
+        length_counter = language_stats.length_counter
+        word_counter = language_stats.word_counter
 
         lengths = list(length_counter.keys())
         freqs = list(length_counter.values())
@@ -252,8 +192,8 @@ if __name__ == "__main__":
         word_length_mean = np.average(lengths, weights=freqs)
         word_length_std = np.sqrt(np.cov(lengths, fweights=freqs))
 
-        alpha_ratio_mean = language_stats["alpha_ratio_mean"]
-        alpha_ratio_std = language_stats["alpha_ratio_std"]
+        alpha_ratio_mean = language_stats.alpha_ratio.mean
+        alpha_ratio_std = language_stats.alpha_ratio.std
 
         def is_clean(word):
             word = word.strip()
@@ -309,7 +249,7 @@ if __name__ == "__main__":
             "min_avg_word_length": round(word_length_mean - word_length_std),
             "max_avg_word_length": round(word_length_mean + word_length_std),
             "max_non_alpha_words_ratio": round(alpha_ratio_mean - 3 * alpha_ratio_std, 1),
-            "stopwords": to_clean_stopwords(language, word_counter),
+            "stopwords": to_clean_stopwords(language_stats.language, word_counter),
         }
 
     pipeline_params = [
