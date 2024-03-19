@@ -72,6 +72,9 @@ class TestFilters(unittest.TestCase):
         self.check_filter(gopher_quality, get_doc("... comment " * 20), "gopher_too_many_ellipsis")
         text = "the ./!*?<><> apple <?////> orange  ++ interconnection !<>??? have" * 20
         self.check_filter(gopher_quality, get_doc(text), "gopher_below_alpha_threshold")
+
+        self.check_filter(gopher_quality, get_doc("Have Have" * 20), "gopher_enough_stop_words")
+        self.assertTrue(gopher_quality.filter(get_doc("have " * 20)) is True)
         self.assertTrue(gopher_quality(get_doc(TEXT_LF_1)))
 
     def test_multilingual_gopher_quality(self):

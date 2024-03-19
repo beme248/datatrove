@@ -1,6 +1,7 @@
 from datatrove.data import Document
 from datatrove.pipeline.filters.base_filter import BaseFilter
 from datatrove.pipeline.writers.disk_base import DiskWriter
+from datatrove.tools.word_tokenizers import get_word_tokenizer
 
 
 class ListFilter(BaseFilter):
@@ -26,10 +27,12 @@ class ListFilter(BaseFilter):
         Returns:
             False if sample.text is a list
         """
-        from nltk.tokenize import word_tokenize
 
         text = doc.text
-        words = word_tokenize(text)  # TODO we should use language id filter
+        lang = doc.metadata["language"]
+        tokenizer = get_word_tokenizer(language=lang)
+
+        words = tokenizer.tokenize(text)  # TODO we should use language id filter
         new_line = text.count("\n")
         if new_line / len(words) > self.new_line_ratio:
             return False, "Suspected list"
