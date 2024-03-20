@@ -1,4 +1,5 @@
 import os
+import sys
 
 from datatrove.executor.local import LocalPipelineExecutor
 from datatrove.executor.slurm import SlurmPipelineExecutor
@@ -6,6 +7,13 @@ from datatrove.pipeline.readers import ShuffledHFDatasetReader
 from datatrove.pipeline.stats import LanguageStatistics, LanguageStatsCalculator, LanguageStatsReducer
 
 
+if len(sys.argv) != 2 or sys.argv[1] not in ["statistics", "filters"]:
+    print("First argument should be: 'statistics' or 'filters'.")
+    print("Use 'statistics' to generate statistics of the Wikipedia documents.")
+    print("Use 'filters' to only generate the filter values for multilingual Gopher quality filter.")
+    exit(1)
+
+RUN_MODE = sys.argv[1]
 LANGUAGES = [
     "en",
     "de",
@@ -109,13 +117,14 @@ LANGUAGES = [
     "tk",
 ]
 
-LANGUAGES = ["bt"]
+LANGUAGES=["de"]
 
 MAIN_OUTPUT_PATH = "./wiki_stats_pipeline"
 WIKI_VERSION = "20231101"  # See https://huggingface.co/datasets/wikimedia/wikipedia
-DOC_LIMIT = 4000
-TASKS = 10
+DOC_LIMIT = 1000
+TASKS = 2
 EXECUTOR = os.environ.get("EXECUTOR", "slurm")  # local/slurm
+
 
 if __name__ == "__main__":
     # Count token lengths
@@ -148,27 +157,8 @@ if __name__ == "__main__":
     }[EXECUTOR]
     executor.run()
 
-    pipeline_stats = [
-        LanguageStatsReducer(
-            input_folder=f"{MAIN_OUTPUT_PATH}/lang_stats_per_rank/",
-            output_folder="./statistics",
-        )
-    ]
-    executor_stats = {
-        "local": LocalPipelineExecutor(pipeline=pipeline_stats, logging_dir=f"{MAIN_OUTPUT_PATH}/logs_stats/"),
-        "slurm": SlurmPipelineExecutor(
-            pipeline=pipeline_stats,
-            logging_dir=f"{MAIN_OUTPUT_PATH}/logs_stats/",
-            tasks=1,
-            time="00:30:00",
-            partition="normal",
-            depends=executor,
-        ),
-    }[EXECUTOR]
-    executor_stats.run()
-
     # Compute language filter parameters
-    def params_mapper(language_stats: LanguageStatistics):
+    def filters_mapper(language_stats: LanguageStatistics):
         # Make sure to import np here for slurm executor
         import numpy as np
 
@@ -248,22 +238,33 @@ if __name__ == "__main__":
             "stopwords": to_clean_stopwords(language_stats.language, word_counter),
         }
 
-    pipeline_params = [
-        LanguageStatsReducer(
-            input_folder=f"{MAIN_OUTPUT_PATH}/lang_stats_per_rank/",
-            output_folder="./filters",
-            map_fn=params_mapper,
-        )
-    ]
-    executor_params = {
-        "local": LocalPipelineExecutor(pipeline=pipeline_params, logging_dir=f"{MAIN_OUTPUT_PATH}/logs_filters/"),
+    pipeline_reduce = {
+        "filters": [
+            LanguageStatsReducer(
+                input_folder=f"{MAIN_OUTPUT_PATH}/lang_stats_per_rank/",
+                output_folder="./filters",
+                map_fn=filters_mapper,
+            )
+        ],
+        "statistics": [
+            LanguageStatsReducer(
+                input_folder=f"{MAIN_OUTPUT_PATH}/lang_stats_per_rank/",
+                output_folder="./statistics",
+            )
+        ],
+    }
+
+    executor_reduce = {
+        "local": LocalPipelineExecutor(
+            pipeline=pipeline_reduce[RUN_MODE], logging_dir=f"{MAIN_OUTPUT_PATH}/logs_{RUN_MODE}/"
+        ),
         "slurm": SlurmPipelineExecutor(
-            pipeline=pipeline_params,
-            logging_dir=f"{MAIN_OUTPUT_PATH}/logs_filters/",
+            pipeline=pipeline_reduce[RUN_MODE],
+            logging_dir=f"{MAIN_OUTPUT_PATH}/logs_{RUN_MODE}/",
             tasks=1,
             time="00:30:00",
             partition="normal",
             depends=executor,
         ),
     }[EXECUTOR]
-    executor_params.run()
+    executor_reduce.run()
