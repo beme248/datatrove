@@ -185,6 +185,5 @@ for lang in LANGUAGES:
         randomize_start=True,
         mem_per_cpu_gb=2,
         partition="normal",
-        mail_user="bettina.messmer@epfl.ch",
     )
     executor.run()

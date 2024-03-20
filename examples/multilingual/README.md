@@ -63,16 +63,15 @@ pip install -e ".[all]" # Install dependencies
 
 ## Run the pipeline
 
+To generate language-specific filter thresholds (optional, filter thresholds are already provided in folder `filters`), run
 ```bash
-cd examples/multilingual
+python wiki_lang_stats.py filters
 ```
 
-To generate language statistics (optional, language statistics are already provided), run
+To start the CommonCrawl cleaning pipeline, run
 ```bash
-python wiki_lang_stats.py
+python process_non_english.py DUMP_NAME
 ```
-
-TODO: add details about running the pipeline.
 
 
 <!-- ## Running on the CSCS Slurm cluster
