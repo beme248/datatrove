@@ -125,7 +125,6 @@ EXECUTOR = os.environ.get("EXECUTOR", "slurm")  # local/slurm
 
 
 if __name__ == "__main__":
-    # Count token lengths
     readers = [
         ShuffledHFDatasetReader(  # Use shuffled dataset when using DOC_LIMIT
             "wikimedia/wikipedia",
