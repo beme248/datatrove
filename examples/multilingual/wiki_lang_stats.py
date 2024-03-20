@@ -117,12 +117,10 @@ LANGUAGES = [
     "tk",
 ]
 
-LANGUAGES=["de"]
-
 MAIN_OUTPUT_PATH = "./wiki_stats_pipeline"
 WIKI_VERSION = "20231101"  # See https://huggingface.co/datasets/wikimedia/wikipedia
-DOC_LIMIT = 1000
-TASKS = 2
+DOC_LIMIT = 4000
+TASKS = 10
 EXECUTOR = os.environ.get("EXECUTOR", "slurm")  # local/slurm
 
 
