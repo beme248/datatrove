@@ -5,7 +5,7 @@ To extend the [RefinedWeb](https://arxiv.org/pdf/2306.01116.pdf) CommonCrawl cle
 
 ## Language-specific word tokenizers
 
-To support multiple languages and scripts, we use different word tokenization libraries availble for different languages.
+The filters we use in the cleaning pipeline are sensitive to word tokenization, which can impact the results. Therefore, we use several word tokenization libraries to support almost 100 languages. In order to process large volumes of data efficiently, we utilize fast and reliable tokenization libraries: [NLTK](https://www.nltk.org/), [SpaCy](https://spacy.io/), [Stanza](https://stanfordnlp.github.io/stanza/), [Indic NLP Library](https://github.com/anoopkunchukuttan/indic_nlp_library), [Jieba](https://github.com/fxsjy/jieba), [NLPashto](https://pypi.org/project/nlpashto/), [PyVi](https://pypi.org/project/pyvi/) and [Anbani](https://github.com/Anbani/anbani.py). For languages that don't have official support in the libraries, we use a tokenizer of a supported language with the same script and from a close language family.
 
 To further analyze the implementation of word tokenizers, inspect the [word tokenizer source code](https://github.com/beme248/datatrove/blob/multilingual/src/datatrove/tools/word_tokenizers.py).
 
