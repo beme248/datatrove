@@ -126,9 +126,6 @@ LANGUAGES = [
     "tk",
 ]
 
-scratch = os.getenv("SCRATCH")
-
-
 # Load language-specific statistics and stopwords
 def load_filters(folder_path, languages):
     filters = {}
@@ -147,15 +144,11 @@ stop_words = {k: v["stopwords"] for k, v in filters.items()}
 alpha_ratio = {k: v["max_non_alpha_words_ratio"] for k, v in filters.items()}
 min_stop_words = {k: 2 for k, _ in filters.items()}
 
-breakpoint()
-
 for lang in LANGUAGES:
-    additional_data_path = f"data/datatrove/multi_lingual_{DOC_LIMIT}_{RUN_NAME}/base_processing/{lang}"
-    additional_logs_path = f"logs/datatrove/multi_lingual_{DOC_LIMIT}_{RUN_NAME}/base_processing/{lang}"
     data_path = f"s3://fineweb-data-processing-us-east-1/base_processing/non_english/{lang}/{DUMP}"
 
-    MAIN_OUTPUT_PATH = os.path.join(scratch, additional_data_path)
-    SLURM_LOGS = os.path.join(scratch, additional_logs_path)
+    MAIN_OUTPUT_PATH = f"data/datatrove/multi_lingual_{DOC_LIMIT}_{RUN_NAME}/base_processing/{lang}"
+    SLURM_LOGS = f"logs/datatrove/multi_lingual_{DOC_LIMIT}_{RUN_NAME}/base_processing/{lang}"
 
     executor = SlurmPipelineExecutor(
         job_name=f"cc_{DUMP}_{lang}",
