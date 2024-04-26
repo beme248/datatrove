@@ -9,6 +9,7 @@ import yaml
 
 from datatrove.io import DataFolderLike, get_datafolder
 from datatrove.pipeline.base import DocumentsPipeline, PipelineStep
+from datatrove.pipeline.filters.gopher_repetition_filter import find_duplicates
 from datatrove.tools.word_tokenizers import get_word_tokenizer
 
 
@@ -31,6 +32,10 @@ class LanguageStatistics:
     bullet_start_ratio: MeanStdFloat
     ellipsis_end_ratio: MeanStdFloat
     alpha_ratio: MeanStdFloat
+    line_punct_ratio: MeanStdFloat
+    short_line_ratio: MeanStdFloat
+    duplicate_line_ratio: MeanStdFloat
+    new_line_ratio: MeanStdFloat
 
     def to_dict(self) -> dict:
         return {
@@ -45,6 +50,10 @@ class LanguageStatistics:
             "bullet_start_ratio": {"mean": self.bullet_start_ratio.mean, "std": self.bullet_start_ratio.std},
             "ellipsis_end_ratio": {"mean": self.ellipsis_end_ratio.mean, "std": self.ellipsis_end_ratio.std},
             "alpha_ratio": {"mean": self.alpha_ratio.mean, "std": self.alpha_ratio.std},
+            "line_punct_ratio": {"mean": self.line_punct_ratio.mean, "std": self.line_punct_ratio.std},
+            "short_line_ratio": {"mean": self.short_line_ratio.mean, "std": self.short_line_ratio.std},
+            "duplicate_line_ratio": {"mean": self.duplicate_line_ratio.mean, "std": self.duplicate_line_ratio.std},
+            "new_line_ratio": {"mean": self.new_line_ratio.mean, "std": self.new_line_ratio.std},
         }
 
 
@@ -81,6 +90,10 @@ class LanguageStatsCalculator(PipelineStep):
                     "bullet_start_ratio": [],
                     "ellipsis_end_ratio": [],
                     "alpha_ratio": [],
+                    "line_punct_ratio": [],
+                    "short_line_ratio": [],
+                    "duplicate_line_ratio": [],
+                    "new_line_ratio": [],
                 }
 
             tokenizer = get_word_tokenizer(language)
@@ -93,6 +106,7 @@ class LanguageStatsCalculator(PipelineStep):
             stats[language]["total_words"] += n_words
             stats[language]["total_bytes"] += len(text.encode("utf-8"))
 
+            ## Gopher quality filters
             # Distribution of word lengths
             for word in words:
                 stats[language]["length_counter"][len(word)] += 1
@@ -124,6 +138,29 @@ class LanguageStatsCalculator(PipelineStep):
             alpha_ratio = (sum([any((c.isalpha() for c in w)) for w in words]) / n_words) if n_words > 0 else 0
             stats[language]["alpha_ratio"].append(alpha_ratio)
 
+            ## FineWeb filters
+            lines = doc.text.split("\n")
+
+            # Compute ratio ratio of lines ending in punctuation
+            stop_chars = (".", "'", '"', "!", "?")
+            line_punct_ratio = sum(1 for line in lines if line.endswith(stop_chars)) / len(lines)
+            stats[language]["line_punct_ratio"].append(line_punct_ratio)
+
+            # Compute ratio of "short" lines (<=30 characters)
+            short_line_ratio = sum(1 for line in lines if len(line) <= 30) / len(lines)
+            stats[language]["short_line_ratio"].append(short_line_ratio)
+
+            # Compute ratio of duplicated lines
+            non_empty_lines = [line for line in lines if line.strip() != ""]
+            duplicate_line_ratio = find_duplicates(non_empty_lines)[1] / len(doc.text.replace("\n", ""))
+            stats[language]["duplicate_line_ratio"].append(duplicate_line_ratio)
+
+            # Compute ratio of newlines to words
+            new_line = doc.text.count("\n")
+            words = tokenizer.tokenize(text)
+            new_line_ratio = new_line / len(words)
+            stats[language]["new_line_ratio"].append(new_line_ratio)
+
             yield doc
 
         for language in stats:
@@ -134,6 +171,10 @@ class LanguageStatsCalculator(PipelineStep):
                 "bullet_start_ratio",
                 "ellipsis_end_ratio",
                 "alpha_ratio",
+                "line_punct_ratio",
+                "short_line_ratio",
+                "duplicate_line_ratio",
+                "new_line_ratio",
             ]:
                 values = np.array(stats[language][key])
                 stats[language][f"{key}_mean"] = np.mean(values)
@@ -174,6 +215,18 @@ class LanguageStatsReducer(PipelineStep):
         stats = {}
         doc_count = {}
 
+        MEAN_STD_KEYS = [
+            "hash_word_ratio",
+            "ellipsis_word_ratio",
+            "bullet_start_ratio",
+            "ellipsis_end_ratio",
+            "alpha_ratio",
+            "line_punct_ratio",
+            "short_line_ratio",
+            "duplicate_line_ratio",
+            "new_line_ratio",
+        ]
+
         # combine all json files with stats
         assert world_size == 1, "world_size must be 1 when getting the input from an input_folder"
         for file in self.input_folder.list_files(glob_pattern="**/*.json"):
@@ -188,13 +241,7 @@ class LanguageStatsReducer(PipelineStep):
                             "total_docs": 0,
                             "total_bytes": 0,
                         }
-                        for key in [
-                            "hash_word_ratio",
-                            "ellipsis_word_ratio",
-                            "bullet_start_ratio",
-                            "ellipsis_end_ratio",
-                            "alpha_ratio",
-                        ]:
+                        for key in MEAN_STD_KEYS:
                             stats[language][f"{key}_mean"] = []
                             stats[language][f"{key}_std"] = []
                     if language not in doc_count:
@@ -205,26 +252,14 @@ class LanguageStatsReducer(PipelineStep):
                     length_counter = Counter({int(k): v for k, v in file_data[language]["length_counter"].items()})
                     stats[language]["length_counter"] += length_counter
                     stats[language]["word_counter"] += file_data[language]["word_counter"]
-                    for key in [
-                        "hash_word_ratio",
-                        "ellipsis_word_ratio",
-                        "bullet_start_ratio",
-                        "ellipsis_end_ratio",
-                        "alpha_ratio",
-                    ]:
+                    for key in MEAN_STD_KEYS:
                         stats[language][f"{key}_mean"].append(file_data[language][f"{key}_mean"])
                         stats[language][f"{key}_std"].append(file_data[language][f"{key}_sq_mean"])
                     doc_count[language].append(file_data[language]["total_docs"])
 
         for language in stats:
             # Average statistics over documents
-            for key in [
-                "hash_word_ratio",
-                "ellipsis_word_ratio",
-                "bullet_start_ratio",
-                "ellipsis_end_ratio",
-                "alpha_ratio",
-            ]:
+            for key in MEAN_STD_KEYS:
                 E_X = np.average(stats[language][f"{key}_mean"], weights=doc_count[language])
                 E_X2 = np.average(stats[language][f"{key}_std"], weights=doc_count[language])
                 stats[language][f"{key}_mean"] = E_X
@@ -240,19 +275,10 @@ class LanguageStatsReducer(PipelineStep):
                 total_bytes=int(v["total_bytes"]),
                 total_docs=int(v["total_docs"]),
                 total_words=int(v["total_words"]),
-                alpha_ratio=MeanStdFloat(mean=float(v["alpha_ratio_mean"]), std=float(v["alpha_ratio_std"])),
-                bullet_start_ratio=MeanStdFloat(
-                    mean=float(v["bullet_start_ratio_mean"]), std=float(v["bullet_start_ratio_std"])
-                ),
-                ellipsis_end_ratio=MeanStdFloat(
-                    mean=float(v["ellipsis_end_ratio_mean"]), std=float(v["ellipsis_end_ratio_std"])
-                ),
-                ellipsis_word_ratio=MeanStdFloat(
-                    mean=float(v["ellipsis_word_ratio_mean"]), std=float(v["ellipsis_word_ratio_std"])
-                ),
-                hash_word_ratio=MeanStdFloat(
-                    mean=float(v["hash_word_ratio_mean"]), std=float(v["hash_word_ratio_std"])
-                ),
+                **{
+                    key: MeanStdFloat(mean=float(v[f"{key}_mean"]), std=float(v[f"{key}_std"]))
+                    for key in MEAN_STD_KEYS
+                },
             )
             for k, v in stats.items()
         }
