@@ -1,3 +1,4 @@
+import random
 from abc import abstractmethod
 from contextlib import nullcontext
 from typing import Callable
@@ -90,7 +91,8 @@ class BaseReader(PipelineStep):
             if not self._empty_warning:
                 self._empty_warning = True
                 logger.warning(
-                    f"Found document without text, skipping. " f'Is your `text_key` ("{self.text_key}") correct?'
+                    f"Found document without text, skipping. "
+                    f'Is your `text_key` ("{self.text_key}") correct? Available keys: {list(data.keys())}'
                 )
             return None
         document = Document(**parsed_data)
@@ -134,6 +136,7 @@ class BaseDiskReader(BaseReader):
         default_metadata: dict = None,
         recursive: bool = True,
         glob_pattern: str | None = None,
+        shuffle_files: bool = False,
     ):
         """
 
@@ -147,11 +150,14 @@ class BaseDiskReader(BaseReader):
             default_metadata: a dictionary with any data that should be added to all sample's metadata
             recursive: whether to search recursively for files
             glob_pattern: pattern that all files must match exactly to be included (relative to data_folder)
+            shuffle_files: shuffle the files within the returned shard. Mostly used for data viz. purposes, do not use
+            with dedup blocks
         """
         super().__init__(limit, progress, adapter, text_key, id_key, default_metadata)
         self.data_folder = get_datafolder(data_folder)
         self.recursive = recursive
         self.glob_pattern = glob_pattern
+        self.shuffle_files = shuffle_files
 
     def get_document_from_dict(self, data: dict, source_file: str, id_in_file: int):
         document = super().get_document_from_dict(data, source_file, id_in_file)
@@ -219,6 +225,8 @@ class BaseDiskReader(BaseReader):
                 raise RuntimeError(f"No files found on {self.data_folder.path}!")
             # otherwise just a warning
             logger.warning(f"No files found on {self.data_folder.path} for {rank=}")
+        if self.shuffle_files:
+            random.shuffle(files_shard)
         for doc in self.read_files_shard(files_shard):
             self.update_doc_stats(doc)
             yield doc
