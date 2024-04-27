@@ -224,7 +224,6 @@ class MinhashDedupSignature(PipelineStep):
                 language = doc.metadata.get(
                     "language", "en"
                 )  # TODO: remove "en" when tests support no language metadata
-                print(language)
                 shingles = self.get_shingles(doc.text, language)
                 if shingles.size != 0:
                     sig = self.get_signature(shingles)
