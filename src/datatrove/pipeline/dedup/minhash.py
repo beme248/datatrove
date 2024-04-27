@@ -14,6 +14,7 @@ from datatrove.data import DocumentsPipeline
 from datatrove.io import DataFolderLike, get_datafolder
 from datatrove.pipeline.base import PipelineStep
 from datatrove.pipeline.writers.disk_base import DiskWriter
+from datatrove.tools.word_tokenizers import get_word_tokenizer
 from datatrove.utils.binaryio import read_tuples_from_file, seek_to_start
 from datatrove.utils.text import TextNormConfig, sha1_hash32, sha1_hash64, simplify_text
 from datatrove.utils.typeshelper import StatHints
@@ -144,18 +145,14 @@ class MinhashDedupSignature(PipelineStep):
 
     type = "🫂 - DEDUP"
     name = "🎯 MinHash stage 1"
-    _requires_dependencies = ["nltk"]
 
-    def __init__(
-        self, output_folder: DataFolderLike, config: MinhashConfig = DEFAULT_MINHASH_CONFIG, language: str = "english"
-    ):
+    def __init__(self, output_folder: DataFolderLike, config: MinhashConfig = DEFAULT_MINHASH_CONFIG):
         super().__init__()
         self.output_folder = get_datafolder(output_folder)
         self.config = config
         self.num_hashes = self.config.num_buckets * self.config.hashes_per_bucket
         self._parameters = None
         self._hash_func = sha1_hash32 if not self.config.use_64bit_hashes else sha1_hash64
-        self.language = language
 
     @property
     def parameters(self):
@@ -190,7 +187,9 @@ class MinhashDedupSignature(PipelineStep):
             x.tolist() for x in np.split(np.min(phv, axis=0).astype(self.config.hash_dtype), self.config.num_buckets)
         ]
 
-    def get_shingles(self, text: str) -> np.ndarray:
+    def get_shingles(
+        self, text: str, language: str = "en"
+    ) -> np.ndarray:  # TODO: remove "en" when tests support no language metadata
         """Get shingles (hashed n-grams) from a string of text
 
         Shingles are created by hashing n-grams of simplified text (lower cases, whitespace normalized, no punctuation, etc).
@@ -201,12 +200,15 @@ class MinhashDedupSignature(PipelineStep):
         Returns:
             numpy array of shingles: dtype = uint64, shape = (number of n_grams in string, 1)
         """
-        from nltk import ngrams, word_tokenize
+        from nltk import ngrams
 
         return np.fromiter(
             [
                 self._hash_func(" ".join(x).encode("utf-8"))
-                for x in ngrams(word_tokenize(simplify_text(text, self.config.norm_config)), self.config.n_grams)
+                for x in ngrams(
+                    get_word_tokenizer(language).tokenize(simplify_text(text, self.config.norm_config)),
+                    self.config.n_grams,
+                )
             ],
             dtype=np.uint64,
         ).reshape((-1, 1))
@@ -219,7 +221,11 @@ class MinhashDedupSignature(PipelineStep):
         with self.track_time():
             for doc_idx, doc in enumerate(data):
                 self.stat_update(StatHints.total)
-                shingles = self.get_shingles(doc.text)
+                language = doc.metadata.get(
+                    "language", "en"
+                )  # TODO: remove "en" when tests support no language metadata
+                print(language)
+                shingles = self.get_shingles(doc.text, language)
                 if shingles.size != 0:
                     sig = self.get_signature(shingles)
                     for bi, (bucket, bucket_sig) in enumerate(zip(buckets, sig)):
