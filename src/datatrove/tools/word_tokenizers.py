@@ -62,7 +62,7 @@ class KiwiTokenizer(WordTokenizer):
         self.kiwi = Kiwi(model_type=model_type)
 
     def tokenize(self, text) -> list[str]:
-        return [token.form for token in self.kiwi.tokenize(text) if len(token.form.strip()) > 0]
+        return [token.form for token in self.kiwi.tokenize(text)]
 
 
 class ThaiTokenizer(WordTokenizer):
@@ -120,7 +120,7 @@ WORD_TOKENIZERS: dict[str, WordTokenizer] = {
     Languages.vietnamese: SpaCyTokenizer("vi"),
     Languages.indonesian: SpaCyTokenizer("id"),
     Languages.persian: SpaCyTokenizer("fa"),
-    Languages.korean: KiwiTokenizer("sbg"),
+    Languages.korean: KiwiTokenizer(),
     Languages.arabic: SpaCyTokenizer("ar"),
     Languages.hindi: SpaCyTokenizer("hi"),
     Languages.tamil: SpaCyTokenizer("ta"),
