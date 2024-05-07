@@ -8,14 +8,17 @@ stopwords:
 - vuonna
 - "h\xE4n"
 - "my\xF6s"
+- "\u2013"
 - "l\xE4hteet"
 - joka
+- "\u201D"
 - se
 - sen
 - ovat
 - "sek\xE4"
 - ei
 - vuoden
+- ''''''
 - mutta
 - s.
 - n

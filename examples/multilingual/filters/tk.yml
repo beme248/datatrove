@@ -9,10 +9,15 @@ stopwords:
 - "\xFC\xE7in"
 - bir
 - ol
+- "\u201C"
+- "\u201D"
 - "bo\xFDun\xE7a"
 - "\xFDylda"
 - bolsa
 - "onu\u0148"
+- "\xAB"
+- "\xBB"
+- "\u2013"
 - bolup
 - bolan
 - "\xF6z"
@@ -21,3 +26,4 @@ stopwords:
 - "\u015Fol"
 - "\xFDaly"
 - "\xFDyly\u0148"
+- ''''''

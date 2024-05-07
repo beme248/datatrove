@@ -7,11 +7,13 @@ stopwords:
 - 'no'
 - "gad\u0101"
 - ar
+- "\u2014"
 - gada
 - par
 - bija
 - "ar\u012B"
 - kas
+- '||'
 - tika
 - uz
 - "k\u0101"
