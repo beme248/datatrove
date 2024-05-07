@@ -4,6 +4,39 @@ alpha_ratio:
 bullet_start_ratio:
   mean: 0.0007012664956695873
   std: 0.013941597700170207
+dup_line_char_frac:
+  mean: 0.0
+  std: 0.0
+dup_line_frac:
+  mean: 0.0
+  std: 0.0
+dup_para_char_frac:
+  mean: 0.0
+  std: 0.0
+dup_para_frac:
+  mean: 0.0
+  std: 0.0
+duplicate_line_ratio:
+  mean: 0.001842840829738486
+  std: 0.017183253045635036
+duplicated_10_grams:
+  mean: 0.010250227613145762
+  std: 0.021195777648930745
+duplicated_5_grams:
+  mean: 0.016206403071509244
+  std: 0.03351749742434839
+duplicated_6_grams:
+  mean: 0.009065224182261394
+  std: 0.018524864076549682
+duplicated_7_grams:
+  mean: 0.008809069282504627
+  std: 0.017826087513186442
+duplicated_8_grams:
+  mean: 0.009685132923407176
+  std: 0.019435089959060806
+duplicated_9_grams:
+  mean: 0.010165830527662005
+  std: 0.020353448375183256
 ellipsis_end_ratio:
   mean: 0.00012961809590072312
   std: 0.003146682047905218
@@ -189,6 +222,24 @@ length_counter:
   227: 1
   228: 1
   231: 1
+line_punct_ratio:
+  mean: 0.18652864634875332
+  std: 0.11807213671456734
+new_line_ratio:
+  mean: 0.16904272097477915
+  std: 0.1605730820168417
+short_line_ratio:
+  mean: 0.7198658708839432
+  std: 0.14297168674772076
+top_2_gram:
+  mean: 0.06070337057232097
+  std: 0.06479804790257683
+top_3_gram:
+  mean: 0.07231435180597262
+  std: 0.07383227114703457
+top_4_gram:
+  mean: 0.07302743224317097
+  std: 0.09801314996743163
 total_bytes: 80365776
 total_docs: 40000
 total_words: 11403682
