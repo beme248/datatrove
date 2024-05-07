@@ -192,39 +192,46 @@ class LanguageStatsCalculator(PipelineStep):
 
             ## FineWeb filters
             lines = doc.text.split("\n")
+            n_lines = len(lines)
 
             # Compute ratio ratio of lines ending in punctuation
             stop_chars = (".", "'", '"', "!", "?")
-            line_punct_ratio = sum(1 for line in lines if line.endswith(stop_chars)) / len(lines)
+            line_punct_ratio = sum(1 for line in lines if line.endswith(stop_chars)) / n_lines if n_lines > 0 else 0
             stats[language]["line_punct_ratio"].append(line_punct_ratio)
 
             # Compute ratio of "short" lines (<=30 characters)
-            short_line_ratio = sum(1 for line in lines if len(line) <= 30) / len(lines)
+            short_line_ratio = sum(1 for line in lines if len(line) <= 30) / n_lines if n_lines > 0 else 0
             stats[language]["short_line_ratio"].append(short_line_ratio)
 
             # Compute ratio of duplicated lines
             non_empty_lines = [line for line in lines if line.strip() != ""]
-            duplicate_line_ratio = find_duplicates(non_empty_lines)[1] / len(doc.text.replace("\n", ""))
+            n_chars = len(doc.text.replace("\n", ""))
+            duplicate_line_ratio = find_duplicates(non_empty_lines)[1] / n_chars if n_chars > 0 else 0
             stats[language]["duplicate_line_ratio"].append(duplicate_line_ratio)
 
             # Compute ratio of newlines to words
             new_line = doc.text.count("\n")
-            new_line_ratio = new_line / len(words_punct)
+            n_words_punct = len(words_punct)
+            new_line_ratio = new_line / n_words_punct if n_words_punct > 0 else 0
             stats[language]["new_line_ratio"].append(new_line_ratio)
 
             ## Gopher repetition filters
 
             # Compute paragraph repetition ratios
+            n_text = len(text)
+
             paragraphs = self.paragraph_exp.split(text.strip())
             paragraphs_duplicates, char_duplicates = find_duplicates(paragraphs)
-            stats[language]["dup_para_frac"] = paragraphs_duplicates / len(paragraphs)
-            stats[language]["dup_para_char_frac"] = char_duplicates / len(text)
+            n_paragraphs = len(paragraphs)
+            stats[language]["dup_para_frac"] = paragraphs_duplicates / n_paragraphs if n_paragraphs > 0 else 0
+            stats[language]["dup_para_char_frac"] = char_duplicates / n_text if n_text > 0 else 0
 
             # Compute line repetition ratios
             lines = self._line_splitter.split(text)
             line_duplicates, char_duplicates = find_duplicates(lines)
-            stats[language]["dup_line_frac"] = line_duplicates / len(lines)
-            stats[language]["dup_line_char_frac"] = char_duplicates / len(text)
+            n_lines = len(lines)
+            stats[language]["dup_line_frac"] = line_duplicates / n_lines if n_lines > 0 else 0
+            stats[language]["dup_line_char_frac"] = char_duplicates / n_text if n_text > 0 else 0
 
             # Compute top n-gram repetition ratios
             for n in [2, 3, 4]:
@@ -232,12 +239,12 @@ class LanguageStatsCalculator(PipelineStep):
                 if not n_grams:
                     continue
                 top_char_length = find_top_duplicate(n_grams)
-                stats[language][f"top_{n}_gram"] = top_char_length / len(text)
+                stats[language][f"top_{n}_gram"] = top_char_length / n_text if n_text > 0 else 0
 
             # Compute duplicated n-gram repetition ratios
             for n in [5, 6, 7, 8, 9, 10]:
                 n_duplicates_char = find_all_duplicate(words_punct, n)
-                stats[language][f"duplicated_{n}_grams"] = n_duplicates_char / len(text)
+                stats[language][f"duplicated_{n}_grams"] = n_duplicates_char / n_text if n_text > 0 else 0
 
             yield doc
 
