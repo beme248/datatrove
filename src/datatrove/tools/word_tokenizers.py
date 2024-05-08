@@ -7,7 +7,7 @@ from indicnlp.tokenize.indic_tokenize import trivial_tokenize as indicnlp_trivia
 from nlpashto import Tokenizer as PsTokenizer
 from nltk.tokenize import word_tokenize
 from pythainlp.tokenize import word_tokenize as th_word_tokenize
-
+from kiwipiepy import Kiwi
 from datatrove.utils.typeshelper import Languages
 
 
@@ -56,6 +56,13 @@ class SpaCyTokenizer(WordTokenizer):
             for token in self.tokenizer(text, disable=["parser", "tagger", "ner"])
             if len(token.text.strip()) > 0
         ]
+
+class KiwiTokenizer(WordTokenizer):
+    def __init__(self, model_type="sbg"):
+        self.kiwi = Kiwi(model_type=model_type)
+
+    def tokenize(self, text) -> list[str]:
+        return [token.form for token in self.kiwi.tokenize(text)]
 
 
 class ThaiTokenizer(WordTokenizer):
@@ -113,7 +120,7 @@ WORD_TOKENIZERS: dict[str, WordTokenizer] = {
     Languages.vietnamese: SpaCyTokenizer("vi"),
     Languages.indonesian: SpaCyTokenizer("id"),
     Languages.persian: SpaCyTokenizer("fa"),
-    Languages.korean: SpaCyTokenizer("ko", {"nlp": {"tokenizer": {"@tokenizers": "spacy.Tokenizer.v1"}}}),
+    Languages.korean: KiwiTokenizer(),
     Languages.arabic: SpaCyTokenizer("ar"),
     Languages.hindi: SpaCyTokenizer("hi"),
     Languages.tamil: SpaCyTokenizer("ta"),
