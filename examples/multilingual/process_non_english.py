@@ -1,4 +1,3 @@
-import os
 import sys
 
 import yaml
@@ -125,6 +124,7 @@ LANGUAGES = [
     "azb",
     "tk",
 ]
+
 
 # Load language-specific statistics and stopwords
 def load_filters(folder_path, languages):

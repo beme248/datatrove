@@ -4,10 +4,11 @@ import spacy
 import stanza
 from anbani.nlp.preprocessing import word_tokenize as ka_word_tokenize
 from indicnlp.tokenize.indic_tokenize import trivial_tokenize as indicnlp_trivial_tokenize
+from kiwipiepy import Kiwi
 from nlpashto import Tokenizer as PsTokenizer
 from nltk.tokenize import word_tokenize
 from pythainlp.tokenize import word_tokenize as th_word_tokenize
-from kiwipiepy import Kiwi
+
 from datatrove.utils.typeshelper import Languages
 
 
@@ -56,6 +57,7 @@ class SpaCyTokenizer(WordTokenizer):
             for token in self.tokenizer(text, disable=["parser", "tagger", "ner"])
             if len(token.text.strip()) > 0
         ]
+
 
 class KiwiTokenizer(WordTokenizer):
     def __init__(self, model_type="sbg"):
