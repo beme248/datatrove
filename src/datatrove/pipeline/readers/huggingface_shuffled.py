@@ -16,6 +16,7 @@ class ShuffledHFDatasetReader(BaseReader):
         dataset: str,
         dataset_options: dict | None = None,
         limit: int = -1,
+        skip: int = 0,
         batch_size: int = 1000,
         progress: bool = False,
         adapter: Callable = None,
@@ -24,7 +25,7 @@ class ShuffledHFDatasetReader(BaseReader):
         default_metadata: dict = None,
         shuffle_seed: int = 42,
     ):
-        super().__init__(limit, progress, adapter, text_key, id_key, default_metadata)
+        super().__init__(limit, skip, progress, adapter, text_key, id_key, default_metadata)
         self.dataset = dataset
         self.dataset_options = dataset_options
         self.batch_size = batch_size
