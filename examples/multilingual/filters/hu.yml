@@ -6,6 +6,7 @@ stopwords:
 - az
 - "\xE9s"
 - is
+- "\u2013"
 - egy
 - hogy
 - volt

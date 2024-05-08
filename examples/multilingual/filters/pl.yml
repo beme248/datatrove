@@ -6,11 +6,14 @@ stopwords:
 - i
 - na
 - z
+- "\u2013"
 - do
 - "si\u0119"
 - roku
 - od
 - a
+- "\u201E"
+- "\u201D"
 - jest
 - przez
 - po

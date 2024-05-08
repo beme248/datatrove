@@ -2,6 +2,7 @@ max_avg_word_length: 9
 max_non_alpha_words_ratio: 0.7
 min_avg_word_length: 2
 stopwords:
+- "\u0964"
 - "\u0B13"
 - "\u0B0F\u0B39\u0B3F"
 - "\u0B38\u0B47"

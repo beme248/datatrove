@@ -2,7 +2,10 @@ max_avg_word_length: 10
 max_non_alpha_words_ratio: 0.7
 min_avg_word_length: 3
 stopwords:
+- "\u2014"
 - "\u04BB\u04D9\u043C"
+- "\xAB"
+- "\xBB"
 - "\u0431\u0443\u0439\u044B\u043D\u0441\u0430"
 - "\u04BB\u044B\u0443"
 - "\u043C\u0435\u043D\u04D9\u043D"

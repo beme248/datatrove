@@ -1,4 +1,5 @@
 import json
+import re
 import string
 from collections import Counter
 from dataclasses import dataclass
@@ -9,8 +10,39 @@ import yaml
 
 from datatrove.io import DataFolderLike, get_datafolder
 from datatrove.pipeline.base import DocumentsPipeline, PipelineStep
-from datatrove.pipeline.filters.gopher_repetition_filter import find_duplicates
+from datatrove.pipeline.filters.gopher_repetition_filter import (
+    find_all_duplicate,
+    find_duplicates,
+    find_top_duplicate,
+    get_n_grams,
+)
 from datatrove.tools.word_tokenizers import get_word_tokenizer
+
+
+MEAN_STD_KEYS = [
+    "hash_word_ratio",
+    "ellipsis_word_ratio",
+    "bullet_start_ratio",
+    "ellipsis_end_ratio",
+    "alpha_ratio",
+    "line_punct_ratio",
+    "short_line_ratio",
+    "duplicate_line_ratio",
+    "new_line_ratio",
+    "dup_para_frac",
+    "dup_para_char_frac",
+    "dup_line_frac",
+    "dup_line_char_frac",
+    "top_2_gram",
+    "top_3_gram",
+    "top_4_gram",
+    "duplicated_5_grams",
+    "duplicated_6_grams",
+    "duplicated_7_grams",
+    "duplicated_8_grams",
+    "duplicated_9_grams",
+    "duplicated_10_grams",
+]
 
 
 @dataclass
@@ -36,6 +68,19 @@ class LanguageStatistics:
     short_line_ratio: MeanStdFloat
     duplicate_line_ratio: MeanStdFloat
     new_line_ratio: MeanStdFloat
+    dup_para_frac: MeanStdFloat
+    dup_para_char_frac: MeanStdFloat
+    dup_line_frac: MeanStdFloat
+    dup_line_char_frac: MeanStdFloat
+    top_2_gram: MeanStdFloat
+    top_3_gram: MeanStdFloat
+    top_4_gram: MeanStdFloat
+    duplicated_5_grams: MeanStdFloat
+    duplicated_6_grams: MeanStdFloat
+    duplicated_7_grams: MeanStdFloat
+    duplicated_8_grams: MeanStdFloat
+    duplicated_9_grams: MeanStdFloat
+    duplicated_10_grams: MeanStdFloat
 
     def to_dict(self) -> dict:
         return {
@@ -54,6 +99,19 @@ class LanguageStatistics:
             "short_line_ratio": {"mean": self.short_line_ratio.mean, "std": self.short_line_ratio.std},
             "duplicate_line_ratio": {"mean": self.duplicate_line_ratio.mean, "std": self.duplicate_line_ratio.std},
             "new_line_ratio": {"mean": self.new_line_ratio.mean, "std": self.new_line_ratio.std},
+            "dup_para_frac": {"mean": self.dup_para_frac.mean, "std": self.dup_para_frac.std},
+            "dup_para_char_frac": {"mean": self.dup_para_char_frac.mean, "std": self.dup_para_char_frac.std},
+            "dup_line_frac": {"mean": self.dup_line_frac.mean, "std": self.dup_line_frac.std},
+            "dup_line_char_frac": {"mean": self.dup_line_char_frac.mean, "std": self.dup_line_char_frac.std},
+            "top_2_gram": {"mean": self.top_2_gram.mean, "std": self.top_2_gram.std},
+            "top_3_gram": {"mean": self.top_3_gram.mean, "std": self.top_3_gram.std},
+            "top_4_gram": {"mean": self.top_4_gram.mean, "std": self.top_4_gram.std},
+            "duplicated_5_grams": {"mean": self.duplicated_5_grams.mean, "std": self.duplicated_5_grams.std},
+            "duplicated_6_grams": {"mean": self.duplicated_6_grams.mean, "std": self.duplicated_6_grams.std},
+            "duplicated_7_grams": {"mean": self.duplicated_7_grams.mean, "std": self.duplicated_7_grams.std},
+            "duplicated_8_grams": {"mean": self.duplicated_8_grams.mean, "std": self.duplicated_8_grams.std},
+            "duplicated_9_grams": {"mean": self.duplicated_9_grams.mean, "std": self.duplicated_9_grams.std},
+            "duplicated_10_grams": {"mean": self.duplicated_10_grams.mean, "std": self.duplicated_10_grams.std},
         }
 
 
@@ -71,6 +129,8 @@ class LanguageStatsCalculator(PipelineStep):
         self.language_field = language_field
         self.output_folder = get_datafolder(output_folder)
         self.word_count_prune = word_count_prune
+        self.paragraph_exp = re.compile(r"\n{2,}")
+        self._line_splitter = re.compile("\n+")
 
     def run(self, data: DocumentsPipeline, rank: int = 0, world_size: int = 1) -> DocumentsPipeline:
         stats = {}
@@ -85,21 +145,13 @@ class LanguageStatsCalculator(PipelineStep):
                     "total_words": 0,
                     "total_docs": 0,
                     "total_bytes": 0,
-                    "hash_word_ratio": [],
-                    "ellipsis_word_ratio": [],
-                    "bullet_start_ratio": [],
-                    "ellipsis_end_ratio": [],
-                    "alpha_ratio": [],
-                    "line_punct_ratio": [],
-                    "short_line_ratio": [],
-                    "duplicate_line_ratio": [],
-                    "new_line_ratio": [],
+                    **{k: [] for k in MEAN_STD_KEYS},
                 }
 
             tokenizer = get_word_tokenizer(language)
             text = doc.text
-            words = tokenizer.tokenize(text)
-            words = [w for w in words if w not in string.punctuation]
+            words_punct = tokenizer.tokenize(text)
+            words = [w for w in words_punct if w not in string.punctuation]
             n_words = len(words)
 
             stats[language]["total_docs"] += 1
@@ -140,42 +192,65 @@ class LanguageStatsCalculator(PipelineStep):
 
             ## FineWeb filters
             lines = doc.text.split("\n")
+            n_lines = len(lines)
 
             # Compute ratio ratio of lines ending in punctuation
             stop_chars = (".", "'", '"', "!", "?")
-            line_punct_ratio = sum(1 for line in lines if line.endswith(stop_chars)) / len(lines)
+            line_punct_ratio = sum(1 for line in lines if line.endswith(stop_chars)) / n_lines if n_lines > 0 else 0
             stats[language]["line_punct_ratio"].append(line_punct_ratio)
 
             # Compute ratio of "short" lines (<=30 characters)
-            short_line_ratio = sum(1 for line in lines if len(line) <= 30) / len(lines)
+            short_line_ratio = sum(1 for line in lines if len(line) <= 30) / n_lines if n_lines > 0 else 0
             stats[language]["short_line_ratio"].append(short_line_ratio)
 
             # Compute ratio of duplicated lines
             non_empty_lines = [line for line in lines if line.strip() != ""]
-            duplicate_line_ratio = find_duplicates(non_empty_lines)[1] / len(doc.text.replace("\n", ""))
+            n_chars = len(doc.text.replace("\n", ""))
+            duplicate_line_ratio = find_duplicates(non_empty_lines)[1] / n_chars if n_chars > 0 else 0
             stats[language]["duplicate_line_ratio"].append(duplicate_line_ratio)
 
             # Compute ratio of newlines to words
             new_line = doc.text.count("\n")
-            words = tokenizer.tokenize(text)
-            new_line_ratio = new_line / len(words)
+            n_words_punct = len(words_punct)
+            new_line_ratio = new_line / n_words_punct if n_words_punct > 0 else 0
             stats[language]["new_line_ratio"].append(new_line_ratio)
+
+            ## Gopher repetition filters
+
+            # Compute paragraph repetition ratios
+            n_text = len(text)
+
+            paragraphs = self.paragraph_exp.split(text.strip())
+            paragraphs_duplicates, char_duplicates = find_duplicates(paragraphs)
+            n_paragraphs = len(paragraphs)
+            stats[language]["dup_para_frac"] = paragraphs_duplicates / n_paragraphs if n_paragraphs > 0 else 0
+            stats[language]["dup_para_char_frac"] = char_duplicates / n_text if n_text > 0 else 0
+
+            # Compute line repetition ratios
+            lines = self._line_splitter.split(text)
+            line_duplicates, char_duplicates = find_duplicates(lines)
+            n_lines = len(lines)
+            stats[language]["dup_line_frac"] = line_duplicates / n_lines if n_lines > 0 else 0
+            stats[language]["dup_line_char_frac"] = char_duplicates / n_text if n_text > 0 else 0
+
+            # Compute top n-gram repetition ratios
+            for n in [2, 3, 4]:
+                n_grams = get_n_grams(words_punct, n)
+                if not n_grams:
+                    continue
+                top_char_length = find_top_duplicate(n_grams)
+                stats[language][f"top_{n}_gram"] = top_char_length / n_text if n_text > 0 else 0
+
+            # Compute duplicated n-gram repetition ratios
+            for n in [5, 6, 7, 8, 9, 10]:
+                n_duplicates_char = find_all_duplicate(words_punct, n)
+                stats[language][f"duplicated_{n}_grams"] = n_duplicates_char / n_text if n_text > 0 else 0
 
             yield doc
 
         for language in stats:
-            # Calculate local mean and squared mean
-            for key in [
-                "hash_word_ratio",
-                "ellipsis_word_ratio",
-                "bullet_start_ratio",
-                "ellipsis_end_ratio",
-                "alpha_ratio",
-                "line_punct_ratio",
-                "short_line_ratio",
-                "duplicate_line_ratio",
-                "new_line_ratio",
-            ]:
+            # Calculate local mean and mean of squares
+            for key in MEAN_STD_KEYS:
                 values = np.array(stats[language][key])
                 stats[language][f"{key}_mean"] = np.mean(values)
                 stats[language][f"{key}_sq_mean"] = np.mean(values**2)
@@ -214,18 +289,6 @@ class LanguageStatsReducer(PipelineStep):
     def run(self, data: DocumentsPipeline, rank: int = 0, world_size: int = 1) -> DocumentsPipeline:
         stats = {}
         doc_count = {}
-
-        MEAN_STD_KEYS = [
-            "hash_word_ratio",
-            "ellipsis_word_ratio",
-            "bullet_start_ratio",
-            "ellipsis_end_ratio",
-            "alpha_ratio",
-            "line_punct_ratio",
-            "short_line_ratio",
-            "duplicate_line_ratio",
-            "new_line_ratio",
-        ]
 
         # combine all json files with stats
         assert world_size == 1, "world_size must be 1 when getting the input from an input_folder"

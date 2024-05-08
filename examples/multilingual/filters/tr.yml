@@ -3,20 +3,25 @@ max_non_alpha_words_ratio: 0.7
 min_avg_word_length: 3
 stopwords:
 - ve
+- ''''''
 - bir
 - olarak
 - bu
 - ile
+- '``'
 - "i\xE7in"
 - da
 - olan
 - de
+- "\u2019"
 - "kaynak\xE7a"
 - "y\u0131l\u0131nda"
 - "taraf\u0131ndan"
 - sonra
+- align=
 - en
 - daha
 - the
+- '|-'
 - "d\u0131\u015F"
 - "ba\u011Flant\u0131lar"

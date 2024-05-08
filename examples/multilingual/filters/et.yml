@@ -4,8 +4,11 @@ min_avg_word_length: 3
 stopwords:
 - ja
 - 'on'
+- ''''''
+- "\u2013"
 - oli
 - eesti
+- '``'
 - ta
 - aastal
 - ka

@@ -4,9 +4,13 @@ min_avg_word_length: 3
 stopwords:
 - m
 - ir
+- "\u2013"
+- "\u201E"
+- "\u201C"
 - buvo
 - "\u012F"
 - nuo
+- '||'
 - lietuvos
 - "i\u0161"
 - d

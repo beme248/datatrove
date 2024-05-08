@@ -5,6 +5,7 @@ stopwords:
 - "v\u0259"
 - "il\u0259"
 - "ild\u0259"
+- "\u2014"
 - bir
 - bu
 - "az\u0259rbaycan"

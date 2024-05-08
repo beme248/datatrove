@@ -3,14 +3,20 @@ max_non_alpha_words_ratio: 0.7
 min_avg_word_length: 3
 stopwords:
 - va
+- "\u2014"
 - bilan
+- "\u201C"
 - u
+- "\u201E"
 - uchun
+- "\u2018"
 - manbalar
 - joylashgan
 - bu
 - bir
+- ''''''
 - "bo\u02BBlgan"
+- '``'
 - ham
 - aholi
 - uning
