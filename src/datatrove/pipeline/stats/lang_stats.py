@@ -327,7 +327,7 @@ class LanguageStatsCalculator(PipelineStep):
                 "𝪈",
                 "｡",
                 "。",
-            ) # FineWeb + Spacy sentencizer stop chars
+            )  # FineWeb + Spacy sentencizer stop chars
             line_punct_ratio = sum(1 for line in lines if line.endswith(stop_chars)) / n_lines if n_lines > 0 else 0
             stats[language]["line_punct_ratio"].append(line_punct_ratio)
 
