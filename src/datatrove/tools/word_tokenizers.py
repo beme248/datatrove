@@ -163,12 +163,22 @@ class MultilingualTokenizer:
     def __init__(self, factory_dict: dict[str, Callable[[], WordTokenizer]]):
         self._factory_dict = factory_dict
         self._tokenizers = {}
+        self._fallback_tokenizer = None
+
+    def _get_fallback_tokenizer(self):
+        if self._fallback_tokenizer is None:
+            self._fallback_tokenizer = SpaCyTokenizer("xx")
+        return self._fallback_tokenizer
 
     def _get_tokenizer(self, language: str) -> WordTokenizer:
         if language not in self._tokenizers:
             if language not in self._factory_dict:
-                raise ValueError(f"'{language}' tokenizer is not set.")
-            tokenizer = self._factory_dict[language]()
+                print(
+                    f"Warning: tokenizer for '{language}' is not set. Using SpaCy 'xx' tokenizer as fallback instead."
+                )
+                tokenizer = self._get_fallback_tokenizer()
+            else:
+                tokenizer = self._factory_dict[language]()
             self._tokenizers[language] = tokenizer
         return self._tokenizers[language]
 

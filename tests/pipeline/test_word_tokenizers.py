@@ -17,19 +17,25 @@ class TestWordTokenizers(unittest.TestCase):
     def test_word_tokenizers(self):
         for language in default_tokenizer.languages:
             tokens = default_tokenizer.word_tokenize(SAMPLE_TEXT, language)
-            assert len(tokens) >= 1, f"'{language}' tokenizer assertion failed"
+            assert len(tokens) >= 1, f"'{language}' word tokenizer assertion failed"
             is_stripped = [token == token.strip() for token in tokens]
             assert all(is_stripped), f"'{language}' tokens contain whitespaces"
 
     def test_sent_tokenizers(self):
         for language in default_tokenizer.languages:
             sents = default_tokenizer.sent_tokenize(SAMPLE_TEXT, language)
-            assert len(sents) >= 1, f"'{language}' tokenizer assertion failed"
+            assert len(sents) >= 1, f"'{language}' sentence tokenizer assertion failed"
             is_stripped = [sent == sent.strip() for sent in sents]
-            assert all(is_stripped), f"'{language}' sents contain whitespaces"
+            assert all(is_stripped), f"'{language}' sentencess contain whitespaces"
 
     def test_english_tokenizer(self):
         nltk_words = word_tokenize(SAMPLE_TEXT, language="english")
         tokenizer_words = default_tokenizer.word_tokenize(SAMPLE_TEXT, language=Languages.english)
 
         self.assertEqual(nltk_words, tokenizer_words, "NLTK tokenizer and multilingual tokenizer differ")
+
+    def test_fallback_tokenizer(self):
+        tokens = default_tokenizer.word_tokenize(SAMPLE_TEXT, "no-tokenizer")
+        assert len(tokens) >= 1, "Fallback word tokenizer assertion failed"
+        sents = default_tokenizer.sent_tokenize(SAMPLE_TEXT, "no-tokenizer")
+        assert len(sents) >= 1, "Fallback sentence tokenizer assertion failed"
