@@ -58,10 +58,13 @@ processing = [
     "ftfy",
     "fasteners",
     "xxhash",
-
-    # Multilingual tokenization
+]
+decont = [
+    "lighteval>=0.3.0"
+]
+multilingual = [
+    "spacy",    
     "stanza",
-    "spacy",
     "pyvi",
     "pythainlp",
     "jieba",
@@ -69,12 +72,6 @@ processing = [
     "nlpashto",
     "indic-nlp-library",
     "kiwipiepy"
-]
-decont = [
-    "lighteval>=0.3.0"
-]
-multilingual = [
-    "spacy",
 ]
 quality = [
   "ruff>=0.1.5"
