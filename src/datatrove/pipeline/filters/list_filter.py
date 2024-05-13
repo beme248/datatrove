@@ -37,7 +37,7 @@ class ListFilter(BaseFilter):
         text = doc.text
         lang = doc.metadata["language"]
 
-        words = self.tokenizer.tokenize(text, lang)
+        words = self.tokenizer.word_tokenize(text, lang)
         new_line = text.count("\n")
         if new_line / len(words) > self.new_line_ratio:
             return False, "Suspected list"

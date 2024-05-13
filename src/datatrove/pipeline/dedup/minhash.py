@@ -212,7 +212,7 @@ class MinhashDedupSignature(PipelineStep):
             [
                 self._hash_func(" ".join(x).encode("utf-8"))
                 for x in ngrams(
-                    self.tokenizer.tokenize(simplify_text(text, self.config.norm_config), language),
+                    self.tokenizer.word_tokenize(simplify_text(text, self.config.norm_config), language),
                     self.config.n_grams,
                 )
             ],

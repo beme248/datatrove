@@ -16,13 +16,13 @@ SAMPLE_TEXT = (
 class TestWordTokenizers(unittest.TestCase):
     def test_word_tokenizers(self):
         for language in default_tokenizer.languages:
-            tokens = default_tokenizer.tokenize(SAMPLE_TEXT, language)
+            tokens = default_tokenizer.word_tokenize(SAMPLE_TEXT, language)
             assert len(tokens) >= 1, f"'{language}' tokenizer assertion failed"
             is_stripped = [token == token.strip() for token in tokens]
             assert all(is_stripped), f"'{language}' tokens contain whitespaces"
 
     def test_english_tokenizer(self):
         nltk_words = word_tokenize(SAMPLE_TEXT, language="english")
-        tokenizer_words = default_tokenizer.tokenize(SAMPLE_TEXT, language=Languages.english)
+        tokenizer_words = default_tokenizer.word_tokenize(SAMPLE_TEXT, language=Languages.english)
 
         self.assertEqual(nltk_words, tokenizer_words, "NLTK tokenizer and multilingual tokenizer differ")

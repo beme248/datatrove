@@ -126,7 +126,7 @@ class GopherRepetitionFilter(BaseFilter):
 
         text = doc.text
         lang = doc.metadata.get("language", "en")
-        words = self.tokenizer.tokenize(text, lang)
+        words = self.tokenizer.word_tokenize(text, lang)
 
         for n, n_frac in self.top_n_grams:
             n_grams = get_n_grams(words, n)

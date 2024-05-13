@@ -192,7 +192,7 @@ class MultilingualFineWebQualityFilter(BaseFilter):
         ):
             return False, "char_dup_ratio"
 
-        words = self.tokenizer.tokenize(doc.text, language)
+        words = self.tokenizer.word_tokenize(doc.text, language)
         new_line = doc.text.count("\n")
         if (
             self.new_line_ratio
