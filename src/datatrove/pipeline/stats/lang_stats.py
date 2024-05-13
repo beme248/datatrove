@@ -16,7 +16,7 @@ from datatrove.pipeline.filters.gopher_repetition_filter import (
     find_top_duplicate,
     get_n_grams,
 )
-from datatrove.tools.word_tokenizers import get_word_tokenizer
+from datatrove.tools.word_tokenizers import default_tokenizer
 
 
 MEAN_STD_KEYS = [
@@ -148,9 +148,8 @@ class LanguageStatsCalculator(PipelineStep):
                     **{k: [] for k in MEAN_STD_KEYS},
                 }
 
-            tokenizer = get_word_tokenizer(language)
             text = doc.text
-            words_punct = tokenizer.tokenize(text)
+            words_punct = default_tokenizer.tokenize(doc.text, language)
             words = [w for w in words_punct if w not in string.punctuation]
             n_words = len(words)
 
