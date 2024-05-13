@@ -21,6 +21,13 @@ class TestWordTokenizers(unittest.TestCase):
             is_stripped = [token == token.strip() for token in tokens]
             assert all(is_stripped), f"'{language}' tokens contain whitespaces"
 
+    def test_sent_tokenizers(self):
+        for language in default_tokenizer.languages:
+            sents = default_tokenizer.sent_tokenize(SAMPLE_TEXT, language)
+            assert len(sents) >= 1, f"'{language}' tokenizer assertion failed"
+            is_stripped = [sent == sent.strip() for sent in sents]
+            assert all(is_stripped), f"'{language}' sents contain whitespaces"
+
     def test_english_tokenizer(self):
         nltk_words = word_tokenize(SAMPLE_TEXT, language="english")
         tokenizer_words = default_tokenizer.word_tokenize(SAMPLE_TEXT, language=Languages.english)

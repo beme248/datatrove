@@ -9,6 +9,9 @@ class WordTokenizer(ABC):
     def word_tokenize(self, text: str) -> list[str]:
         pass
 
+    def sent_tokenize(self, text: str) -> list[str]:
+        pass
+
 
 class StanzaWordTokenizer(WordTokenizer):
     def __init__(self, stanza_language: str):
@@ -23,10 +26,14 @@ class StanzaWordTokenizer(WordTokenizer):
             self._tokenizer = stanza.Pipeline(self.stanza_language, processors="tokenize")
         return self._tokenizer
 
-    def word_tokenize(self, text) -> list[str]:
+    def word_tokenize(self, text: str) -> list[str]:
         doc = self.tokenizer(text)
         tokens = [token.text for sentence in doc.sentences for token in sentence.tokens]
         return tokens
+
+    def sent_tokenize(self, text: str) -> list[str]:
+        doc = self.tokenizer(text)
+        return [sentence.text for sentence in doc.sentences]
 
 
 class NLTKTokenizer(WordTokenizer):
@@ -34,10 +41,15 @@ class NLTKTokenizer(WordTokenizer):
         super().__init__()
         self.punkt_language = punkt_language
 
-    def word_tokenize(self, text) -> list[str]:
+    def word_tokenize(self, text: str) -> list[str]:
         from nltk.tokenize import word_tokenize
 
         return word_tokenize(text, language=self.punkt_language)
+
+    def sent_tokenize(self, text: str) -> list[str]:
+        from nltk.tokenize import sent_tokenize
+
+        return sent_tokenize(text, language=self.punkt_language)
 
 
 class SpaCyTokenizer(WordTokenizer):
@@ -49,13 +61,22 @@ class SpaCyTokenizer(WordTokenizer):
             self.tokenizer = spacy.blank(spacy_language)
         else:
             self.tokenizer = spacy.blank(spacy_language, config=config)
+        self.tokenizer.add_pipe("sentencizer")
 
-    def word_tokenize(self, text) -> list[str]:
+    def word_tokenize(self, text: str) -> list[str]:
         self.tokenizer.max_length = len(text) + 10
         return [
             token.text
             for token in self.tokenizer(text, disable=["parser", "tagger", "ner"])
             if len(token.text.strip()) > 0
+        ]
+
+    def sent_tokenize(self, text: str) -> list[str]:
+        self.tokenizer.max_length = len(text) + 10
+        return [
+            sent.text
+            for sent in self.tokenizer(text, disable=["parser", "tagger", "ner"])
+            if len(sent.text.strip()) > 0
         ]
 
 
@@ -65,12 +86,15 @@ class KiwiTokenizer(WordTokenizer):
 
         self.kiwi = Kiwi(model_type=model_type)
 
-    def word_tokenize(self, text) -> list[str]:
+    def word_tokenize(self, text: str) -> list[str]:
         return [token.form for token in self.kiwi.tokenize(text)]
+
+    def sent_tokenize(self, text: str) -> list[str]:
+        return [sent.text for sent in self.kiwi.split_into_sents(text)]
 
 
 class ThaiTokenizer(WordTokenizer):
-    def word_tokenize(self, text) -> list[str]:
+    def word_tokenize(self, text: str) -> list[str]:
         from pythainlp.tokenize import word_tokenize as th_word_tokenize
 
         return [
@@ -79,6 +103,11 @@ class ThaiTokenizer(WordTokenizer):
             if len(token.strip()) > 0
         ]
 
+    def sent_tokenize(self, text: str) -> list[str]:
+        from pythainlp.tokenize import sent_tokenize as th_sent_tokenize
+
+        return [sent.strip() for sent in th_sent_tokenize(text) if len(sent.strip()) > 0]
+
 
 class GeorgianTokenizer(WordTokenizer):
     def word_tokenize(self, text) -> list[str]:
@@ -86,15 +115,27 @@ class GeorgianTokenizer(WordTokenizer):
 
         return ka_word_tokenize(text)
 
+    def sent_tokenize(self, text: str) -> list[str]:
+        from anbani.nlp.preprocessing import sentence_tokenize as ka_sent_tokenize
+
+        sents = [" ".join(sentence) for sentence in ka_sent_tokenize(text)]
+        sents = [sent.strip() for sent in sents if len(sent.strip()) > 0]
+        return sents
+
 
 class PashtoTokenizer(WordTokenizer):
     def __init__(self):
+        from nlpashto import Cleaner as PsCleaner
         from nlpashto import Tokenizer as PsTokenizer
 
         self.tokenizer = PsTokenizer()
+        self.cleaner = PsCleaner()
 
     def word_tokenize(self, text) -> list[str]:
         return [tok for sent in self.tokenizer.tokenize(text) for tok in sent]
+
+    def sent_tokenize(self, text: str) -> list[str]:
+        return self.cleaner.clean(text, remove_emojis=False, normalize_nums=False, remove_special_chars=False)
 
 
 class IndicNLPTokenizer(WordTokenizer):
@@ -105,6 +146,11 @@ class IndicNLPTokenizer(WordTokenizer):
         from indicnlp.tokenize.indic_tokenize import trivial_tokenize as indicnlp_trivial_tokenize
 
         return [token.strip() for token in indicnlp_trivial_tokenize(text, self.language) if len(token.strip()) > 0]
+
+    def sent_tokenize(self, text: str) -> list[str]:
+        from indicnlp.tokenize.sentence_tokenize import sentence_split
+
+        return [sent.strip() for sent in sentence_split(text, lang=self.language) if len(sent.strip()) > 0]
 
 
 class MultilingualTokenizer:
@@ -126,6 +172,9 @@ class MultilingualTokenizer:
 
     def word_tokenize(self, text: str, language: str) -> list[str]:
         return self._get_tokenizer(language).word_tokenize(text)
+
+    def sent_tokenize(self, text: str, language: str) -> list[str]:
+        return self._get_tokenizer(language).sent_tokenize(text)
 
 
 WORD_TOKENIZER_FACTORY: dict[str, Callable[[], WordTokenizer]] = {
