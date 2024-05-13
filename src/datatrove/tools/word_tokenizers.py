@@ -74,8 +74,8 @@ class SpaCyTokenizer(WordTokenizer):
     def sent_tokenize(self, text: str) -> list[str]:
         self.tokenizer.max_length = len(text) + 10
         return [
-            sent.text
-            for sent in self.tokenizer(text, disable=["parser", "tagger", "ner"])
+            sent.text.strip()
+            for sent in self.tokenizer(text, disable=["parser", "tagger", "ner"]).sents
             if len(sent.text.strip()) > 0
         ]
 
@@ -125,17 +125,18 @@ class GeorgianTokenizer(WordTokenizer):
 
 class PashtoTokenizer(WordTokenizer):
     def __init__(self):
-        from nlpashto import Cleaner as PsCleaner
         from nlpashto import Tokenizer as PsTokenizer
 
         self.tokenizer = PsTokenizer()
-        self.cleaner = PsCleaner()
 
     def word_tokenize(self, text) -> list[str]:
         return [tok for sent in self.tokenizer.tokenize(text) for tok in sent]
 
     def sent_tokenize(self, text: str) -> list[str]:
-        return self.cleaner.clean(text, remove_emojis=False, normalize_nums=False, remove_special_chars=False)
+        # TODO: find appropriate sent tokenizer
+        from nltk.tokenize import sent_tokenize
+
+        return sent_tokenize(text)
 
 
 class IndicNLPTokenizer(WordTokenizer):
