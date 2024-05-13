@@ -1,7 +1,7 @@
 from datatrove.pipeline.filters.base_filter import BaseFilter
 from datatrove.pipeline.filters.gopher_repetition_filter import find_duplicates
 from datatrove.pipeline.writers.disk_base import DiskWriter
-from datatrove.tools.word_tokenizers import get_word_tokenizer
+from datatrove.tools.word_tokenizers import MultilingualTokenizer, default_tokenizer
 
 
 class MultilingualFineWebQualityFilter(BaseFilter):
@@ -16,6 +16,7 @@ class MultilingualFineWebQualityFilter(BaseFilter):
         short_line_length: dict[str, int] | None = None,
         char_duplicates_ratio: dict[str, float] | None = None,
         new_line_ratio: dict[str, float] | None = None,
+        tokenizer: MultilingualTokenizer = default_tokenizer,
     ):
         super().__init__(exclusion_writer)
         self.line_punct_thr = line_punct_thr
@@ -24,6 +25,7 @@ class MultilingualFineWebQualityFilter(BaseFilter):
         self.short_line_length = short_line_length
         self.char_duplicates_ratio = char_duplicates_ratio
         self.new_line_ratio = new_line_ratio
+        self.tokenizer = tokenizer
 
     def filter(self, doc) -> bool | tuple[bool, str]:
         stop_chars = (
@@ -190,8 +192,7 @@ class MultilingualFineWebQualityFilter(BaseFilter):
         ):
             return False, "char_dup_ratio"
 
-        tokenizer = get_word_tokenizer(language)
-        words = tokenizer.tokenize(doc.text)
+        words = self.tokenizer.tokenize(doc.text, language)
         new_line = doc.text.count("\n")
         if (
             self.new_line_ratio

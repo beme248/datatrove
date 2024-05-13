@@ -1,4 +1,5 @@
 from abc import ABC, abstractmethod
+from typing import Callable
 
 import spacy
 import stanza
@@ -37,6 +38,7 @@ class StanzaWordTokenizer(WordTokenizer):
 
 class NLTKTokenizer(WordTokenizer):
     def __init__(self, punkt_language: str):
+        super().__init__()
         self.punkt_language = punkt_language
 
     def tokenize(self, text) -> list[str]:
@@ -45,6 +47,7 @@ class NLTKTokenizer(WordTokenizer):
 
 class SpaCyTokenizer(WordTokenizer):
     def __init__(self, spacy_language: str, config=None):
+        super().__init__()
         if config is None:
             self.tokenizer = spacy.blank(spacy_language)
         else:
@@ -97,110 +100,126 @@ class IndicNLPTokenizer(WordTokenizer):
         return [token.strip() for token in indicnlp_trivial_tokenize(text, self.language) if len(token.strip()) > 0]
 
 
-WORD_TOKENIZERS: dict[str, WordTokenizer] = {
-    Languages.english: NLTKTokenizer("english"),
-    Languages.german: NLTKTokenizer("german"),
-    Languages.french: NLTKTokenizer("french"),
-    Languages.czech: NLTKTokenizer("czech"),
-    Languages.danish: NLTKTokenizer("danish"),
-    Languages.dutch: NLTKTokenizer("dutch"),
-    Languages.estonian: NLTKTokenizer("estonian"),
-    Languages.finnish: NLTKTokenizer("finnish"),
-    Languages.greek: NLTKTokenizer("greek"),
-    Languages.italian: NLTKTokenizer("italian"),
-    Languages.malayalam: NLTKTokenizer("malayalam"),
-    Languages.norwegian: NLTKTokenizer("norwegian"),
-    Languages.polish: NLTKTokenizer("polish"),
-    Languages.portuguese: NLTKTokenizer("portuguese"),
-    Languages.russian: NLTKTokenizer("russian"),
-    Languages.slovenian: NLTKTokenizer("slovene"),
-    Languages.spanish: NLTKTokenizer("spanish"),
-    Languages.swedish: NLTKTokenizer("swedish"),
-    Languages.turkish: NLTKTokenizer("turkish"),
-    Languages.chinese: SpaCyTokenizer("zh", {"nlp": {"tokenizer": {"segmenter": "jieba"}}}),
-    Languages.japanese: StanzaWordTokenizer("ja"),
-    Languages.vietnamese: SpaCyTokenizer("vi"),
-    Languages.indonesian: SpaCyTokenizer("id"),
-    Languages.persian: SpaCyTokenizer("fa"),
-    Languages.korean: KiwiTokenizer(),
-    Languages.arabic: SpaCyTokenizer("ar"),
-    Languages.hindi: SpaCyTokenizer("hi"),
-    Languages.tamil: SpaCyTokenizer("ta"),
-    Languages.urdu: SpaCyTokenizer("ur"),
-    Languages.marathi: SpaCyTokenizer("mr"),
-    Languages.telugu: SpaCyTokenizer("te"),
-    Languages.hungarian: SpaCyTokenizer("hu"),
-    Languages.romanian: SpaCyTokenizer("ro"),
-    Languages.ukrainian: SpaCyTokenizer("uk"),
-    Languages.slovak: SpaCyTokenizer("sk"),
-    Languages.bulgarian: SpaCyTokenizer("bg"),
-    Languages.catalan: SpaCyTokenizer("ca"),
-    Languages.croatian: SpaCyTokenizer("hr"),
-    Languages.latin: SpaCyTokenizer("la"),
-    Languages.serbian: SpaCyTokenizer("sr"),
-    Languages.lithuanian: SpaCyTokenizer("lt"),
-    Languages.hebrew: SpaCyTokenizer("he"),
-    Languages.latvian: SpaCyTokenizer("lv"),
-    Languages.icelandic: SpaCyTokenizer("is"),
-    Languages.armenian: SpaCyTokenizer("hy"),
-    Languages.basque: SpaCyTokenizer("eu"),
-    Languages.thai: ThaiTokenizer(),
-    Languages.georgian: GeorgianTokenizer(),
-    Languages.tagalog: SpaCyTokenizer("tl"),
-    Languages.albanian: SpaCyTokenizer("sq"),
-    Languages.macedonian: SpaCyTokenizer("mk"),
-    Languages.azerbaijani: SpaCyTokenizer("az"),
-    Languages.amharic: SpaCyTokenizer("am"),
-    Languages.bengali: SpaCyTokenizer("bn"),
-    Languages.malay: SpaCyTokenizer("ms"),
-    Languages.urdu: SpaCyTokenizer("ur"),
-    Languages.nepali: SpaCyTokenizer("ne"),
-    Languages.kazakh: StanzaWordTokenizer("kk"),
-    Languages.gujarati: SpaCyTokenizer("gu"),
-    Languages.kannada: SpaCyTokenizer("kn"),
-    Languages.welsh: StanzaWordTokenizer("cy"),
-    Languages.norwegian_nynorsk: NLTKTokenizer("norwegian"),
-    Languages.sinhala: SpaCyTokenizer("si"),
-    Languages.tatar: SpaCyTokenizer("tt"),
-    Languages.afrikaans: SpaCyTokenizer("af"),
-    Languages.kirghiz: SpaCyTokenizer("ky"),
-    Languages.irish: SpaCyTokenizer("ga"),
-    Languages.luxembourgish: SpaCyTokenizer("lb"),
-    Languages.maltese: StanzaWordTokenizer("mt"),
-    Languages.sanskrit: SpaCyTokenizer("sa"),
-    Languages.yoruba: SpaCyTokenizer("yo"),
-    Languages.pashto: PashtoTokenizer(),
-    Languages.serbocroatian: SpaCyTokenizer("sr"),
-    Languages.oriya: IndicNLPTokenizer("or"),
-    Languages.punjabi: IndicNLPTokenizer("sa"),
-    Languages.assamese: IndicNLPTokenizer("as"),
-    Languages.war: IndicNLPTokenizer("war"),
-    Languages.sindhi: IndicNLPTokenizer("sd"),
-    Languages.bosnian: SpaCyTokenizer("hr"),  # Proxy
-    Languages.belarusian: SpaCyTokenizer("uk"),  # Proxy
-    Languages.galician: NLTKTokenizer("portuguese"),  # Proxy
-    Languages.esperanto: NLTKTokenizer("english"),  # Proxy
-    Languages.occitan: NLTKTokenizer("italian"),  # Proxy
-    Languages.cebuano: NLTKTokenizer("english"),  # Proxy
-    Languages.swahili: NLTKTokenizer("english"),  # Proxy
-    Languages.javanese: NLTKTokenizer("english"),  # Proxy
-    Languages.uzbek: NLTKTokenizer("turkish"),  # Proxy, alternative ru
-    Languages.tajik: SpaCyTokenizer("ru"),  # Proxy
-    Languages.kurdish: NLTKTokenizer("english"),  # Proxy, multiple scripts!
-    Languages.sorani: SpaCyTokenizer("fa"),  # Proxy
-    Languages.south_azerbaijani: SpaCyTokenizer("fa"),  # Proxy
-    Languages.bashkir: SpaCyTokenizer("tt"),  # Proxy
-    Languages.western_frisian: NLTKTokenizer("dutch"),  # Proxy
-    Languages.breton: StanzaWordTokenizer("cy"),  # Proxy
-    Languages.malagasy: NLTKTokenizer("english"),  # Proxy
-    Languages.yiddish: SpaCyTokenizer("he"),  # Proxy
-    Languages.somali: NLTKTokenizer("english"),  # Proxy
-    Languages.turkmen: NLTKTokenizer("turkish"),  # Proxy
+class MultilingualTokenizer:
+    def __init__(self, factory_dict: dict[str, Callable[[], WordTokenizer]]):
+        self._factory_dict = factory_dict
+        self._tokenizers = {}
+
+    def _get_tokenizer(self, language: str) -> WordTokenizer:
+        if language not in self._tokenizers:
+            if language not in self._factory_dict:
+                raise ValueError(f"'{language}' tokenizer is not set.")
+            tokenizer = self._factory_dict[language]()
+            self._tokenizers[language] = tokenizer
+        return self._tokenizers[language]
+
+    @property
+    def languages(self) -> list[str]:
+        return list(self._factory_dict.keys())
+
+    def tokenize(self, text: str, language: str) -> list[str]:
+        return self._get_tokenizer(language).tokenize(text)
+
+
+WORD_TOKENIZER_FACTORY: dict[str, Callable[[], WordTokenizer]] = {
+    Languages.english: lambda: NLTKTokenizer("english"),
+    Languages.german: lambda: NLTKTokenizer("german"),
+    Languages.french: lambda: NLTKTokenizer("french"),
+    Languages.czech: lambda: NLTKTokenizer("czech"),
+    Languages.danish: lambda: NLTKTokenizer("danish"),
+    Languages.dutch: lambda: NLTKTokenizer("dutch"),
+    Languages.estonian: lambda: NLTKTokenizer("estonian"),
+    Languages.finnish: lambda: NLTKTokenizer("finnish"),
+    Languages.greek: lambda: NLTKTokenizer("greek"),
+    Languages.italian: lambda: NLTKTokenizer("italian"),
+    Languages.malayalam: lambda: NLTKTokenizer("malayalam"),
+    Languages.norwegian: lambda: NLTKTokenizer("norwegian"),
+    Languages.polish: lambda: NLTKTokenizer("polish"),
+    Languages.portuguese: lambda: NLTKTokenizer("portuguese"),
+    Languages.russian: lambda: NLTKTokenizer("russian"),
+    Languages.slovenian: lambda: NLTKTokenizer("slovene"),
+    Languages.spanish: lambda: NLTKTokenizer("spanish"),
+    Languages.swedish: lambda: NLTKTokenizer("swedish"),
+    Languages.turkish: lambda: NLTKTokenizer("turkish"),
+    Languages.chinese: lambda: SpaCyTokenizer("zh", {"nlp": {"tokenizer": {"segmenter": "jieba"}}}),
+    Languages.japanese: lambda: StanzaWordTokenizer("ja"),
+    Languages.vietnamese: lambda: SpaCyTokenizer("vi"),
+    Languages.indonesian: lambda: SpaCyTokenizer("id"),
+    Languages.persian: lambda: SpaCyTokenizer("fa"),
+    Languages.korean: lambda: KiwiTokenizer(),
+    Languages.arabic: lambda: SpaCyTokenizer("ar"),
+    Languages.hindi: lambda: SpaCyTokenizer("hi"),
+    Languages.tamil: lambda: SpaCyTokenizer("ta"),
+    Languages.urdu: lambda: SpaCyTokenizer("ur"),
+    Languages.marathi: lambda: SpaCyTokenizer("mr"),
+    Languages.telugu: lambda: SpaCyTokenizer("te"),
+    Languages.hungarian: lambda: SpaCyTokenizer("hu"),
+    Languages.romanian: lambda: SpaCyTokenizer("ro"),
+    Languages.ukrainian: lambda: SpaCyTokenizer("uk"),
+    Languages.slovak: lambda: SpaCyTokenizer("sk"),
+    Languages.bulgarian: lambda: SpaCyTokenizer("bg"),
+    Languages.catalan: lambda: SpaCyTokenizer("ca"),
+    Languages.croatian: lambda: SpaCyTokenizer("hr"),
+    Languages.latin: lambda: SpaCyTokenizer("la"),
+    Languages.serbian: lambda: SpaCyTokenizer("sr"),
+    Languages.lithuanian: lambda: SpaCyTokenizer("lt"),
+    Languages.hebrew: lambda: SpaCyTokenizer("he"),
+    Languages.latvian: lambda: SpaCyTokenizer("lv"),
+    Languages.icelandic: lambda: SpaCyTokenizer("is"),
+    Languages.armenian: lambda: SpaCyTokenizer("hy"),
+    Languages.basque: lambda: SpaCyTokenizer("eu"),
+    Languages.thai: lambda: ThaiTokenizer(),
+    Languages.georgian: lambda: GeorgianTokenizer(),
+    Languages.tagalog: lambda: SpaCyTokenizer("tl"),
+    Languages.albanian: lambda: SpaCyTokenizer("sq"),
+    Languages.macedonian: lambda: SpaCyTokenizer("mk"),
+    Languages.azerbaijani: lambda: SpaCyTokenizer("az"),
+    Languages.amharic: lambda: SpaCyTokenizer("am"),
+    Languages.bengali: lambda: SpaCyTokenizer("bn"),
+    Languages.malay: lambda: SpaCyTokenizer("ms"),
+    Languages.urdu: lambda: SpaCyTokenizer("ur"),
+    Languages.nepali: lambda: SpaCyTokenizer("ne"),
+    Languages.kazakh: lambda: StanzaWordTokenizer("kk"),
+    Languages.gujarati: lambda: SpaCyTokenizer("gu"),
+    Languages.kannada: lambda: SpaCyTokenizer("kn"),
+    Languages.welsh: lambda: StanzaWordTokenizer("cy"),
+    Languages.norwegian_nynorsk: lambda: NLTKTokenizer("norwegian"),
+    Languages.sinhala: lambda: SpaCyTokenizer("si"),
+    Languages.tatar: lambda: SpaCyTokenizer("tt"),
+    Languages.afrikaans: lambda: SpaCyTokenizer("af"),
+    Languages.kirghiz: lambda: SpaCyTokenizer("ky"),
+    Languages.irish: lambda: SpaCyTokenizer("ga"),
+    Languages.luxembourgish: lambda: SpaCyTokenizer("lb"),
+    Languages.maltese: lambda: StanzaWordTokenizer("mt"),
+    Languages.sanskrit: lambda: SpaCyTokenizer("sa"),
+    Languages.yoruba: lambda: SpaCyTokenizer("yo"),
+    Languages.pashto: lambda: PashtoTokenizer(),
+    Languages.serbocroatian: lambda: SpaCyTokenizer("sr"),
+    Languages.oriya: lambda: IndicNLPTokenizer("or"),
+    Languages.punjabi: lambda: IndicNLPTokenizer("sa"),
+    Languages.assamese: lambda: IndicNLPTokenizer("as"),
+    Languages.war: lambda: IndicNLPTokenizer("war"),
+    Languages.sindhi: lambda: IndicNLPTokenizer("sd"),
+    Languages.bosnian: lambda: SpaCyTokenizer("hr"),  # Proxy
+    Languages.belarusian: lambda: SpaCyTokenizer("uk"),  # Proxy
+    Languages.galician: lambda: NLTKTokenizer("portuguese"),  # Proxy
+    Languages.esperanto: lambda: NLTKTokenizer("english"),  # Proxy
+    Languages.occitan: lambda: NLTKTokenizer("italian"),  # Proxy
+    Languages.cebuano: lambda: NLTKTokenizer("english"),  # Proxy
+    Languages.swahili: lambda: NLTKTokenizer("english"),  # Proxy
+    Languages.javanese: lambda: NLTKTokenizer("english"),  # Proxy
+    Languages.uzbek: lambda: NLTKTokenizer("turkish"),  # Proxy, alternative ru
+    Languages.tajik: lambda: SpaCyTokenizer("ru"),  # Proxy
+    Languages.kurdish: lambda: NLTKTokenizer("english"),  # Proxy, multiple scripts!
+    Languages.sorani: lambda: SpaCyTokenizer("fa"),  # Proxy
+    Languages.south_azerbaijani: lambda: SpaCyTokenizer("fa"),  # Proxy
+    Languages.bashkir: lambda: SpaCyTokenizer("tt"),  # Proxy
+    Languages.western_frisian: lambda: NLTKTokenizer("dutch"),  # Proxy
+    Languages.breton: lambda: StanzaWordTokenizer("cy"),  # Proxy
+    Languages.malagasy: lambda: NLTKTokenizer("english"),  # Proxy
+    Languages.yiddish: lambda: SpaCyTokenizer("he"),  # Proxy
+    Languages.somali: lambda: NLTKTokenizer("english"),  # Proxy
+    Languages.turkmen: lambda: NLTKTokenizer("turkish"),  # Proxy
 }
 
-
-def get_word_tokenizer(language: Languages | str):
-    if language in WORD_TOKENIZERS:
-        return WORD_TOKENIZERS[language]
-    else:
-        return WORD_TOKENIZERS[Languages.english]
+default_tokenizer = MultilingualTokenizer(WORD_TOKENIZER_FACTORY)

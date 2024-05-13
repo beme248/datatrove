@@ -5,7 +5,7 @@ import numpy as np
 from datatrove.data import Document
 from datatrove.pipeline.filters.base_filter import BaseFilter
 from datatrove.pipeline.writers.disk_base import DiskWriter
-from datatrove.tools.word_tokenizers import get_word_tokenizer
+from datatrove.tools.word_tokenizers import MultilingualTokenizer, default_tokenizer
 
 
 class MultilingualGopherQualityFilter(BaseFilter):
@@ -25,6 +25,7 @@ class MultilingualGopherQualityFilter(BaseFilter):
         max_bullet_lines_ratio: float | None = 0.9,
         max_ellipsis_lines_ratio: float | None = 0.3,
         exclusion_writer: DiskWriter = None,
+        tokenizer: MultilingualTokenizer = default_tokenizer,
     ):
         super().__init__(exclusion_writer)
         self.min_doc_words = min_doc_words
@@ -37,6 +38,7 @@ class MultilingualGopherQualityFilter(BaseFilter):
         self.max_non_alpha_words_ratio = max_non_alpha_words_ratio
         self.min_stop_words = min_stop_words
         self.stop_words = stop_words
+        self.tokenizer = tokenizer
 
     def filter(self, doc: Document) -> bool | tuple[bool, str]:
         """
@@ -52,8 +54,7 @@ class MultilingualGopherQualityFilter(BaseFilter):
         text = doc.text
         lang = doc.metadata["language"]
 
-        tokenizer = get_word_tokenizer(lang)
-        words = tokenizer.tokenize(text)
+        words = self.tokenizer.tokenize(text, lang)
 
         # words < min_doc_words or words > max_doc_words
         n_words = len([w for w in words if w not in string.punctuation])

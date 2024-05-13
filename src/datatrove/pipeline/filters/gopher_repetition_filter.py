@@ -4,7 +4,7 @@ from collections import Counter
 from datatrove.data import Document
 from datatrove.pipeline.filters.base_filter import BaseFilter
 from datatrove.pipeline.writers.disk_base import DiskWriter
-from datatrove.tools.word_tokenizers import get_word_tokenizer
+from datatrove.tools.word_tokenizers import MultilingualTokenizer, default_tokenizer
 
 
 """
@@ -82,6 +82,7 @@ class GopherRepetitionFilter(BaseFilter):
         top_n_grams: tuple[tuple[int, float]] = ((2, 0.2), (3, 0.18), (4, 0.16)),
         dup_n_grams: tuple[tuple[int, float]] = ((5, 0.15), (6, 0.14), (7, 0.13), (8, 0.12), (9, 0.11), (10, 0.10)),
         exclusion_writer: DiskWriter = None,
+        tokenizer: MultilingualTokenizer = default_tokenizer,
     ):
         """
 
@@ -104,10 +105,9 @@ class GopherRepetitionFilter(BaseFilter):
         self.dup_n_grams = dup_n_grams
         self.paragraph_exp = re.compile(r"\n{2,}")
         self._line_splitter = re.compile("\n+")
+        self.tokenizer = tokenizer
 
     def filter(self, doc: Document) -> bool | tuple[bool, str]:
-        # from nltk.tokenize import word_tokenize
-
         text = doc.text
 
         paragraphs = self.paragraph_exp.split(text.strip())
@@ -125,10 +125,8 @@ class GopherRepetitionFilter(BaseFilter):
             return False, "dup_line_char_frac"
 
         text = doc.text
-        lang = doc.metadata["language"]
-        tokenizer = get_word_tokenizer(language=lang)
-        words = tokenizer.tokenize(text)
-        # words = word_tokenize(text, language="english")  # TODO we should use language id filter
+        lang = doc.metadata.get("language", "en")
+        words = self.tokenizer.tokenize(text, lang)
 
         for n, n_frac in self.top_n_grams:
             n_grams = get_n_grams(words, n)

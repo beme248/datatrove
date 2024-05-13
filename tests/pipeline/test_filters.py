@@ -35,7 +35,7 @@ TEXT_LF_4 = (
 )
 
 
-def get_doc(text, url=None, language=None):
+def get_doc(text, url=None, language="en"):
     return Document(text, id="0", metadata={"url": url, "language": language})
 
 
