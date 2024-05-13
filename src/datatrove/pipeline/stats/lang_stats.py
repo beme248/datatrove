@@ -149,7 +149,7 @@ class LanguageStatsCalculator(PipelineStep):
                 }
 
             text = doc.text
-            words_punct = default_tokenizer.tokenize(doc.text, language)
+            words_punct = default_tokenizer.word_tokenize(doc.text, language)
             words = [w for w in words_punct if w not in string.punctuation]
             n_words = len(words)
 
