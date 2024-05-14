@@ -1,6 +1,10 @@
-max_avg_word_length: 5
+char_duplicates_ratio: 0.01
+line_punct_thr: 0.11
+max_avg_word_length: 6
 max_non_alpha_words_ratio: 0.8
 min_avg_word_length: 1
+new_line_ratio: 0.58
+short_line_thr: 0.76
 stopwords:
 - "\u062F"
 - "\u067E\u0647"
@@ -10,3 +14,4 @@ stopwords:
 - "\u0686\u06D0"
 - "\u0644\u0647"
 - "\u062A\u0647"
+- "\u0633\u0631\u0647"

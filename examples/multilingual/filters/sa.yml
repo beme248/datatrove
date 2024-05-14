@@ -1,6 +1,10 @@
+char_duplicates_ratio: 0.01
+line_punct_thr: 0.03
 max_avg_word_length: 12
 max_non_alpha_words_ratio: 0.7
 min_avg_word_length: 2
+new_line_ratio: 0.77
+short_line_thr: 0.94
 stopwords:
 - "\u091A"
 - "\u0907\u0924\u093F"

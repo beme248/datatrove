@@ -1,6 +1,10 @@
+char_duplicates_ratio: 0.01
+line_punct_thr: 0.09
 max_avg_word_length: 8
 max_non_alpha_words_ratio: 0.8
 min_avg_word_length: 2
+new_line_ratio: 0.41
+short_line_thr: 0.76
 stopwords:
 - e
 - ar
@@ -11,9 +15,7 @@ stopwords:
 - da
 - en
 - ur
-- eus
 - hag
+- eus
 - zo
 - oa
-- h
-- eo

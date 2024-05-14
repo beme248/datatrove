@@ -1,6 +1,10 @@
+char_duplicates_ratio: 0.01
+line_punct_thr: 0.12
 max_avg_word_length: 10
 max_non_alpha_words_ratio: 1.0
 min_avg_word_length: 4
+new_line_ratio: 0.68
+short_line_thr: 0.74
 stopwords:
 - "\u10D3\u10D0"
 - "\u10EC\u10DA\u10D8\u10E1"

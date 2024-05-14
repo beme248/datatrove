@@ -1,6 +1,10 @@
+char_duplicates_ratio: 0.01
+line_punct_thr: 0.07
 max_avg_word_length: 9
 max_non_alpha_words_ratio: 0.7
 min_avg_word_length: 3
+new_line_ratio: 0.7
+short_line_thr: 0.79
 stopwords:
 - "\u0434\u0430\u0440"
 - "\u0432\u0430"
