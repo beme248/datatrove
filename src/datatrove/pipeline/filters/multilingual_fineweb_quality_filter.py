@@ -159,7 +159,13 @@ class MultilingualFineWebQualityFilter(BaseFilter):
             "𝪈",
             "｡",
             "。",
-        )  # FineWeb + Spacy sentencizer stop chars
+            "ល",
+            "។",
+            "៕",
+            "៖",
+            "៙",
+            "៚",
+        )  # FineWeb + Spacy sentencizer stop chars + Khmer puncts
 
         language = doc.metadata["language"]
 
