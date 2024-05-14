@@ -246,7 +246,7 @@ if __name__ == "__main__":
                 "stopwords": to_clean_stopwords(language_stats.language, word_counter),
                 "line_punct_thr": max(round(line_punct_ratio_mean - line_punct_ratio_std, 2), 0),
                 "short_line_thr": round(short_line_ratio_mean + short_line_ratio_std, 2),
-                "new_line_ratio": min(round(new_line_ratio_mean + 2*new_line_ratio_std, 2), 1),
+                "new_line_ratio": min(round(new_line_ratio_mean + 2 * new_line_ratio_std, 2), 1),
                 "char_duplicates_ratio": 0.01,
             }
 
