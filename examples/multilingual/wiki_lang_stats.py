@@ -181,6 +181,15 @@ if __name__ == "__main__":
             alpha_ratio_mean = language_stats.alpha_ratio.mean
             alpha_ratio_std = language_stats.alpha_ratio.std
 
+            line_punct_ratio_mean = language_stats.line_punct_ratio.mean
+            line_punct_ratio_std = language_stats.line_punct_ratio.std
+
+            short_line_ratio_mean = language_stats.short_line_ratio.mean
+            short_line_ratio_std = language_stats.short_line_ratio.std
+
+            new_line_ratio_mean = language_stats.new_line_ratio.mean
+            new_line_ratio_std = language_stats.new_line_ratio.std
+
             def is_clean(word):
                 word = word.strip()
                 return (
@@ -235,6 +244,10 @@ if __name__ == "__main__":
                 "max_avg_word_length": round(word_length_mean + word_length_std),
                 "max_non_alpha_words_ratio": round(alpha_ratio_mean - 3 * alpha_ratio_std, 1),
                 "stopwords": to_clean_stopwords(language_stats.language, word_counter),
+                "line_punct_thr": max(round(line_punct_ratio_mean - line_punct_ratio_std, 2), 0),
+                "short_line_thr": round(short_line_ratio_mean + short_line_ratio_std, 2),
+                "new_line_ratio": min(round(new_line_ratio_mean + 2*new_line_ratio_std, 2), 1),
+                "char_duplicates_ratio": 0.01,
             }
 
         pipeline_reduce = {
