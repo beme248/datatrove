@@ -16,6 +16,7 @@ class WarcReader(BaseDiskReader):
         data_folder: the data folder to read from
         compression: the compression to use (default: "infer")
         limit: limit the number of WARC documents to read
+        skip: skip the first n rows
         progress: show progress bar
         adapter: function to adapt the data dict from the source to a Document.
             Take as input: data: dict, path: str, id_in_file: int | str
@@ -25,16 +26,19 @@ class WarcReader(BaseDiskReader):
         default_metadata: default metadata to add to all documents
         recursive: if True, will read files recursively in subfolders (default: True)
         glob_pattern: a glob pattern to filter files to read (default: None)
+        shuffle_files: shuffle the files within the returned shard. Mostly used for data viz. purposes, do not use
+            with dedup blocks
     """
 
     name = "🕷 Warc"
-    _requires_dependencies = ["warcio", ("cchardet", "faust-chardet"), ("magic", "python-magic")]
+    _requires_dependencies = ["warcio", ("cchardet", "faust-cchardet"), ("magic", "python-magic")]
 
     def __init__(
         self,
         data_folder: DataFolderLike,
         compression: Literal["infer", "gzip", "zstd"] | None = "infer",
         limit: int = -1,
+        skip: int = 0,
         progress: bool = False,
         adapter: Callable = None,
         text_key: str = "text",
@@ -42,10 +46,21 @@ class WarcReader(BaseDiskReader):
         default_metadata: dict = None,
         recursive: bool = True,
         glob_pattern: str | None = None,
+        shuffle_files: bool = False,
     ):
         self.compression = compression
         super().__init__(
-            data_folder, limit, progress, adapter, text_key, id_key, default_metadata, recursive, glob_pattern
+            data_folder,
+            limit,
+            skip,
+            progress,
+            adapter,
+            text_key,
+            id_key,
+            default_metadata,
+            recursive,
+            glob_pattern,
+            shuffle_files,
         )
 
     def read_file(self, filepath: str):

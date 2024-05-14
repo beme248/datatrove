@@ -1,10 +1,10 @@
-import string
-
 import numpy as np
 
 from datatrove.data import Document
 from datatrove.pipeline.filters.base_filter import BaseFilter
 from datatrove.pipeline.writers.disk_base import DiskWriter
+from datatrove.tools.word_tokenizers import MultilingualTokenizer, default_tokenizer
+from datatrove.utils.text import PUNCTUATION_SET
 
 
 STOP_WORDS = ["the", "be", "to", "of", "and", "that", "have", "with"]
@@ -27,6 +27,7 @@ class GopherQualityFilter(BaseFilter):
         min_stop_words: int | None = 2,
         stop_words: list[str] | None = None,
         exclusion_writer: DiskWriter = None,
+        tokenizer: MultilingualTokenizer = default_tokenizer,
     ):
         """
         Filter to apply Gopher's quality heuristic rules.
@@ -56,6 +57,7 @@ class GopherQualityFilter(BaseFilter):
         self.max_non_alpha_words_ratio = max_non_alpha_words_ratio
         self.min_stop_words = min_stop_words
         self.stop_words = set(STOP_WORDS if stop_words is None else stop_words)
+        self.tokenizer = tokenizer
 
     def filter(self, doc: Document) -> bool | tuple[bool, str]:
         """
@@ -67,20 +69,22 @@ class GopherQualityFilter(BaseFilter):
         Returns: False if sample.text does not pass any of the the heuristic tests
 
         """
-        from nltk.tokenize import word_tokenize
-
         text = doc.text
-        words = word_tokenize(text)  # TODO we should use language id filter
+        language = doc.metadata.get("language", "en")
+        words = self.tokenizer.word_tokenize(text, language)
+        n_words = len(words)
+
+        non_symbol_words = [w for w in words if any(ch not in PUNCTUATION_SET for ch in w)]
+        n_non_symbol_words_words = len(non_symbol_words)
 
         # words < min_doc_words or words > max_doc_words
-        n_words = len([w for w in words if w not in string.punctuation])
-        if self.min_doc_words and n_words < self.min_doc_words:
+        if self.min_doc_words and n_non_symbol_words_words < self.min_doc_words:
             return False, "gopher_short_doc"
-        if self.max_doc_words and n_words > self.max_doc_words:
+        if self.max_doc_words and n_non_symbol_words_words > self.max_doc_words:
             return False, "gopher_long_doc"
 
         # mean word length is outside the range of 3 to 10 characters
-        avg_n_words = np.mean([len(w) for w in words if w not in string.punctuation])
+        avg_n_words = np.mean([len(w) for w in non_symbol_words])
         if self.min_avg_word_length and avg_n_words < self.min_avg_word_length:
             return False, "gopher_below_avg_threshold"
         if self.max_avg_word_length and avg_n_words > self.max_avg_word_length:

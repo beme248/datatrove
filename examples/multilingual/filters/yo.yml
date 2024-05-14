@@ -1,0 +1,16 @@
+max_avg_word_length: 7
+max_non_alpha_words_ratio: 0.8
+min_avg_word_length: 2
+stopwords:
+- "\xE0w\u1ECDn"
+- "n\xED"
+- ni
+- ti
+- "t\xED"
+- "\xF3"
+- "\xE1st\u1EB9\u0301r\u1ECD\u0301\xECd\xEC"
+- "j\u1EB9\u0301"
+- itokasi
+- o
+- ibi
+- "\xE0ti"

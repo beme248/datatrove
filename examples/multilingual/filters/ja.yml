@@ -1,0 +1,23 @@
+char_duplicates_ratio: 0.01
+line_punct_thr: 0.11
+max_avg_word_length: 3
+max_non_alpha_words_ratio: 0.6
+min_avg_word_length: 1
+new_line_ratio: 0.21
+short_line_thr: 0.85
+stopwords:
+- "\u306E"
+- "\u3001"
+- "\u306B"
+- "\u3002"
+- "\u3092"
+- "\u306F"
+- "\u305F"
+- "\u3066"
+- "\u5E74"
+- "\u3068"
+- "\u304C"
+- "\u3067"
+- "\u3057"
+- "\u30FB"
+- "\u6708"

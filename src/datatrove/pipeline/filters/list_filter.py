@@ -1,6 +1,7 @@
 from datatrove.data import Document
 from datatrove.pipeline.filters.base_filter import BaseFilter
 from datatrove.pipeline.writers.disk_base import DiskWriter
+from datatrove.tools.word_tokenizers import MultilingualTokenizer, default_tokenizer
 
 
 class ListFilter(BaseFilter):
@@ -13,10 +14,16 @@ class ListFilter(BaseFilter):
     name = "🎅 List"
     _requires_dependencies = ["nltk"]
 
-    def __init__(self, new_line_ratio: float | None = 0.3, exclusion_writer: DiskWriter = None):  # TODO better tune
+    def __init__(
+        self,
+        new_line_ratio: float | None = 0.3,
+        exclusion_writer: DiskWriter = None,
+        tokenizer: MultilingualTokenizer = default_tokenizer,
+    ):  # TODO better tune
         """ """
         super().__init__(exclusion_writer)
         self.new_line_ratio = new_line_ratio
+        self.tokenizer = tokenizer
 
     def filter(self, doc: Document) -> bool | tuple[bool, str]:
         """Applies heuristic rules to decide if a document should be REMOVED
@@ -26,10 +33,11 @@ class ListFilter(BaseFilter):
         Returns:
             False if sample.text is a list
         """
-        from nltk.tokenize import word_tokenize
 
         text = doc.text
-        words = word_tokenize(text)  # TODO we should use language id filter
+        lang = doc.metadata["language"]
+
+        words = self.tokenizer.word_tokenize(text, lang)
         new_line = text.count("\n")
         if new_line / len(words) > self.new_line_ratio:
             return False, "Suspected list"

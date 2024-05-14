@@ -1,0 +1,21 @@
+char_duplicates_ratio: 0.01
+line_punct_thr: 0.16
+max_avg_word_length: 8
+max_non_alpha_words_ratio: 0.9
+min_avg_word_length: 2
+new_line_ratio: 0.63
+short_line_thr: 0.7
+stopwords:
+- "\u05D3\u05D9"
+- "\u05E4\u05D5\u05DF"
+- "\u05D0\u05D9\u05DF"
+- "\u05D0\u05D5\u05DF"
+- "\u05D0\u05D9\u05D6"
+- "\u05D0"
+- "\u05D3\u05E2\u05E8"
+- "\u05D4\u05D0\u05D8"
+- "\u05E2\u05E8"
+- "\u05E6\u05D5"
+- "\u05D5\u05D5\u05D0\u05E1"
+- "\u05D3\u05E2\u05DD"
+- "\u05E8\u05D1\u05D9"

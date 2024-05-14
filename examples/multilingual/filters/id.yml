@@ -1,0 +1,18 @@
+char_duplicates_ratio: 0.01
+line_punct_thr: 0.13
+max_avg_word_length: 9
+max_non_alpha_words_ratio: 0.8
+min_avg_word_length: 3
+new_line_ratio: 0.31
+short_line_thr: 0.72
+stopwords:
+- dan
+- yang
+- di
+- pada
+- dari
+- ini
+- dengan
+- adalah
+- dalam
+- untuk
