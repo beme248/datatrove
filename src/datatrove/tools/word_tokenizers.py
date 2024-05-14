@@ -124,24 +124,6 @@ class GeorgianTokenizer(WordTokenizer):
         return strip_strings(sents)
 
 
-class PashtoTokenizer(WordTokenizer):
-    def __init__(self):
-        from nlpashto import Tokenizer as PsTokenizer
-
-        self.tokenizer = PsTokenizer()
-
-    def word_tokenize(self, text) -> list[str]:
-        tokens = [tok for sent in self.tokenizer.tokenize(text) for tok in sent]
-        return strip_strings(tokens)
-
-    def sent_tokenize(self, text: str) -> list[str]:
-        # TODO: find appropriate sent tokenizer
-        from nltk.tokenize import sent_tokenize
-
-        sents = sent_tokenize(text)
-        return strip_strings(sents)
-
-
 class IndicNLPTokenizer(WordTokenizer):
     def __init__(self, language: str):
         self.language = language
@@ -265,7 +247,6 @@ WORD_TOKENIZER_FACTORY: dict[str, Callable[[], WordTokenizer]] = {
     Languages.maltese: lambda: StanzaWordTokenizer("mt"),
     Languages.sanskrit: lambda: SpaCyTokenizer("sa"),
     Languages.yoruba: lambda: SpaCyTokenizer("yo"),
-    Languages.pashto: lambda: PashtoTokenizer(),
     Languages.serbocroatian: lambda: SpaCyTokenizer("sr"),
     Languages.oriya: lambda: IndicNLPTokenizer("or"),
     Languages.punjabi: lambda: IndicNLPTokenizer("sa"),
@@ -292,6 +273,7 @@ WORD_TOKENIZER_FACTORY: dict[str, Callable[[], WordTokenizer]] = {
     Languages.yiddish: lambda: SpaCyTokenizer("he"),  # Proxy
     Languages.somali: lambda: NLTKTokenizer("english"),  # Proxy
     Languages.turkmen: lambda: NLTKTokenizer("turkish"),  # Proxy
+    Languages.pashto: lambda: SpaCyTokenizer("xx"),  # Proxy
 }
 
 default_tokenizer = MultilingualTokenizer(WORD_TOKENIZER_FACTORY)
