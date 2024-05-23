@@ -8,7 +8,7 @@ from typing import Callable
 import numpy as np
 import yaml
 
-from datatrove.io import DataFolderLike, get_datafolder
+from datatrove.io import DataFolderLike, cached_asset_path_or_download, get_datafolder
 from datatrove.pipeline.base import DocumentsPipeline, PipelineStep
 from datatrove.pipeline.filters.gopher_repetition_filter import (
     find_all_duplicate,
@@ -19,6 +19,8 @@ from datatrove.pipeline.filters.gopher_repetition_filter import (
 from datatrove.utils.typeshelper import Languages
 from datatrove.utils.word_tokenizers import load_word_tokenizer
 
+
+LANGUAGE_ID_MODEL_URL = "https://dl.fbaipublicfiles.com/fasttext/supervised-models/lid.176.bin"
 
 MEAN_STD_KEYS = [
     "hash_word_ratio",
@@ -81,6 +83,7 @@ class LanguageStatistics:
     duplicated_8_grams: MeanStdFloat
     duplicated_9_grams: MeanStdFloat
     duplicated_10_grams: MeanStdFloat
+    min_language_score: float
 
     def to_dict(self) -> dict:
         return {
@@ -111,6 +114,7 @@ class LanguageStatistics:
             "duplicated_8_grams": {"mean": self.duplicated_8_grams.mean, "std": self.duplicated_8_grams.std},
             "duplicated_9_grams": {"mean": self.duplicated_9_grams.mean, "std": self.duplicated_9_grams.std},
             "duplicated_10_grams": {"mean": self.duplicated_10_grams.mean, "std": self.duplicated_10_grams.std},
+            "min_language_score": self.min_language_score,
         }
 
 
@@ -130,6 +134,22 @@ class LanguageStatsCalculator(PipelineStep):
         self.paragraph_exp = re.compile(r"\n{2,}")
         self._line_splitter = re.compile("\n+")
         self.tokenizer = load_word_tokenizer(language)
+        self.language = language
+        self._model = None
+
+    @property
+    def fasttext_model(self):
+        if not self._model:
+            from fasttext.FastText import _FastText
+
+            model_file = cached_asset_path_or_download(
+                LANGUAGE_ID_MODEL_URL,
+                namespace="filters",
+                subfolder="language_filter",
+                desc="fast-text language identifier model",
+            )
+            self._model = _FastText(model_file)
+        return self._model
 
     def run(self, data: DocumentsPipeline, rank: int = 0, world_size: int = 1) -> DocumentsPipeline:
         stats = {
@@ -138,6 +158,7 @@ class LanguageStatsCalculator(PipelineStep):
             "total_words": 0,
             "total_docs": 0,
             "total_bytes": 0,
+            "min_language_score": 100,
             **{k: [] for k in MEAN_STD_KEYS},
         }
 
@@ -377,6 +398,14 @@ class LanguageStatsCalculator(PipelineStep):
                 n_duplicates_char = find_all_duplicate(words_punct, n)
                 stats[f"duplicated_{n}_grams"] = n_duplicates_char / n_text if n_text > 0 else 0
 
+            # Track lowest language score
+            labels, scores = self.fasttext_model.predict(
+                doc.text.replace("\n", ""), k=len(self.fasttext_model.labels), threshold=-1
+            )
+            language_label_index = labels.index(f"__label__{self.language}")
+            language_score = scores[language_label_index]
+            stats["min_language_score"] = min(language_score, stats["min_language_score"])
+
             yield doc
 
         # Calculate local mean and mean of squares
@@ -422,6 +451,7 @@ class LanguageStatsReducer(PipelineStep):
             "total_words": 0,
             "total_docs": 0,
             "total_bytes": 0,
+            "min_language_score": 101,
             **{f"{k}_mean": [] for k in MEAN_STD_KEYS},
             **{f"{k}_std": [] for k in MEAN_STD_KEYS},
         }
@@ -438,6 +468,7 @@ class LanguageStatsReducer(PipelineStep):
                 length_counter = Counter({int(k): v for k, v in file_data["length_counter"].items()})
                 stats["length_counter"] += length_counter
                 stats["word_counter"] += file_data["word_counter"]
+                stats["min_language_score"] = min(stats["min_language_score"], file_data["min_language_score"])
                 for key in MEAN_STD_KEYS:
                     stats[f"{key}_mean"].append(file_data[f"{key}_mean"])
                     stats[f"{key}_std"].append(file_data[f"{key}_sq_mean"])
@@ -458,6 +489,7 @@ class LanguageStatsReducer(PipelineStep):
             total_bytes=int(stats["total_bytes"]),
             total_docs=int(stats["total_docs"]),
             total_words=int(stats["total_words"]),
+            min_language_score=float(stats["min_language_score"]),
             **{
                 key: MeanStdFloat(mean=float(stats[f"{key}_mean"]), std=float(stats[f"{key}_std"]))
                 for key in MEAN_STD_KEYS
