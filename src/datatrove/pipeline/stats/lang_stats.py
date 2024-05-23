@@ -56,6 +56,7 @@ class LanguageStatistics:
     language: str
     word_counter: Counter
     length_counter: Counter
+    doc_per_word: Counter
     total_words: int
     total_docs: int
     total_bytes: int
@@ -87,6 +88,7 @@ class LanguageStatistics:
             "language": self.language,
             "word_counter": dict(self.word_counter),
             "length_counter": dict(self.length_counter),
+            "doc_per_word": dict(self.doc_per_word),
             "total_words": self.total_words,
             "total_docs": self.total_docs,
             "total_bytes": self.total_bytes,
@@ -142,6 +144,7 @@ class LanguageStatsCalculator(PipelineStep):
                 stats[language] = {
                     "length_counter": Counter(),
                     "word_counter": Counter(),
+                    "doc_per_word": Counter(),
                     "total_words": 0,
                     "total_docs": 0,
                     "total_bytes": 0,
@@ -162,6 +165,9 @@ class LanguageStatsCalculator(PipelineStep):
             for word in words:
                 stats[language]["length_counter"][len(word)] += 1
                 stats[language]["word_counter"][word.lower()] += 1
+
+            for word in set(words):
+                stats[language]["doc_per_word"][word.lower()] += 1
 
             # Compute hash to word ratio and ellipsis to word ratio
             hash_word_ratio = (text.count("#") / n_words) if n_words > 0 else 0
@@ -451,6 +457,7 @@ class LanguageStatsReducer(PipelineStep):
                     length_counter = Counter({int(k): v for k, v in file_data[language]["length_counter"].items()})
                     stats[language]["length_counter"] += length_counter
                     stats[language]["word_counter"] += file_data[language]["word_counter"]
+                    stats[language]["doc_per_word"] += file_data[language]["doc_per_word"]
                     for key in MEAN_STD_KEYS:
                         stats[language][f"{key}_mean"].append(file_data[language][f"{key}_mean"])
                         stats[language][f"{key}_std"].append(file_data[language][f"{key}_sq_mean"])
@@ -470,6 +477,9 @@ class LanguageStatsReducer(PipelineStep):
                 word_counter=Counter(v["word_counter"]).most_common(
                     10_000
                 ),  # 10000 most common words pruning, TODO: remove
+                doc_per_word=Counter(v["doc_per_word"]).most_common(
+                    1_000
+                ),
                 length_counter=Counter(v["length_counter"]),
                 total_bytes=int(v["total_bytes"]),
                 total_docs=int(v["total_docs"]),
