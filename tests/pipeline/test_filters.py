@@ -71,7 +71,7 @@ class TestFilters(unittest.TestCase):
         self.check_filter(gopher_quality, get_doc("... comment " * 20), "gopher_too_many_ellipsis")
         text = "the ./!*?<><> apple <?////> orange  ++ interconnection !<>??? have" * 20
         self.check_filter(gopher_quality, get_doc(text), "gopher_below_alpha_threshold")
-        self.assertTrue(gopher_quality(get_doc(TEXT_LF_1)))
+        self.assertTrue(gopher_quality.filter(get_doc(TEXT_LF_1)) is True)
 
     def test_lambda(self):
         doc = Document(text=TEXT_LF_1, id="0", metadata={"test": 1})
