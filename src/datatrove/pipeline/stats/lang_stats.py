@@ -1,6 +1,5 @@
 import json
 import re
-import string
 from collections import Counter
 from dataclasses import dataclass
 from typing import Callable
@@ -16,6 +15,7 @@ from datatrove.pipeline.filters.gopher_repetition_filter import (
     find_top_duplicate,
     get_n_grams,
 )
+from datatrove.utils.text import PUNCTUATION_SET
 from datatrove.utils.typeshelper import Languages
 from datatrove.utils.word_tokenizers import load_word_tokenizer
 
@@ -165,9 +165,10 @@ class LanguageStatsCalculator(PipelineStep):
         # map and produce one output file per rank
         for doc in data:
             text = doc.text
-            words_punct = self.tokenizer.word_tokenize(doc.text)
-            words = [w for w in words_punct if w not in string.punctuation]
+            words_symbols = self.tokenizer.word_tokenize(doc.text)
+            words = [w for w in words_symbols if any(ch not in PUNCTUATION_SET for ch in w)]
             n_words = len(words)
+            n_words_symbols = len(words_symbols)
 
             stats["total_docs"] += 1
             stats["total_words"] += n_words
@@ -180,9 +181,11 @@ class LanguageStatsCalculator(PipelineStep):
                 stats["word_counter"][word.lower()] += 1
 
             # Compute hash to word ratio and ellipsis to word ratio
-            hash_word_ratio = (text.count("#") / n_words) if n_words > 0 else 0
+            hash_word_ratio = (text.count("#") / n_words_symbols) if n_words_symbols > 0 else 0
             stats["hash_word_ratio"].append(hash_word_ratio)
-            ellipsis_word_ratio = ((text.count("...") + text.count("…")) / n_words) if n_words > 0 else 0
+            ellipsis_word_ratio = (
+                ((text.count("...") + text.count("…")) / n_words_symbols) if n_words_symbols > 0 else 0
+            )
             stats["ellipsis_word_ratio"].append(ellipsis_word_ratio)
 
             # Compute ratio of lines starting with a bullet and ratio of lines ending in an ellipsis
@@ -202,7 +205,11 @@ class LanguageStatsCalculator(PipelineStep):
             stats["ellipsis_end_ratio"].append(ellipsis_end_ratio)
 
             # Compute ratio of words in the document that contain at least one alphabetic character
-            alpha_ratio = (sum([any((c.isalpha() for c in w)) for w in words]) / n_words) if n_words > 0 else 0
+            alpha_ratio = (
+                (sum([any((c.isalpha() for c in w)) for w in words_symbols]) / n_words_symbols)
+                if n_words_symbols > 0
+                else 0
+            )
             stats["alpha_ratio"].append(alpha_ratio)
 
             ## FineWeb filters
@@ -363,8 +370,8 @@ class LanguageStatsCalculator(PipelineStep):
 
             # Compute ratio of newlines to words
             new_line = doc.text.count("\n")
-            n_words_punct = len(words_punct)
-            new_line_ratio = new_line / n_words_punct if n_words_punct > 0 else 0
+            n_words_symbols = len(words_symbols)
+            new_line_ratio = new_line / n_words_symbols if n_words_symbols > 0 else 0
             stats["new_line_ratio"].append(new_line_ratio)
 
             ## Gopher repetition filters
@@ -387,15 +394,13 @@ class LanguageStatsCalculator(PipelineStep):
 
             # Compute top n-gram repetition ratios
             for n in [2, 3, 4]:
-                n_grams = get_n_grams(words_punct, n)
-                if not n_grams:
-                    continue
-                top_char_length = find_top_duplicate(n_grams)
+                n_grams = get_n_grams(words_symbols, n)
+                top_char_length = find_top_duplicate(n_grams) if n_grams else 0
                 stats[f"top_{n}_gram"] = top_char_length / n_text if n_text > 0 else 0
 
             # Compute duplicated n-gram repetition ratios
             for n in [5, 6, 7, 8, 9, 10]:
-                n_duplicates_char = find_all_duplicate(words_punct, n)
+                n_duplicates_char = find_all_duplicate(words_symbols, n)
                 stats[f"duplicated_{n}_grams"] = n_duplicates_char / n_text if n_text > 0 else 0
 
             # Track lowest language score
