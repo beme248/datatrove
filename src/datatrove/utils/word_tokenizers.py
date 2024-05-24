@@ -9,6 +9,10 @@ def strip_strings(els: list[str]) -> list[str]:
     return [el.strip() for el in els if len(el.strip()) > 0]
 
 
+def remove_empty_spans(spans: list[tuple[int, int]], text: str):
+    return [span for span in spans if len(text[span[0] : span[1]].strip()) > 0]
+
+
 def simple_span_tokenize(text: str, sents: list[str]) -> Iterator[tuple[int, int]]:
     start_index = 0
     for sent in sents:
@@ -60,7 +64,8 @@ class NLTKTokenizer(WordTokenizer):
         return strip_strings(sents)
 
     def span_tokenize(self, text: str) -> list[tuple[int, int]]:
-        return list(self.tokenizer.span_tokenize(text))
+        spans = list(self.tokenizer.span_tokenize(text))
+        return remove_empty_spans(spans, text)
 
 
 class SpaCyTokenizer(WordTokenizer):
@@ -98,10 +103,11 @@ class SpaCyTokenizer(WordTokenizer):
         return strip_strings(sents)
 
     def span_tokenize(self, text: str) -> list[tuple[int, int]]:
-        return [
+        spans = [
             (sent.start_char, sent.end_char)
             for sent in self.tokenizer(text, disable=["parser", "tagger", "ner"]).sents
         ]
+        return remove_empty_spans(spans, text)
 
 
 class StanzaTokenizer(WordTokenizer):
@@ -139,7 +145,8 @@ class StanzaTokenizer(WordTokenizer):
 
     def span_tokenize(self, text: str) -> list[tuple[int, int]]:
         doc = self.tokenizer(text)
-        return [(sent.tokens[0].start_char, sent.tokens[-1].end_char) for sent in doc.sentences]
+        spans = [(sent.tokens[0].start_char, sent.tokens[-1].end_char) for sent in doc.sentences]
+        return remove_empty_spans(spans, text)
 
 
 class ThaiTokenizer(WordTokenizer):
@@ -211,7 +218,71 @@ class KiwiTokenizer(WordTokenizer):
         return strip_strings(sents)
 
     def span_tokenize(self, text: str) -> list[tuple[int, int]]:
-        return [(sent.start, sent.end) for sent in self.tokenizer.split_into_sents(text)]
+        spans = [(sent.start, sent.end) for sent in self.tokenizer.split_into_sents(text)]
+        return remove_empty_spans(spans, text)
+
+
+class ICUTokenizer(WordTokenizer):
+    def __init__(self, language):
+        super().__init__()
+        check_required_dependencies(f"{language} word tokenizer", ["icu"])
+        self.language = language
+        self._word_breakiter = None
+        self._sent_breakiter = None
+
+    @property
+    def word_breakiter(self):
+        if not self._word_breakiter:
+            from icu import BreakIterator, Locale
+
+            self._word_breakiter = BreakIterator.createWordInstance(Locale(self.language))
+        return self._word_breakiter
+
+    @property
+    def sent_breakiter(self):
+        if not self._sent_breakiter:
+            from icu import BreakIterator, Locale
+
+            self._sent_breakiter = BreakIterator.createSentenceInstance(Locale(self.language))
+        return self._sent_breakiter
+
+    def word_tokenize(self, text: str) -> list[str]:
+        # Implementation from https://gist.github.com/dpk/8325992#break-iteration
+
+        self.word_breakiter.setText(text)
+        lastpos = 0
+        tokens = []
+        while True:
+            next_boundary = self.word_breakiter.nextBoundary()
+            if next_boundary == -1:
+                break
+            tokens.append(text[lastpos:next_boundary])
+            lastpos = next_boundary
+        return strip_strings(tokens)
+
+    def sent_tokenize(self, text: str) -> list[str]:
+        self.sent_breakiter.setText(text)
+        lastpos = 0
+        sents = []
+        while True:
+            next_boundary = self.sent_breakiter.nextBoundary()
+            if next_boundary == -1:
+                break
+            sents.append(text[lastpos:next_boundary])
+            lastpos = next_boundary
+        return strip_strings(sents)
+
+    def span_tokenize(self, text: str) -> list[tuple[int, int]]:
+        self.sent_breakiter.setText(text)
+        lastpos = 0
+        spans = []
+        while True:
+            next_boundary = self.sent_breakiter.nextBoundary()
+            if next_boundary == -1:
+                break
+            spans.append((lastpos, next_boundary))
+            lastpos = next_boundary
+        return remove_empty_spans(spans, text)
 
 
 # If you know a better tokenizer or better proxy language, please submit a PR
@@ -237,7 +308,7 @@ WORD_TOKENIZER_FACTORY: dict[str, Callable[[], WordTokenizer]] = {
     Languages.swedish: lambda: NLTKTokenizer("swedish"),
     Languages.turkish: lambda: NLTKTokenizer("turkish"),
     Languages.chinese: lambda: SpaCyTokenizer("zh", {"nlp": {"tokenizer": {"segmenter": "jieba"}}}),
-    Languages.japanese: lambda: StanzaTokenizer("ja"),
+    Languages.japanese: lambda: ICUTokenizer("ja"),
     Languages.vietnamese: lambda: SpaCyTokenizer("vi"),
     Languages.indonesian: lambda: SpaCyTokenizer("id"),
     Languages.persian: lambda: SpaCyTokenizer("fa"),
@@ -272,10 +343,11 @@ WORD_TOKENIZER_FACTORY: dict[str, Callable[[], WordTokenizer]] = {
     Languages.malay: lambda: SpaCyTokenizer("ms"),
     Languages.urdu: lambda: SpaCyTokenizer("ur"),
     Languages.nepali: lambda: SpaCyTokenizer("ne"),
-    Languages.kazakh: lambda: StanzaTokenizer("kk"),
+    Languages.kazakh: lambda: ICUTokenizer("kk"),
     Languages.gujarati: lambda: SpaCyTokenizer("gu"),
     Languages.kannada: lambda: SpaCyTokenizer("kn"),
-    Languages.welsh: lambda: StanzaTokenizer("cy"),
+    Languages.welsh: lambda: ICUTokenizer("cy"),
+    Languages.breton: lambda: ICUTokenizer("bt"),
     Languages.norwegian_nynorsk: lambda: NLTKTokenizer(
         "norwegian"
     ),  # TODO: change to SpaCyTokenizer("nn") when spacy version>=3.7.4
@@ -285,7 +357,7 @@ WORD_TOKENIZER_FACTORY: dict[str, Callable[[], WordTokenizer]] = {
     Languages.kirghiz: lambda: SpaCyTokenizer("ky"),
     Languages.irish: lambda: SpaCyTokenizer("ga"),
     Languages.luxembourgish: lambda: SpaCyTokenizer("lb"),
-    Languages.maltese: lambda: StanzaTokenizer("mt"),
+    Languages.maltese: lambda: ICUTokenizer("mt"),
     Languages.sanskrit: lambda: SpaCyTokenizer("sa"),
     Languages.yoruba: lambda: SpaCyTokenizer("yo"),
     Languages.serbocroatian: lambda: SpaCyTokenizer("sr"),
@@ -309,7 +381,6 @@ WORD_TOKENIZER_FACTORY: dict[str, Callable[[], WordTokenizer]] = {
     Languages.south_azerbaijani: lambda: SpaCyTokenizer("fa"),  # Proxy
     Languages.bashkir: lambda: SpaCyTokenizer("tt"),  # Proxy
     Languages.western_frisian: lambda: NLTKTokenizer("dutch"),  # Proxy
-    Languages.breton: lambda: StanzaTokenizer("cy"),  # Proxy
     Languages.malagasy: lambda: NLTKTokenizer("english"),  # Proxy
     Languages.yiddish: lambda: SpaCyTokenizer("he"),  # Proxy
     Languages.somali: lambda: NLTKTokenizer("english"),  # Proxy

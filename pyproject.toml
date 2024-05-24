@@ -70,6 +70,7 @@ multilingual = [
     "jieba",
     "indic-nlp-library",
     "kiwipiepy",
+    "pyicu",
 ]
 quality = [
   "ruff>=0.1.5"
