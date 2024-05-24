@@ -166,8 +166,8 @@ class LanguageStatsCalculator(PipelineStep):
                 stats[language]["length_counter"][len(word)] += 1
                 stats[language]["word_counter"][word.lower()] += 1
 
-            for word in set(words):
-                stats[language]["doc_per_word"][word.lower()] += 1
+            for word in set([word.lower() for word in words] ):
+                stats[language]["doc_per_word"][word] += 1
 
             # Compute hash to word ratio and ellipsis to word ratio
             hash_word_ratio = (text.count("#") / n_words) if n_words > 0 else 0
@@ -390,6 +390,7 @@ class LanguageStatsCalculator(PipelineStep):
 
             yield doc
 
+
         for language in stats:
             # Calculate local mean and mean of squares
             for key in MEAN_STD_KEYS:
@@ -397,6 +398,9 @@ class LanguageStatsCalculator(PipelineStep):
                 stats[language][f"{key}_mean"] = np.mean(values)
                 stats[language][f"{key}_sq_mean"] = np.mean(values**2)
                 del stats[language][key]
+
+            for _, v in dict(stats[language]["doc_per_word"]).items():
+                assert v <= stats[language]["total_docs"]
             # Prune word counter (include only words that appear at least word_count_prune times)
             if self.word_count_prune is not None:
                 word_counter = stats[language]["word_counter"]
@@ -412,6 +416,8 @@ class LanguageStatsCalculator(PipelineStep):
                     f,
                 )
 
+def sorted_dict_and_values(d):
+    return {k: sorted(v) if isinstance(v, list) else v for k, v in sorted(d.items())}
 
 class LanguageStatsReducer(PipelineStep):
     type = "📊 - STATS"
@@ -442,6 +448,7 @@ class LanguageStatsReducer(PipelineStep):
                         stats[language] = {
                             "length_counter": Counter(),
                             "word_counter": Counter(),
+                            "doc_per_word": Counter(),
                             "total_words": 0,
                             "total_docs": 0,
                             "total_bytes": 0,
@@ -478,7 +485,7 @@ class LanguageStatsReducer(PipelineStep):
                     10_000
                 ),  # 10000 most common words pruning, TODO: remove
                 doc_per_word=Counter(v["doc_per_word"]).most_common(
-                    1_000
+                    10_000
                 ),
                 length_counter=Counter(v["length_counter"]),
                 total_bytes=int(v["total_bytes"]),
@@ -499,6 +506,7 @@ class LanguageStatsReducer(PipelineStep):
         for language in stats:
             with self.output_folder.open(f"{language}.yml", "wt") as f:
                 yaml.safe_dump(
-                    stats[language],
+                    sorted_dict_and_values(stats[language]),
                     f,
+                    sort_keys=False,
                 )

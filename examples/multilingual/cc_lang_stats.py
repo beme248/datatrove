@@ -6,7 +6,7 @@ datasets.builder.has_sufficient_disk_space = lambda needed_bytes, directory='.':
 
 from datatrove.executor.local import LocalPipelineExecutor
 from datatrove.executor.slurm import SlurmPipelineExecutor
-from datatrove.pipeline.readers import ShuffledHFDatasetReader
+from datatrove.pipeline.readers import JsonlReader
 from datatrove.pipeline.stats import LanguageStatistics, LanguageStatsCalculator, LanguageStatsReducer
 
 if len(sys.argv) != 2 or sys.argv[1] not in ["statistics", "filters"]:
@@ -48,24 +48,21 @@ LANGUAGES = [
 
 MAIN_OUTPUT_PATH = "./wiki_stats_pipeline_2"
 WIKI_VERSION = "20231101"  # See https://huggingface.co/datasets/wikimedia/wikipedia
-DOC_LIMIT = 4000
-NUM_TASKS = 10
-NUM_WORKERS = 10
-# EXECUTOR = os.environ.get("EXECUTOR", "slurm")  # local/slurm
+DOC_LIMIT = 400
+NUM_TASKS = 1
+NUM_WORKERS = 1
 EXECUTOR = "local"
+DUMP = "CC-MAIN-2023-23"
 
 if __name__ == "__main__":
     for language in LANGUAGES:
+        data_path = f"s3://fineweb-data-processing-us-east-1/base_processing/non_english/{language}/{DUMP}"
         pipeline = [
-            ShuffledHFDatasetReader(  # Use shuffled dataset when using DOC_LIMIT
-                "wikimedia/wikipedia",
-                dataset_options={
-                    "name": f"{WIKI_VERSION}.{language}",
-                    "split": "train",
-                    "cache_dir": "./hf_cache"
-                },
+            JsonlReader(
+                data_path,
+                default_metadata={"dump": DUMP},
                 limit=DOC_LIMIT,
-                default_metadata={"language": language},
+                text_key="content",
             ),
             LanguageStatsCalculator(output_folder=f"{MAIN_OUTPUT_PATH}/lang_stats_per_rank/"),
         ]
