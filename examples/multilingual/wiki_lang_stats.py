@@ -4,7 +4,7 @@ import sys
 from datatrove.executor.local import LocalPipelineExecutor
 from datatrove.executor.slurm import SlurmPipelineExecutor
 from datatrove.pipeline.readers import ShuffledHFDatasetReader
-from datatrove.pipeline.stats import LanguageStatistics, LanguageStatsCalculator, LanguageStatsReducer
+from datatrove.pipeline.stats import LanguageStatistics, LanguageStatsCollector, LanguageStatsReducer
 
 
 if len(sys.argv) != 2 or sys.argv[1] not in ["statistics", "filters"]:
@@ -136,7 +136,7 @@ if __name__ == "__main__":
                 limit=DOC_LIMIT,
                 default_metadata={"language": language},
             ),
-            LanguageStatsCalculator(
+            LanguageStatsCollector(
                 output_folder=f"{MAIN_OUTPUT_PATH}/lang_stats_per_rank/{language}", language=language
             ),
         ]

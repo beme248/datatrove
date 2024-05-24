@@ -45,6 +45,7 @@ MEAN_STD_KEYS = [
     "duplicated_8_grams",
     "duplicated_9_grams",
     "duplicated_10_grams",
+    "language_score",
 ]
 
 
@@ -83,6 +84,7 @@ class LanguageStatistics:
     duplicated_8_grams: MeanStdFloat
     duplicated_9_grams: MeanStdFloat
     duplicated_10_grams: MeanStdFloat
+    language_score: MeanStdFloat
     min_language_score: float
 
     def to_dict(self) -> dict:
@@ -114,13 +116,14 @@ class LanguageStatistics:
             "duplicated_8_grams": {"mean": self.duplicated_8_grams.mean, "std": self.duplicated_8_grams.std},
             "duplicated_9_grams": {"mean": self.duplicated_9_grams.mean, "std": self.duplicated_9_grams.std},
             "duplicated_10_grams": {"mean": self.duplicated_10_grams.mean, "std": self.duplicated_10_grams.std},
+            "language_score": {"mean": self.language_score.mean, "std": self.language_score.std},
             "min_language_score": self.min_language_score,
         }
 
 
-class LanguageStatsCalculator(PipelineStep):
+class LanguageStatsCollector(PipelineStep):
     type = "📊 - STATS"
-    name = "🌐 Languages"
+    name = "🌐 Stats collector"
 
     def __init__(
         self,
@@ -410,6 +413,7 @@ class LanguageStatsCalculator(PipelineStep):
             language_label_index = labels.index(f"__label__{self.language}")
             language_score = scores[language_label_index]
             stats["min_language_score"] = min(language_score, stats["min_language_score"])
+            stats["language_score"].append(language_score)
 
             yield doc
 
