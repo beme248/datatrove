@@ -1,6 +1,12 @@
 import os
 import sys
 
+import sys
+sys.path.append('/mloscratch/homes/bmessmer/code/back/datatrove/src')
+
+import datasets
+datasets.builder.has_sufficient_disk_space = lambda needed_bytes, directory='.': True
+
 from datatrove.executor.local import LocalPipelineExecutor
 from datatrove.executor.slurm import SlurmPipelineExecutor
 from datatrove.pipeline.readers import ShuffledHFDatasetReader
@@ -17,104 +23,19 @@ RUN_MODE = sys.argv[1]
 LANGUAGES = [
     "en",
     "de",
-    "ru",
-    "fr",
-    "ja",
-    "es",
-    "zh",
-    "it",
-    "nl",
-    "pl",
+    "hr",
     "pt",
     "cs",
-    "vi",
-    "id",
+    "zh",
+    "fr",
+    "ru",
     "tr",
-    "sv",
-    "fa",
-    "ko",
-    "hu",
     "ar",
-    "el",
-    "ro",
-    "da",
-    "fi",
     "th",
-    "uk",
-    "sk",
-    "no",
-    "bg",
-    "ca",
-    "hr",
-    "la",
-    "sr",
     "hi",
-    "sl",
-    "lt",
-    "et",
-    "he",
-    "bn",
-    "lv",
-    "sh",
-    "sq",
-    "az",
-    "ta",
-    "is",
-    "mk",
-    "ka",
-    "gl",
-    "hy",
-    "eu",
-    "ms",
-    "ur",
-    "ne",
-    "mr",
-    "ml",
-    "kk",
-    "te",
-    "mn",
-    "be",
-    "gu",
-    "kn",
-    "tl",
-    "my",
-    "eo",
-    "uz",
-    "km",
-    "tg",
-    "cy",
-    "nn",
-    "bs",
-    "si",
     "sw",
-    "pa",
-    "tt",
-    "ckb",
-    "af",
-    "or",
-    "ky",
-    "ga",
-    "am",
-    "oc",
-    "ku",
-    "lo",
-    "lb",
-    "ba",
-    "ceb",
-    "fy",
-    "ps",
-    "mt",
-    "br",
-    "as",
-    "mg",
-    "war",
-    "dv",
-    "yi",
-    "so",
-    "sa",
-    "sd",
-    "azb",
-    "tk",
+    "te",
+    "ja",
 ]
 
 MAIN_OUTPUT_PATH = "./wiki_stats_pipeline"
@@ -122,7 +43,7 @@ WIKI_VERSION = "20231101"  # See https://huggingface.co/datasets/wikimedia/wikip
 DOC_LIMIT = 4000
 NUM_TASKS = 10
 NUM_WORKERS = 10
-EXECUTOR = os.environ.get("EXECUTOR", "slurm")  # local/slurm
+EXECUTOR = "local" # os.environ.get("EXECUTOR", "slurm")  # local/slurm
 
 if __name__ == "__main__":
     for language in LANGUAGES:
@@ -264,7 +185,7 @@ if __name__ == "__main__":
             "statistics": [
                 LanguageStatsReducer(
                     input_folder=f"{MAIN_OUTPUT_PATH}/lang_stats_per_rank/{language}",
-                    output_folder="./statistics",
+                    output_folder="./wiki_statistics",
                     output_filename=f"{language}.yml",
                 )
             ],
