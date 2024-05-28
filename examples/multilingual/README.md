@@ -31,7 +31,7 @@ To further analyze word frequencies, use the [language statistics visualization 
 
 ### `min_avg_word_length` and `max_avg_word_length`
 
-We calculate the language-specific thresholds for `min_avg_word_length` and `max_avg_word_length` as one standard deviation below (for minimum) and one standard deviation above (for maximum) the mean word length value rounded to the closest integer. When computed for the English language, these values are equal to the original Gopher quality filter thresholds: 2 (for minimum) and 8 (for maximum).
+We calculate the language-specific thresholds for `min_avg_word_length` and `max_avg_word_length` as one standard deviation below (for minimum) and one standard deviation above (for maximum) the mean word length value rounded to the closest integer. When computed for the English language, these values are similar to the original Gopher quality filter thresholds: 2 (for minimum) and 8 (for maximum).
 
 
 ### `max_non_alpha_words_ratio`
