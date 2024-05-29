@@ -32,6 +32,7 @@ class FineWebQualityFilter(BaseFilter):
 
     def filter(self, doc) -> bool | tuple[bool, str]:
         lines = doc.text.split("\n")
+        lines = [line for line in lines if line.strip() != ""]
         ratio = sum(1 for line in lines if line.endswith(self.stop_chars)) / len(lines)
         if ratio <= self.line_punct_thr and not (ratio == 0 and self.line_punct_exclude_zero):
             return False, "line_punct_ratio"
@@ -40,8 +41,7 @@ class FineWebQualityFilter(BaseFilter):
         if ratio >= self.short_line_threshold:
             return False, "short_line_ratio"
 
-        non_empty_lines = [line for line in lines if line.strip() != ""]
-        ratio = find_duplicates(non_empty_lines)[1] / len(doc.text.replace("\n", ""))
+        ratio = find_duplicates(lines)[1] / len(doc.text.replace("\n", ""))
 
         if ratio >= self.char_duplicates_ratio:
             return False, "char_dup_ratio"
