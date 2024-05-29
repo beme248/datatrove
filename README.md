@@ -96,6 +96,7 @@ Some options common to all executors:
 - `pipeline` a list consisting of the pipeline steps that should be run
 - `logging_dir` a datafolder where log files, statistics and more should be saved. Do not reuse folders for different pipelines/jobs as this will overwrite your stats, logs and completions.
 - `skip_completed` (_bool_, `True` by default) datatrove keeps track of completed tasks so that when you relaunch a job they can be skipped. Set this to `False` to disable this behaviour
+- `randomize_start_duration` (_int_, `0` by default) the maximum number of seconds to delay the start of each task to prevent all tasks from starting simultaneously and potentially overloading the system. 
 
 Call an executor's `run` method to execute its pipeline.
 
@@ -411,7 +412,7 @@ pytest -sv ./tests/
 
 ```bibtex
 @misc{penedo2024datatrove,
-  author = {Penedo, Guilherme and Cappelli, Alessandro and Wolf, Thomas and Sasko, Mario},
+  author = {Penedo, Guilherme and Kydlíček, Hynek and Cappelli, Alessandro and Wolf, Thomas and Sasko, Mario},
   title = {DataTrove: large scale data processing},
   year = {2024},
   publisher = {GitHub},
