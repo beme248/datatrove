@@ -1,20 +1,29 @@
-import os
-import sys
-
 import datasets
 datasets.builder.has_sufficient_disk_space = lambda needed_bytes, directory='.': True
 
 from datatrove.executor.local import LocalPipelineExecutor
 from datatrove.executor.slurm import SlurmPipelineExecutor
 from datatrove.pipeline.readers import ShuffledHFDatasetReader
-from datatrove.pipeline.stats import LanguageStatistics, LanguageStatsCollector, LanguageStatsReducer
-
+from datatrove.pipeline.stats import LanguageStatistics, LanguageStatsCalculator, LanguageStatsReducer
 
 if len(sys.argv) != 2 or sys.argv[1] not in ["statistics", "filters"]:
     print("First argument should be: 'statistics' or 'filters'.")
     print("Use 'statistics' to generate statistics of the Wikipedia documents.")
     print("Use 'filters' to only generate the filter values for multilingual Gopher quality filter.")
     exit(1)
+
+# high resource:
+# chinese (105M docs, 13 benchmarks)
+# french (135M docs, 10 benchmarks)
+# russian (160M docs, 10 benchmarks)
+# medium resource:
+# turkish (21M docs, 5 benchmarks)
+# arabic (17M docs, 12 benchmarks)
+# thai (11M docs, 6 benchmarks)
+# hindi (5M docs, 9 benchmarks)
+# low resource:
+# swahili (200k docs, 8 benchmarks)
+# telugu (500k docs, 4 benchmarks)
 
 RUN_MODE = sys.argv[1]
 LANGUAGES = [
@@ -35,15 +44,17 @@ LANGUAGES = [
     "ja",
 ]
 
-MAIN_OUTPUT_PATH = f"./wiki_stats_pipeline_{RUN_MODE}"
+MAIN_OUTPUT_PATH = "./cc_stats_pipeline"
 WIKI_VERSION = "20231101"  # See https://huggingface.co/datasets/wikimedia/wikipedia
-DOC_LIMIT = 4000
-NUM_TASKS = 10
-NUM_WORKERS = 10
-EXECUTOR = "local" # os.environ.get("EXECUTOR", "slurm")  # local/slurm
+DOC_LIMIT = 400
+NUM_TASKS = 1
+NUM_WORKERS = 1
+EXECUTOR = "local"
+DUMP = "CC-MAIN-2023-23"
 
 if __name__ == "__main__":
     for language in LANGUAGES:
+        data_path = f"s3://fineweb-data-processing-us-east-1/base_processing/non_english/{language}/{DUMP}"
         pipeline = [
             ShuffledHFDatasetReader(  # Use shuffled dataset when using DOC_LIMIT
                 "wikimedia/wikipedia",
@@ -54,9 +65,7 @@ if __name__ == "__main__":
                 limit=DOC_LIMIT,
                 default_metadata={"language": language},
             ),
-            LanguageStatsCollector(
-                output_folder=f"{MAIN_OUTPUT_PATH}/lang_stats_per_rank/{language}", language=language
-            ),
+            LanguageStatsCalculator(output_folder=f"{MAIN_OUTPUT_PATH}/lang_stats_per_rank/"),
         ]
         executor = {
             "local": LocalPipelineExecutor(
@@ -163,7 +172,7 @@ if __name__ == "__main__":
                 "min_avg_word_length": round(word_length_mean - word_length_std),
                 "max_avg_word_length": round(word_length_mean + word_length_std),
                 "max_non_alpha_words_ratio": round(alpha_ratio_mean - 3 * alpha_ratio_std, 1),
-                "stopwords": to_clean_stopwords(language, word_counter),
+                "stopwords": to_clean_stopwords(language_stats.language, word_counter),
                 "line_punct_thr": max(round(line_punct_ratio_mean - line_punct_ratio_std, 2), 0),
                 "short_line_thr": round(short_line_ratio_mean + short_line_ratio_std, 2),
                 "new_line_ratio": min(round(new_line_ratio_mean + 2 * new_line_ratio_std, 2), 1),
@@ -173,21 +182,15 @@ if __name__ == "__main__":
         pipeline_reduce = {
             "filters": [
                 LanguageStatsReducer(
-                    input_folder=f"{MAIN_OUTPUT_PATH}/lang_stats_per_rank/{language}",
-                    output_folder=f"./wiki_{RUN_MODE}",
+                    input_folder=f"{MAIN_OUTPUT_PATH}/lang_stats_per_rank/",
+                    output_folder="./filters",
                     map_fn=filters_mapper,
-                    output_filename=f"{language}.yml",
                 )
             ],
             "statistics": [
                 LanguageStatsReducer(
-                    input_folder=f"{MAIN_OUTPUT_PATH}/lang_stats_per_rank/{language}",
-<<<<<<< HEAD:examples/multilingual/DEPRECATED_wiki_lang_stats.py
-                    output_folder=f"./wiki_{RUN_MODE}",
-=======
-                    output_folder="./wiki_statistics",
->>>>>>> 7178d1fc9c164937ec616abc08ccdc2c348a03d7:examples/multilingual/wiki_lang_stats.py
-                    output_filename=f"{language}.yml",
+                    input_folder=f"{MAIN_OUTPUT_PATH}/lang_stats_per_rank/",
+                    output_folder="./cc_statistics",
                 )
             ],
         }
