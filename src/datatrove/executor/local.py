@@ -30,6 +30,7 @@ class LocalPipelineExecutor(PipelineExecutor):
             Tasks [local_rank_offset, local_rank_offset + local_tasks] will be run.
         depends: another LocalPipelineExecutor that should run
             before this one
+        randomize_start_duration: the maximum number of seconds to delay the start of each task.
     """
 
     def __init__(
@@ -43,8 +44,9 @@ class LocalPipelineExecutor(PipelineExecutor):
         start_method: str = "forkserver",
         local_tasks: int = -1,
         local_rank_offset: int = 0,
+        randomize_start_duration: int = 0,
     ):
-        super().__init__(pipeline, logging_dir, skip_completed)
+        super().__init__(pipeline, logging_dir, skip_completed, randomize_start_duration)
         self.tasks = tasks
         self.workers = workers if workers != -1 else tasks
         self.start_method = start_method

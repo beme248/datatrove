@@ -23,6 +23,7 @@ from datatrove.utils.word_tokenizers import load_word_tokenizer
 LANGUAGE_ID_MODEL_URL = "https://dl.fbaipublicfiles.com/fasttext/supervised-models/lid.176.bin"
 
 MEAN_STD_KEYS = [
+    "avg_word_length",
     "hash_word_ratio",
     "ellipsis_word_ratio",
     "bullet_start_ratio",
@@ -63,6 +64,7 @@ class LanguageStatistics:
     total_words: int
     total_docs: int
     total_bytes: int
+    avg_word_length: MeanStdFloat
     hash_word_ratio: MeanStdFloat
     ellipsis_word_ratio: MeanStdFloat
     bullet_start_ratio: MeanStdFloat
@@ -96,6 +98,7 @@ class LanguageStatistics:
             "total_words": self.total_words,
             "total_docs": self.total_docs,
             "total_bytes": self.total_bytes,
+            "avg_word_length": {"mean": self.avg_word_length.mean, "std": self.avg_word_length.std},
             "hash_word_ratio": {"mean": self.hash_word_ratio.mean, "std": self.hash_word_ratio.std},
             "ellipsis_word_ratio": {"mean": self.ellipsis_word_ratio.mean, "std": self.ellipsis_word_ratio.std},
             "bullet_start_ratio": {"mean": self.bullet_start_ratio.mean, "std": self.bullet_start_ratio.std},
@@ -188,6 +191,10 @@ class LanguageStatsCollector(PipelineStep):
             
             for word in set([word.lower() for word in words] ):
                 stats["doc_per_word"][word] += 1
+
+            # Compute average word length
+            avg_n_words = np.mean([len(w) for w in words]) if n_words > 0 else 0
+            stats["avg_word_length"].append(avg_n_words)
 
             # Compute hash to word ratio and ellipsis to word ratio
             hash_word_ratio = (text.count("#") / n_words_symbols) if n_words_symbols > 0 else 0

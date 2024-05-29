@@ -63,6 +63,7 @@ class C4QualityFilter(BaseFilter):
         split_paragraph: bool = True,  # default as used on c4. Set to "False" to split with sent_tokenize
         remove_citations: bool = True,
         filter_no_terminal_punct: bool = True,
+        end_punctuation: tuple[str] = END_PUNCTUATION,
         min_num_sentences: int = 5,  # set to -1 to disable
         min_words_per_line: int = 3,  # set to -1 to disable
         max_word_length: int = 1000,  # set to -1 to disable
@@ -76,6 +77,7 @@ class C4QualityFilter(BaseFilter):
         self.split_paragraph = split_paragraph
         self.remove_citations = remove_citations
         self.filter_no_terminal_punct = filter_no_terminal_punct
+        self.end_punctuation = end_punctuation
         self.min_num_sentences = min_num_sentences
         self.min_words_per_line = min_words_per_line
         self.max_word_length = max_word_length
@@ -93,7 +95,7 @@ class C4QualityFilter(BaseFilter):
 
         for line in lines:
             line = line.strip()
-            words = line.split()
+            words = self.tokenizer.word_tokenize(line)
             self.stat_update("line-total")
             # check line has too long word
             if self.max_word_length != -1 and any(len(word) > self.max_word_length for word in words):
@@ -103,7 +105,7 @@ class C4QualityFilter(BaseFilter):
             if self.remove_citations:
                 line = CITATION_REGEX.sub("", line)
             # end punctuation
-            if self.filter_no_terminal_punct and (not line.endswith(END_PUNCTUATION) or line.endswith(ELLIPSIS)):
+            if self.filter_no_terminal_punct and (not line.endswith(self.end_punctuation) or line.endswith(ELLIPSIS)):
                 self.stat_update("line-filter-no_terminal_punc")
                 continue
             # min words per line
