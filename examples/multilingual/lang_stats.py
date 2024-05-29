@@ -1,34 +1,32 @@
+import os
 import sys
-sys.path.append('/mloscratch/homes/bmessmer/code/copied/datatrove/src')
+
+import sys
+sys.path.append('/mloscratch/homes/bmessmer/code/back/datatrove/src')
 
 import datasets
 datasets.builder.has_sufficient_disk_space = lambda needed_bytes, directory='.': True
 
 from datatrove.executor.local import LocalPipelineExecutor
 from datatrove.executor.slurm import SlurmPipelineExecutor
-from datatrove.pipeline.readers import ShuffledHFDatasetReader
-from datatrove.pipeline.stats import LanguageStatistics, LanguageStatsCalculator, LanguageStatsReducer
+from datatrove.pipeline.readers import JsonlReader, ShuffledHFDatasetReader
+from datatrove.pipeline.stats import LanguageStatistics, LanguageStatsCollector, LanguageStatsReducer
 
-if len(sys.argv) != 2 or sys.argv[1] not in ["statistics", "filters"]:
+
+if len(sys.argv) < 2 or sys.argv[1] not in ["statistics", "filters"]:
     print("First argument should be: 'statistics' or 'filters'.")
     print("Use 'statistics' to generate statistics of the Wikipedia documents.")
     print("Use 'filters' to only generate the filter values for multilingual Gopher quality filter.")
     exit(1)
 
-# high resource:
-# chinese (105M docs, 13 benchmarks)
-# french (135M docs, 10 benchmarks)
-# russian (160M docs, 10 benchmarks)
-# medium resource:
-# turkish (21M docs, 5 benchmarks)
-# arabic (17M docs, 12 benchmarks)
-# thai (11M docs, 6 benchmarks)
-# hindi (5M docs, 9 benchmarks)
-# low resource:
-# swahili (200k docs, 8 benchmarks)
-# telugu (500k docs, 4 benchmarks)
+if len(sys.argv) < 3 or sys.argv[2] not in ["cc", "wiki"]:
+    print("Second argument should be: 'cc' or 'wiki'.")
+    print("Use 'cc' to generate statistics of CC documents.")
+    print("Use 'wiki' to generate statistics of CC documents.")
+    exit(1)
 
 RUN_MODE = sys.argv[1]
+DATASET_MODE = sys.argv[2]
 LANGUAGES = [
     "en",
     "de",
@@ -47,19 +45,25 @@ LANGUAGES = [
     "ja",
 ]
 
-MAIN_OUTPUT_PATH = "./cc_stats_pipeline"
+MAIN_OUTPUT_PATH = f"./{DATASET_MODE}_stats_pipeline_{RUN_MODE}"
+DOC_LIMIT = 4000
+NUM_TASKS = 10
+NUM_WORKERS = 10
+EXECUTOR = "local" # os.environ.get("EXECUTOR", "slurm")  # local/slurm
+DUMP_TO_PROCESS = "CC-MAIN-2023-23"
 WIKI_VERSION = "20231101"  # See https://huggingface.co/datasets/wikimedia/wikipedia
-DOC_LIMIT = 400
-NUM_TASKS = 1
-NUM_WORKERS = 1
-EXECUTOR = "local"
-DUMP = "CC-MAIN-2023-23"
 
 if __name__ == "__main__":
     for language in LANGUAGES:
-        data_path = f"s3://fineweb-data-processing-us-east-1/base_processing/non_english/{language}/{DUMP}"
-        pipeline = [
-            ShuffledHFDatasetReader(  # Use shuffled dataset when using DOC_LIMIT
+        data_path = f"s3://fineweb-data-processing-us-east-1/base_processing/non_english/{language}/{DUMP_TO_PROCESS}"
+        readers = {
+        'cc': JsonlReader(
+                data_path,
+                default_metadata={"dump": DUMP_TO_PROCESS},
+                limit=DOC_LIMIT,
+                text_key="content",
+            ),
+        'wiki': ShuffledHFDatasetReader(  # Use shuffled dataset when using DOC_LIMIT
                 "wikimedia/wikipedia",
                 dataset_options={
                     "name": f"{WIKI_VERSION}.{language}",
@@ -68,7 +72,13 @@ if __name__ == "__main__":
                 limit=DOC_LIMIT,
                 default_metadata={"language": language},
             ),
-            LanguageStatsCalculator(output_folder=f"{MAIN_OUTPUT_PATH}/lang_stats_per_rank/"),
+        
+        }
+        pipeline = [
+            readers[DATASET_MODE],
+            LanguageStatsCollector(
+                output_folder=f"{MAIN_OUTPUT_PATH}/lang_stats_per_rank/{language}", language=language
+            ),
         ]
         executor = {
             "local": LocalPipelineExecutor(
@@ -175,7 +185,7 @@ if __name__ == "__main__":
                 "min_avg_word_length": round(word_length_mean - word_length_std),
                 "max_avg_word_length": round(word_length_mean + word_length_std),
                 "max_non_alpha_words_ratio": round(alpha_ratio_mean - 3 * alpha_ratio_std, 1),
-                "stopwords": to_clean_stopwords(language_stats.language, word_counter),
+                "stopwords": to_clean_stopwords(language, word_counter),
                 "line_punct_thr": max(round(line_punct_ratio_mean - line_punct_ratio_std, 2), 0),
                 "short_line_thr": round(short_line_ratio_mean + short_line_ratio_std, 2),
                 "new_line_ratio": min(round(new_line_ratio_mean + 2 * new_line_ratio_std, 2), 1),
@@ -185,15 +195,17 @@ if __name__ == "__main__":
         pipeline_reduce = {
             "filters": [
                 LanguageStatsReducer(
-                    input_folder=f"{MAIN_OUTPUT_PATH}/lang_stats_per_rank/",
-                    output_folder="./filters",
+                    input_folder=f"{MAIN_OUTPUT_PATH}/lang_stats_per_rank/{language}",
+                    output_folder=f"./{DATASET_MODE}_{RUN_MODE}",
                     map_fn=filters_mapper,
+                    output_filename=f"{language}.yml",
                 )
             ],
             "statistics": [
                 LanguageStatsReducer(
-                    input_folder=f"{MAIN_OUTPUT_PATH}/lang_stats_per_rank/",
-                    output_folder="./cc_statistics",
+                    input_folder=f"{MAIN_OUTPUT_PATH}/lang_stats_per_rank/{language}",
+                    output_folder=f"./{DATASET_MODE}_{RUN_MODE}",
+                    output_filename=f"{language}.yml",
                 )
             ],
         }

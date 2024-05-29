@@ -38,7 +38,7 @@ LANGUAGES = [
     "ja",
 ]
 
-MAIN_OUTPUT_PATH = "./wiki_stats_pipeline"
+MAIN_OUTPUT_PATH = f"./wiki_stats_pipeline_{RUN_MODE}"
 WIKI_VERSION = "20231101"  # See https://huggingface.co/datasets/wikimedia/wikipedia
 DOC_LIMIT = 4000
 NUM_TASKS = 10
@@ -177,7 +177,7 @@ if __name__ == "__main__":
             "filters": [
                 LanguageStatsReducer(
                     input_folder=f"{MAIN_OUTPUT_PATH}/lang_stats_per_rank/{language}",
-                    output_folder="./filters",
+                    output_folder=f"./wiki_{RUN_MODE}",
                     map_fn=filters_mapper,
                     output_filename=f"{language}.yml",
                 )
@@ -185,7 +185,7 @@ if __name__ == "__main__":
             "statistics": [
                 LanguageStatsReducer(
                     input_folder=f"{MAIN_OUTPUT_PATH}/lang_stats_per_rank/{language}",
-                    output_folder="./wiki_statistics",
+                    output_folder=f"./wiki_{RUN_MODE}",
                     output_filename=f"{language}.yml",
                 )
             ],
