@@ -47,9 +47,9 @@ def process_data(
     filter_mode: str = 'wiki',
     dataset_mode: str = 'cc',
     dump_to_process: str = "CC-MAIN-2023-23",
-    doc_limit: int = 100,
-    num_tasks: int = 1,
-    num_workers: int = 1,
+    doc_limit: int = 10_000,
+    num_tasks: int = 200,
+    num_workers: int = 200,
     executor_mode: str = "local"):
 
     assert filter_mode == 'wiki' or filter_mode == 'cc', \
@@ -80,6 +80,7 @@ def process_data(
                 f"s3://commoncrawl/crawl-data/{dump_to_process}/segments/",
                 glob_pattern="*/warc/*",  # we want the warc files
                 default_metadata={"dump": dump_to_process},
+                limit=doc_limit
             ),
             URLFilter(exclusion_writer=JsonlWriter(f"{filtering_output_path}/removed/url/{dump_to_process}")),
             Trafilatura(favour_precision=True, timeout=5),
