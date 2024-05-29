@@ -95,7 +95,7 @@ class C4QualityFilter(BaseFilter):
 
         for line in lines:
             line = line.strip()
-            words = line.split()
+            words = self.tokenizer.word_tokenize(line)
             self.stat_update("line-total")
             # check line has too long word
             if self.max_word_length != -1 and any(len(word) > self.max_word_length for word in words):
