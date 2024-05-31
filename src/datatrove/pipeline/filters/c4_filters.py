@@ -23,7 +23,6 @@ POLICY_SUBSTRINGS = [
     "use cookies",
 ]
 
-
 class C4QualityFilter(BaseFilter):
     """Applies heuristic rules from C4 https://jmlr.org/papers/volume21/20-074/20-074.pdf
 

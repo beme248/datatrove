@@ -19,30 +19,10 @@ if len(sys.argv) < 2 or sys.argv[1] not in ["statistics", "filters"]:
     print("Use 'filters' to only generate the filter values for multilingual Gopher quality filter.")
     exit(1)
 
-if len(sys.argv) < 3 or sys.argv[2] not in ["cc", "wiki"]:
-    print("Second argument should be: 'cc' or 'wiki'.")
-    print("Use 'cc' to generate statistics of CC documents.")
-    print("Use 'wiki' to generate statistics of CC documents.")
-    exit(1)
-
 RUN_MODE = sys.argv[1]
-DATASET_MODE = sys.argv[2]
+DATASET_MODE = 'cc'
 LANGUAGES = [
     "en",
-    "de",
-    "hr",
-    "pt",
-    "cs",
-    "zh",
-    "fr",
-    "ru",
-    "tr",
-    "ar",
-    "th",
-    "hi",
-    "sw",
-    "te",
-    "ja",
 ]
 
 MAIN_OUTPUT_PATH = f"./{DATASET_MODE}_stats_pipeline_{RUN_MODE}"
@@ -55,13 +35,13 @@ WIKI_VERSION = "20231101"  # See https://huggingface.co/datasets/wikimedia/wikip
 
 if __name__ == "__main__":
     for language in LANGUAGES:
-        data_path = f"s3://fineweb-data-processing-us-east-1/base_processing/non_english/{language}/{DUMP_TO_PROCESS}"
+        data_path = f"processing/en4_cc_with wiki_filters/data/{DUMP_TO_PROCESS}/{language}/output/{DUMP_TO_PROCESS}"
         readers = {
         'cc': JsonlReader(
                 data_path,
                 default_metadata={"dump": DUMP_TO_PROCESS},
                 limit=DOC_LIMIT,
-                text_key="content",
+                text_key="text",
             ),
         'wiki': ShuffledHFDatasetReader(  # Use shuffled dataset when using DOC_LIMIT
                 "wikimedia/wikipedia",
