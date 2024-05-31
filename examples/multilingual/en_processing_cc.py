@@ -204,7 +204,7 @@ def process_data(
     short_line_thr = {k: v["short_line_thr"] for k, v in filters.items()}
 
     for language in LANGUAGES:
-        data_path = f"processing/en5_cc_with_wiki_filters/data/{dump_to_process}/{language}/output/{dump_to_process}"
+        data_path = f"clean_cc_en/v5/data/{dump_to_process}/{language}/output/{dump_to_process}"
         filtering_output_path = f"processing/multilingual_{run_name}/data/{dump_to_process}/{language}"
         logs_path = f"processing/multilingual_{run_name}/logs/{dump_to_process}/{language}"
         pipeline =[

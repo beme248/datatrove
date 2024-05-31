@@ -35,7 +35,7 @@ WIKI_VERSION = "20231101"  # See https://huggingface.co/datasets/wikimedia/wikip
 
 if __name__ == "__main__":
     for language in LANGUAGES:
-        data_path = f"processing/en4_cc_with wiki_filters/data/{DUMP_TO_PROCESS}/{language}/output/{DUMP_TO_PROCESS}"
+        data_path = f"clean_cc_en/v5/data/{DUMP_TO_PROCESS}/{language}/output/{DUMP_TO_PROCESS}"
         readers = {
         'cc': JsonlReader(
                 data_path,
@@ -162,9 +162,9 @@ if __name__ == "__main__":
                 return stopwords
 
             return {
-                "min_avg_word_length": round(word_length_mean - word_length_std),
+                "min_avg_word_length": max(round(word_length_mean - word_length_std), 0), # also limited this to 0, but this doesn't affect anything
                 "max_avg_word_length": round(word_length_mean + word_length_std),
-                "max_non_alpha_words_ratio": round(alpha_ratio_mean - 3 * alpha_ratio_std, 1),
+                "max_non_alpha_words_ratio": round(alpha_ratio_mean - 0.5 * alpha_ratio_std, 2), # <----
                 "stopwords": to_clean_stopwords(language, word_counter),
                 "line_punct_thr": max(round(line_punct_ratio_mean - line_punct_ratio_std, 2), 0),
                 "short_line_thr": round(short_line_ratio_mean + short_line_ratio_std, 2),

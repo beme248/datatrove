@@ -44,8 +44,8 @@ def process_data(
     run_name = f"{dataset_mode}_clean"
 
     for language in LANGUAGES:
-        filtering_output_path = f"processing/en_{run_name}/data/{dump_to_process}/{language}"
-        logs_path = f"processing/en_{run_name}/logs/{dump_to_process}/{language}"
+        filtering_output_path = f"clean_cc_en/v6/data/{dump_to_process}/{language}"
+        logs_path = f"clean_cc_en/v6/logs/{dump_to_process}/{language}"
         pipeline =[
             WarcReader(
                 f"s3://commoncrawl/crawl-data/{dump_to_process}/segments/",
