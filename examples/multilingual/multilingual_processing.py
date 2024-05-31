@@ -268,6 +268,7 @@ def process_data(
                 filter_no_terminal_punct=False,
                 end_punctuation=END_PUNCTUATION,
                 exclusion_writer=JsonlWriter(f"{filtering_output_path}/removed/5_c4/{dump_to_process}"),
+                language=language,
             ),
             FineWebQualityFilter(
                 exclusion_writer=JsonlWriter(f"{filtering_output_path}/removed/6_fineweb_qual/{dump_to_process}"),
