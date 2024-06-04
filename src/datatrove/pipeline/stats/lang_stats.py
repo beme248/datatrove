@@ -22,8 +22,8 @@ from datatrove.utils.word_tokenizers import load_word_tokenizer
 
 LANGUAGE_ID_MODEL_URL = "https://dl.fbaipublicfiles.com/fasttext/supervised-models/lid.176.bin"
 
-MEAN_STD_KEYS = [
-    "avg_word_length",
+STATS_KEYS = [
+    "avg_word_doc_length",
     "hash_word_ratio",
     "ellipsis_word_ratio",
     "bullet_start_ratio",
@@ -51,43 +51,36 @@ MEAN_STD_KEYS = [
 
 
 @dataclass
-class MeanStdFloat:
-    mean: float
-    std: float
-
-
-@dataclass
 class LanguageStatistics:
     word_counter: Counter
     length_counter: Counter
     total_words: int
     total_docs: int
     total_bytes: int
-    avg_word_length: MeanStdFloat
-    hash_word_ratio: MeanStdFloat
-    ellipsis_word_ratio: MeanStdFloat
-    bullet_start_ratio: MeanStdFloat
-    ellipsis_end_ratio: MeanStdFloat
-    alpha_ratio: MeanStdFloat
-    line_punct_ratio: MeanStdFloat
-    short_line_ratio: MeanStdFloat
-    duplicate_line_ratio: MeanStdFloat
-    new_line_ratio: MeanStdFloat
-    dup_para_frac: MeanStdFloat
-    dup_para_char_frac: MeanStdFloat
-    dup_line_frac: MeanStdFloat
-    dup_line_char_frac: MeanStdFloat
-    top_2_gram: MeanStdFloat
-    top_3_gram: MeanStdFloat
-    top_4_gram: MeanStdFloat
-    duplicated_5_grams: MeanStdFloat
-    duplicated_6_grams: MeanStdFloat
-    duplicated_7_grams: MeanStdFloat
-    duplicated_8_grams: MeanStdFloat
-    duplicated_9_grams: MeanStdFloat
-    duplicated_10_grams: MeanStdFloat
-    language_score: MeanStdFloat
-    min_language_score: float
+    avg_word_doc_length: list[float]
+    hash_word_ratio: list[float]
+    ellipsis_word_ratio: list[float]
+    bullet_start_ratio: list[float]
+    ellipsis_end_ratio: list[float]
+    alpha_ratio: list[float]
+    line_punct_ratio: list[float]
+    short_line_ratio: list[float]
+    duplicate_line_ratio: list[float]
+    new_line_ratio: list[float]
+    dup_para_frac: list[float]
+    dup_para_char_frac: list[float]
+    dup_line_frac: list[float]
+    dup_line_char_frac: list[float]
+    top_2_gram: list[float]
+    top_3_gram: list[float]
+    top_4_gram: list[float]
+    duplicated_5_grams: list[float]
+    duplicated_6_grams: list[float]
+    duplicated_7_grams: list[float]
+    duplicated_8_grams: list[float]
+    duplicated_9_grams: list[float]
+    duplicated_10_grams: list[float]
+    language_score: list[float]
 
     def to_dict(self) -> dict:
         return {
@@ -96,32 +89,148 @@ class LanguageStatistics:
             "total_words": self.total_words,
             "total_docs": self.total_docs,
             "total_bytes": self.total_bytes,
-            "avg_word_length": {"mean": self.avg_word_length.mean, "std": self.avg_word_length.std},
-            "hash_word_ratio": {"mean": self.hash_word_ratio.mean, "std": self.hash_word_ratio.std},
-            "ellipsis_word_ratio": {"mean": self.ellipsis_word_ratio.mean, "std": self.ellipsis_word_ratio.std},
-            "bullet_start_ratio": {"mean": self.bullet_start_ratio.mean, "std": self.bullet_start_ratio.std},
-            "ellipsis_end_ratio": {"mean": self.ellipsis_end_ratio.mean, "std": self.ellipsis_end_ratio.std},
-            "alpha_ratio": {"mean": self.alpha_ratio.mean, "std": self.alpha_ratio.std},
-            "line_punct_ratio": {"mean": self.line_punct_ratio.mean, "std": self.line_punct_ratio.std},
-            "short_line_ratio": {"mean": self.short_line_ratio.mean, "std": self.short_line_ratio.std},
-            "duplicate_line_ratio": {"mean": self.duplicate_line_ratio.mean, "std": self.duplicate_line_ratio.std},
-            "new_line_ratio": {"mean": self.new_line_ratio.mean, "std": self.new_line_ratio.std},
-            "dup_para_frac": {"mean": self.dup_para_frac.mean, "std": self.dup_para_frac.std},
-            "dup_para_char_frac": {"mean": self.dup_para_char_frac.mean, "std": self.dup_para_char_frac.std},
-            "dup_line_frac": {"mean": self.dup_line_frac.mean, "std": self.dup_line_frac.std},
-            "dup_line_char_frac": {"mean": self.dup_line_char_frac.mean, "std": self.dup_line_char_frac.std},
-            "top_2_gram": {"mean": self.top_2_gram.mean, "std": self.top_2_gram.std},
-            "top_3_gram": {"mean": self.top_3_gram.mean, "std": self.top_3_gram.std},
-            "top_4_gram": {"mean": self.top_4_gram.mean, "std": self.top_4_gram.std},
-            "duplicated_5_grams": {"mean": self.duplicated_5_grams.mean, "std": self.duplicated_5_grams.std},
-            "duplicated_6_grams": {"mean": self.duplicated_6_grams.mean, "std": self.duplicated_6_grams.std},
-            "duplicated_7_grams": {"mean": self.duplicated_7_grams.mean, "std": self.duplicated_7_grams.std},
-            "duplicated_8_grams": {"mean": self.duplicated_8_grams.mean, "std": self.duplicated_8_grams.std},
-            "duplicated_9_grams": {"mean": self.duplicated_9_grams.mean, "std": self.duplicated_9_grams.std},
-            "duplicated_10_grams": {"mean": self.duplicated_10_grams.mean, "std": self.duplicated_10_grams.std},
-            "language_score": {"mean": self.language_score.mean, "std": self.language_score.std},
-            "min_language_score": self.min_language_score,
+            **{k: self.__getattribute__(k) for k in STATS_KEYS},
         }
+
+
+STOP_CHARS = (
+    ".",
+    "'",
+    '"',
+    "!",
+    "?",
+    "։",
+    "؟",
+    "۔",
+    "܀",
+    "܁",
+    "܂",
+    "߹",
+    "।",
+    "॥",
+    "၊",
+    "။",
+    "።",
+    "፧",
+    "፨",
+    "᙮",
+    "᜵",
+    "᜶",
+    "᠃",
+    "᠉",
+    "᥄",
+    "᥅",
+    "᪨",
+    "᪩",
+    "᪪",
+    "᪫",
+    "᭚",
+    "᭛",
+    "᭞",
+    "᭟",
+    "᰻",
+    "᰼",
+    "᱾",
+    "᱿",
+    "‼",
+    "‽",
+    "⁇",
+    "⁈",
+    "⁉",
+    "⸮",
+    "⸼",
+    "꓿",
+    "꘎",
+    "꘏",
+    "꛳",
+    "꛷",
+    "꡶",
+    "꡷",
+    "꣎",
+    "꣏",
+    "꤯",
+    "꧈",
+    "꧉",
+    "꩝",
+    "꩞",
+    "꩟",
+    "꫰",
+    "꫱",
+    "꯫",
+    "﹒",
+    "﹖",
+    "﹗",
+    "！",
+    "．",
+    "？",
+    "𐩖",
+    "𐩗",
+    "𑁇",
+    "𑁈",
+    "𑂾",
+    "𑂿",
+    "𑃀",
+    "𑃁",
+    "𑅁",
+    "𑅂",
+    "𑅃",
+    "𑇅",
+    "𑇆",
+    "𑇍",
+    "𑇞",
+    "𑇟",
+    "𑈸",
+    "𑈹",
+    "𑈻",
+    "𑈼",
+    "𑊩",
+    "𑑋",
+    "𑑌",
+    "𑗂",
+    "𑗃",
+    "𑗉",
+    "𑗊",
+    "𑗋",
+    "𑗌",
+    "𑗍",
+    "𑗎",
+    "𑗏",
+    "𑗐",
+    "𑗑",
+    "𑗒",
+    "𑗓",
+    "𑗔",
+    "𑗕",
+    "𑗖",
+    "𑗗",
+    "𑙁",
+    "𑙂",
+    "𑜼",
+    "𑜽",
+    "𑜾",
+    "𑩂",
+    "𑩃",
+    "𑪛",
+    "𑪜",
+    "𑱁",
+    "𑱂",
+    "𖩮",
+    "𖩯",
+    "𖫵",
+    "𖬷",
+    "𖬸",
+    "𖭄",
+    "𛲟",
+    "𝪈",
+    "｡",
+    "。",
+    "ល",
+    "។",
+    "៕",
+    "៖",
+    "៙",
+    "៚",
+)  # FineWeb + Spacy sentencizer stop chars + Khmer puncts
 
 
 class LanguageStatsCollector(PipelineStep):
@@ -133,6 +242,7 @@ class LanguageStatsCollector(PipelineStep):
         output_folder: DataFolderLike,
         language: str = Languages.english,
         word_count_prune=2,
+        stop_chars=STOP_CHARS,
     ):
         super().__init__()
         self.output_folder = get_datafolder(output_folder)
@@ -141,11 +251,12 @@ class LanguageStatsCollector(PipelineStep):
         self._line_splitter = re.compile("\n+")
         self.tokenizer = load_word_tokenizer(language)
         self.language = language
-        self._model = None
+        self._fasttext_model = None
+        self.stop_chars = stop_chars
 
     @property
     def fasttext_model(self):
-        if not self._model:
+        if not self._fasttext_model:
             from fasttext.FastText import _FastText
 
             model_file = cached_asset_path_or_download(
@@ -154,8 +265,8 @@ class LanguageStatsCollector(PipelineStep):
                 subfolder="language_filter",
                 desc="fast-text language identifier model",
             )
-            self._model = _FastText(model_file)
-        return self._model
+            self._fasttext_model = _FastText(model_file)
+        return self._fasttext_model
 
     def run(self, data: DocumentsPipeline, rank: int = 0, world_size: int = 1) -> DocumentsPipeline:
         stats = {
@@ -164,8 +275,7 @@ class LanguageStatsCollector(PipelineStep):
             "total_words": 0,
             "total_docs": 0,
             "total_bytes": 0,
-            "min_language_score": 100,
-            **{k: [] for k in MEAN_STD_KEYS},
+            **{k: [] for k in STATS_KEYS},
         }
 
         # map and produce one output file per rank
@@ -188,7 +298,7 @@ class LanguageStatsCollector(PipelineStep):
 
             # Compute average word length
             avg_n_words = np.mean([len(w) for w in words]) if n_words > 0 else 0
-            stats["avg_word_length"].append(avg_n_words)
+            stats["avg_word_doc_length"].append(avg_n_words)
 
             # Compute hash to word ratio and ellipsis to word ratio
             hash_word_ratio = (text.count("#") / n_words_symbols) if n_words_symbols > 0 else 0
@@ -228,144 +338,7 @@ class LanguageStatsCollector(PipelineStep):
             n_lines = len(lines)
 
             # Compute ratio ratio of lines ending in punctuation
-            stop_chars = (
-                ".",
-                "'",
-                '"',
-                "!",
-                "?",
-                "։",
-                "؟",
-                "۔",
-                "܀",
-                "܁",
-                "܂",
-                "߹",
-                "।",
-                "॥",
-                "၊",
-                "။",
-                "።",
-                "፧",
-                "፨",
-                "᙮",
-                "᜵",
-                "᜶",
-                "᠃",
-                "᠉",
-                "᥄",
-                "᥅",
-                "᪨",
-                "᪩",
-                "᪪",
-                "᪫",
-                "᭚",
-                "᭛",
-                "᭞",
-                "᭟",
-                "᰻",
-                "᰼",
-                "᱾",
-                "᱿",
-                "‼",
-                "‽",
-                "⁇",
-                "⁈",
-                "⁉",
-                "⸮",
-                "⸼",
-                "꓿",
-                "꘎",
-                "꘏",
-                "꛳",
-                "꛷",
-                "꡶",
-                "꡷",
-                "꣎",
-                "꣏",
-                "꤯",
-                "꧈",
-                "꧉",
-                "꩝",
-                "꩞",
-                "꩟",
-                "꫰",
-                "꫱",
-                "꯫",
-                "﹒",
-                "﹖",
-                "﹗",
-                "！",
-                "．",
-                "？",
-                "𐩖",
-                "𐩗",
-                "𑁇",
-                "𑁈",
-                "𑂾",
-                "𑂿",
-                "𑃀",
-                "𑃁",
-                "𑅁",
-                "𑅂",
-                "𑅃",
-                "𑇅",
-                "𑇆",
-                "𑇍",
-                "𑇞",
-                "𑇟",
-                "𑈸",
-                "𑈹",
-                "𑈻",
-                "𑈼",
-                "𑊩",
-                "𑑋",
-                "𑑌",
-                "𑗂",
-                "𑗃",
-                "𑗉",
-                "𑗊",
-                "𑗋",
-                "𑗌",
-                "𑗍",
-                "𑗎",
-                "𑗏",
-                "𑗐",
-                "𑗑",
-                "𑗒",
-                "𑗓",
-                "𑗔",
-                "𑗕",
-                "𑗖",
-                "𑗗",
-                "𑙁",
-                "𑙂",
-                "𑜼",
-                "𑜽",
-                "𑜾",
-                "𑩂",
-                "𑩃",
-                "𑪛",
-                "𑪜",
-                "𑱁",
-                "𑱂",
-                "𖩮",
-                "𖩯",
-                "𖫵",
-                "𖬷",
-                "𖬸",
-                "𖭄",
-                "𛲟",
-                "𝪈",
-                "｡",
-                "。",
-                "ល",
-                "។",
-                "៕",
-                "៖",
-                "៙",
-                "៚",
-            )  # FineWeb + Spacy sentencizer stop chars + Khmer puncts
+            stop_chars = self.stop_chars
             line_punct_ratio = sum(1 for line in lines if line.endswith(stop_chars)) / n_lines if n_lines > 0 else 0
             stats["line_punct_ratio"].append(line_punct_ratio)
 
@@ -392,44 +365,37 @@ class LanguageStatsCollector(PipelineStep):
             paragraphs = self.paragraph_exp.split(text.strip())
             paragraphs_duplicates, char_duplicates = find_duplicates(paragraphs)
             n_paragraphs = len(paragraphs)
-            stats["dup_para_frac"] = paragraphs_duplicates / n_paragraphs if n_paragraphs > 0 else 0
-            stats["dup_para_char_frac"] = char_duplicates / n_text if n_text > 0 else 0
+            stats["dup_para_frac"].append(paragraphs_duplicates / n_paragraphs if n_paragraphs > 0 else 0)
+            stats["dup_para_char_frac"].append(char_duplicates / n_text if n_text > 0 else 0)
 
             # Compute line repetition ratios
             lines = self._line_splitter.split(text)
             line_duplicates, char_duplicates = find_duplicates(lines)
             n_lines = len(lines)
-            stats["dup_line_frac"] = line_duplicates / n_lines if n_lines > 0 else 0
-            stats["dup_line_char_frac"] = char_duplicates / n_text if n_text > 0 else 0
+            stats["dup_line_frac"].append(line_duplicates / n_lines if n_lines > 0 else 0)
+            stats["dup_line_char_frac"].append(char_duplicates / n_text if n_text > 0 else 0)
 
             # Compute top n-gram repetition ratios
             for n in [2, 3, 4]:
                 n_grams = get_n_grams(words_symbols, n)
                 top_char_length = find_top_duplicate(n_grams) if n_grams else 0
-                stats[f"top_{n}_gram"] = top_char_length / n_text if n_text > 0 else 0
+                stats[f"top_{n}_gram"].append(top_char_length / n_text if n_text > 0 else 0)
 
             # Compute duplicated n-gram repetition ratios
             for n in [5, 6, 7, 8, 9, 10]:
                 n_duplicates_char = find_all_duplicate(words_symbols, n)
-                stats[f"duplicated_{n}_grams"] = n_duplicates_char / n_text if n_text > 0 else 0
+                stats[f"duplicated_{n}_grams"].append(n_duplicates_char / n_text if n_text > 0 else 0)
 
-            # Track lowest language score
+            # Get language score
             labels, scores = self.fasttext_model.predict(
                 doc.text.replace("\n", ""), k=len(self.fasttext_model.labels), threshold=-1
             )
             language_label_index = labels.index(f"__label__{self.language}")
             language_score = scores[language_label_index]
-            stats["min_language_score"] = min(language_score, stats["min_language_score"])
             stats["language_score"].append(language_score)
 
             yield doc
 
-        # Calculate local mean and mean of squares
-        for key in MEAN_STD_KEYS:
-            values = np.array(stats[key])
-            stats[f"{key}_mean"] = np.mean(values)
-            stats[f"{key}_sq_mean"] = np.mean(values**2)
-            del stats[key]
         # Prune word counter (include only words that appear at least word_count_prune times)
         if self.word_count_prune is not None:
             word_counter = stats["word_counter"]
@@ -467,11 +433,8 @@ class LanguageStatsReducer(PipelineStep):
             "total_words": 0,
             "total_docs": 0,
             "total_bytes": 0,
-            "min_language_score": 101,
-            **{f"{k}_mean": [] for k in MEAN_STD_KEYS},
-            **{f"{k}_std": [] for k in MEAN_STD_KEYS},
+            **{k: [] for k in STATS_KEYS},
         }
-        doc_count = []
 
         # combine all json files with stats
         assert world_size == 1, "world_size must be 1 when getting the input from an input_folder"
@@ -484,32 +447,18 @@ class LanguageStatsReducer(PipelineStep):
                 length_counter = Counter({int(k): v for k, v in file_data["length_counter"].items()})
                 stats["length_counter"] += length_counter
                 stats["word_counter"] += file_data["word_counter"]
-                stats["min_language_score"] = min(stats["min_language_score"], file_data["min_language_score"])
-                for key in MEAN_STD_KEYS:
-                    stats[f"{key}_mean"].append(file_data[f"{key}_mean"])
-                    stats[f"{key}_std"].append(file_data[f"{key}_sq_mean"])
-                doc_count.append(file_data["total_docs"])
-
-        # Average statistics over documents
-        for key in MEAN_STD_KEYS:
-            E_X = np.average(stats[f"{key}_mean"], weights=doc_count)
-            E_X2 = np.average(stats[f"{key}_std"], weights=doc_count)
-            stats[f"{key}_mean"] = E_X
-            stats[f"{key}_std"] = np.sqrt(E_X2 - (E_X**2))
+                for key in STATS_KEYS:
+                    stats[key] += file_data[key]
 
         stats = LanguageStatistics(
             word_counter=Counter(stats["word_counter"]).most_common(
                 10_000
-            ),  # 10000 most common words pruning, TODO: remove
+            ),  # 10000 most common words pruning, TODO: remove and retweak stopword threshold after
             length_counter=Counter(stats["length_counter"]),
             total_bytes=int(stats["total_bytes"]),
             total_docs=int(stats["total_docs"]),
             total_words=int(stats["total_words"]),
-            min_language_score=float(stats["min_language_score"]),
-            **{
-                key: MeanStdFloat(mean=float(stats[f"{key}_mean"]), std=float(stats[f"{key}_std"]))
-                for key in MEAN_STD_KEYS
-            },
+            **{key: stats[key] for key in STATS_KEYS},
         )
 
         # Apply mapping function

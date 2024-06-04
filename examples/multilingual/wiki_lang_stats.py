@@ -4,11 +4,15 @@ import sys
 from datatrove.executor.local import LocalPipelineExecutor
 from datatrove.executor.slurm import SlurmPipelineExecutor
 from datatrove.pipeline.readers import ShuffledHFDatasetReader
-from datatrove.pipeline.stats import LanguageStatistics, LanguageStatsCollector, LanguageStatsReducer
+from datatrove.pipeline.stats import (
+    LanguageStatistics,
+    LanguageStatsCollector,
+    LanguageStatsReducer,
+)
 
 
-if len(sys.argv) != 2 or sys.argv[1] not in ["statistics", "filters"]:
-    print("First argument should be: 'statistics' or 'filters'.")
+if len(sys.argv) != 2 or sys.argv[1] not in ["statistics", "filters", "raw"]:
+    print("First argument should be: 'statistics', 'filters', or 'raw'.")
     print("Use 'statistics' to generate statistics of the Wikipedia documents.")
     print("Use 'filters' to only generate the filter values for multilingual Gopher quality filter.")
     exit(1)
@@ -16,105 +20,17 @@ if len(sys.argv) != 2 or sys.argv[1] not in ["statistics", "filters"]:
 RUN_MODE = sys.argv[1]
 LANGUAGES = [
     "en",
-    "de",
-    "ru",
-    "fr",
-    "ja",
-    "es",
-    "zh",
-    "it",
-    "nl",
-    "pl",
-    "pt",
-    "cs",
-    "vi",
-    "id",
-    "tr",
-    "sv",
-    "fa",
-    "ko",
-    "hu",
-    "ar",
-    "el",
-    "ro",
-    "da",
-    "fi",
-    "th",
-    "uk",
-    "sk",
-    "no",
-    "bg",
-    "ca",
-    "hr",
-    "la",
-    "sr",
-    "hi",
-    "sl",
-    "lt",
-    "et",
-    "he",
-    "bn",
-    "lv",
-    "sh",
-    "sq",
-    "az",
-    "ta",
-    "is",
-    "mk",
-    "ka",
-    "gl",
-    "hy",
-    "eu",
-    "ms",
-    "ur",
-    "ne",
-    "mr",
-    "ml",
-    "kk",
-    "te",
-    "mn",
-    "be",
-    "gu",
-    "kn",
-    "tl",
-    "my",
-    "eo",
-    "uz",
-    "km",
-    "tg",
-    "cy",
-    "nn",
-    "bs",
-    "si",
-    "sw",
-    "pa",
-    "tt",
-    "ckb",
-    "af",
-    "or",
-    "ky",
-    "ga",
-    "am",
-    "oc",
-    "ku",
-    "lo",
-    "lb",
-    "ba",
-    "ceb",
-    "fy",
-    "ps",
-    "mt",
-    "br",
-    "as",
-    "mg",
-    "war",
-    "dv",
-    "yi",
-    "so",
-    "sa",
-    "sd",
-    "azb",
-    "tk",
+    # "zh",
+    # "fr",
+    # "ru",
+    # "tr",
+    # "ar",
+    # "th",
+    # "hi",
+    # "sw",
+    # "te",
+    # "de",
+    # "ja",
 ]
 
 MAIN_OUTPUT_PATH = "./wiki_stats_pipeline"
@@ -137,7 +53,8 @@ if __name__ == "__main__":
                 default_metadata={"language": language},
             ),
             LanguageStatsCollector(
-                output_folder=f"{MAIN_OUTPUT_PATH}/lang_stats_per_rank/{language}", language=language
+                output_folder=f"{MAIN_OUTPUT_PATH}/lang_stats_per_rank/{language}",
+                language=language,
             ),
         ]
         executor = {
@@ -180,17 +97,17 @@ if __name__ == "__main__":
             word_length_mean = np.average(lengths, weights=freqs)
             word_length_std = np.sqrt(np.cov(lengths, fweights=freqs))
 
-            alpha_ratio_mean = language_stats.alpha_ratio.mean
-            alpha_ratio_std = language_stats.alpha_ratio.std
+            alpha_ratio_mean = float(np.mean(language_stats.alpha_ratio))
+            alpha_ratio_std = float(np.std(language_stats.alpha_ratio))
 
-            line_punct_ratio_mean = language_stats.line_punct_ratio.mean
-            line_punct_ratio_std = language_stats.line_punct_ratio.std
+            line_punct_ratio_mean = float(np.mean(language_stats.line_punct_ratio))
+            line_punct_ratio_std = float(np.std(language_stats.line_punct_ratio))
 
-            short_line_ratio_mean = language_stats.short_line_ratio.mean
-            short_line_ratio_std = language_stats.short_line_ratio.std
+            short_line_ratio_mean = float(np.mean(language_stats.short_line_ratio))
+            short_line_ratio_std = float(np.std(language_stats.short_line_ratio))
 
-            new_line_ratio_mean = language_stats.new_line_ratio.mean
-            new_line_ratio_std = language_stats.new_line_ratio.std
+            new_line_ratio_mean = float(np.mean(language_stats.new_line_ratio))
+            new_line_ratio_std = float(np.std(language_stats.new_line_ratio))
 
             def is_clean(word):
                 word = word.strip()
@@ -252,6 +169,23 @@ if __name__ == "__main__":
                 "char_duplicates_ratio": 0.01,
             }
 
+        # Compute language statistics
+        def statistics_mapper(language_stats: LanguageStatistics):
+            # Make sure to import np here for slurm executor
+            import numpy as np
+
+            from datatrove.pipeline.stats.lang_stats import STATS_KEYS
+
+            ls = language_stats.to_dict()
+            return {
+                "length_counter": dict(language_stats.length_counter),
+                "word_counter": dict(language_stats.word_counter),
+                "total_words": int(language_stats.total_words),
+                "total_docs": int(language_stats.total_docs),
+                "total_bytes": int(language_stats.total_bytes),
+                **{key: {"mean": float(np.mean(ls[key])), "std": float(np.std(ls[key]))} for key in STATS_KEYS},
+            }
+
         pipeline_reduce = {
             "filters": [
                 LanguageStatsReducer(
@@ -265,6 +199,14 @@ if __name__ == "__main__":
                 LanguageStatsReducer(
                     input_folder=f"{MAIN_OUTPUT_PATH}/lang_stats_per_rank/{language}",
                     output_folder="./statistics",
+                    map_fn=statistics_mapper,
+                    output_filename=f"{language}.yml",
+                )
+            ],
+            "raw": [
+                LanguageStatsReducer(
+                    input_folder=f"{MAIN_OUTPUT_PATH}/lang_stats_per_rank/{language}",
+                    output_folder="./raw",
                     output_filename=f"{language}.yml",
                 )
             ],
@@ -272,7 +214,8 @@ if __name__ == "__main__":
 
         executor_reduce = {
             "local": LocalPipelineExecutor(
-                pipeline=pipeline_reduce[RUN_MODE], logging_dir=f"{MAIN_OUTPUT_PATH}/logs_{RUN_MODE}/{language}"
+                pipeline=pipeline_reduce[RUN_MODE],
+                logging_dir=f"{MAIN_OUTPUT_PATH}/logs_{RUN_MODE}/{language}",
             ),
             "slurm": SlurmPipelineExecutor(
                 pipeline=pipeline_reduce[RUN_MODE],
