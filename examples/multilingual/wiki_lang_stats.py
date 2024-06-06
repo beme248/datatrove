@@ -11,8 +11,13 @@ from datatrove.pipeline.stats import (
 )
 
 
-if len(sys.argv) != 2 or sys.argv[1] not in ["statistics", "filters", "raw"]:
-    print("First argument should be: 'statistics', 'filters', or 'raw'.")
+if len(sys.argv) != 2 or sys.argv[1] not in [
+    "statistics",
+    "filters_q",
+    "filters_meanstd",
+    "raw",
+]:
+    print("First argument should be: 'statistics', 'filters_q', 'filters_meanstd' or 'raw'.")
     print("Use 'statistics' to generate statistics of the Wikipedia documents.")
     print("Use 'filters' to only generate the filter values for multilingual Gopher quality filter.")
     exit(1)
@@ -20,17 +25,105 @@ if len(sys.argv) != 2 or sys.argv[1] not in ["statistics", "filters", "raw"]:
 RUN_MODE = sys.argv[1]
 LANGUAGES = [
     "en",
-    # "zh",
-    # "fr",
-    # "ru",
-    # "tr",
-    # "ar",
-    # "th",
-    # "hi",
-    # "sw",
-    # "te",
-    # "de",
-    # "ja",
+    "de",
+    "ru",
+    "fr",
+    "ja",
+    "es",
+    "zh",
+    "it",
+    "nl",
+    "pl",
+    "pt",
+    "cs",
+    "vi",
+    "id",
+    "tr",
+    "sv",
+    "fa",
+    "ko",
+    "hu",
+    "ar",
+    "el",
+    "ro",
+    "da",
+    "fi",
+    "th",
+    "uk",
+    "sk",
+    "no",
+    "bg",
+    "ca",
+    "hr",
+    "la",
+    "sr",
+    "hi",
+    "sl",
+    "lt",
+    "et",
+    "he",
+    "bn",
+    "lv",
+    "sh",
+    "sq",
+    "az",
+    "ta",
+    "is",
+    "mk",
+    # "ka",
+    "gl",
+    "hy",
+    "eu",
+    "ms",
+    "ur",
+    "ne",
+    "mr",
+    "ml",
+    "kk",
+    "te",
+    # "mn",
+    "be",
+    "gu",
+    "kn",
+    "tl",
+    # "my",
+    "eo",
+    "uz",
+    # "km",
+    "tg",
+    "cy",
+    "nn",
+    "bs",
+    "si",
+    "sw",
+    "pa",
+    "tt",
+    "ckb",
+    "af",
+    "or",
+    "ky",
+    "ga",
+    "am",
+    "oc",
+    "ku",
+    # "lo",
+    "lb",
+    "ba",
+    "ceb",
+    "fy",
+    "ps",
+    "mt",
+    # "br",
+    "as",
+    "mg",
+    "war",
+    # "dv",
+    "yi",
+    "so",
+    "sa",
+    "sd",
+    "azb",
+    "tk",
 ]
 
 MAIN_OUTPUT_PATH = "./wiki_stats_pipeline"
@@ -38,7 +131,7 @@ WIKI_VERSION = "20231101"  # See https://huggingface.co/datasets/wikimedia/wikip
 DOC_LIMIT = 4000
 NUM_TASKS = 10
 NUM_WORKERS = 10
-EXECUTOR = os.environ.get("EXECUTOR", "slurm")  # local/slurm
+EXECUTOR = os.environ.get("EXECUTOR", "local")  # local/slurm
 
 if __name__ == "__main__":
     for language in LANGUAGES:
@@ -76,7 +169,7 @@ if __name__ == "__main__":
         executor.run()
 
         # Compute language filter parameters
-        def filters_mapper(language_stats: LanguageStatistics):
+        def filters_meanstd_mapper(language_stats: LanguageStatistics):
             # Make sure to import np here for slurm executor
             import numpy as np
 
@@ -108,6 +201,9 @@ if __name__ == "__main__":
 
             new_line_ratio_mean = float(np.mean(language_stats.new_line_ratio))
             new_line_ratio_std = float(np.std(language_stats.new_line_ratio))
+
+            language_score_mean = float(np.mean(language_stats.language_score))
+            language_score_std = float(np.std(language_stats.language_score))
 
             def is_clean(word):
                 word = word.strip()
@@ -167,6 +263,81 @@ if __name__ == "__main__":
                 "short_line_thr": round(short_line_ratio_mean + short_line_ratio_std, 2),
                 "new_line_ratio": min(round(new_line_ratio_mean + 2 * new_line_ratio_std, 2), 1),
                 "char_duplicates_ratio": 0.01,
+                "language_score_thr": max(round(float(language_score_mean - 3 * language_score_std), 2), 0),
+            }
+
+        # Compute language filter parameters
+        def filters_q_mapper(language_stats: LanguageStatistics):
+            # Make sure to import np here for slurm executor
+            import numpy as np
+
+            def p_thresh_words(counts, p):
+                counts_sorted = sorted(counts, key=lambda x: -x[1])
+                xs = [d[0] for d in counts_sorted]
+                ys = [d[1] for d in counts_sorted]
+                ys_cumsum = np.cumsum(ys)
+                index = np.sum(ys > p * ys_cumsum[-1])
+                return xs[:index]
+
+            def is_clean(word):
+                word = word.strip()
+                return (
+                    word != "–"
+                    and word != "—"
+                    and word != "’"
+                    and word != "’’"
+                    and word != "||"
+                    and word != "|"
+                    and word != "।"
+                    and word != "''"
+                    and word != "'"
+                    and word != "``"
+                    and word != "`"
+                    and word != "‘"
+                    and word != "„"
+                    and word != "“"
+                    and word != "”"
+                    and word != "«"
+                    and word != "»"
+                    and word != "|-"
+                    and word != ":"
+                    and word != "："
+                    and word != "《"
+                    and word != "》"
+                    and word != "，"
+                    and word != "("
+                    and word != ")"
+                    and word != "（"
+                    and word != "）"
+                    and word != "//"
+                    and word != "/"
+                    and word != "\\"
+                    and word != "\\\\"
+                    and "=" not in word
+                    and "\u200d" not in word
+                    and "align" != word
+                    and not word.isdigit()
+                )
+
+            def to_clean(stopwords):
+                return [w for w in stopwords if is_clean(w)]
+
+            def to_clean_stopwords(lang, word_counter):
+                stopwords = to_clean(p_thresh_words(word_counter, 0.008))
+                if len(stopwords) < 8 or lang == "sr":
+                    stopwords = p_thresh_words(word_counter, 0.003)
+                return stopwords
+
+            return {
+                "min_avg_word_length": round(float(np.quantile(language_stats.avg_word_doc_length, 0.0001))),
+                "max_avg_word_length": round(float(np.quantile(language_stats.avg_word_doc_length, 0.9999))),
+                "max_non_alpha_words_ratio": round(float(np.quantile(language_stats.alpha_ratio, 0.25)), 2),
+                "stopwords": to_clean_stopwords(language, language_stats.word_counter),
+                "line_punct_thr": round(float(float(np.quantile(language_stats.line_punct_ratio, 0.2))), 2),
+                "short_line_thr": round(float(np.quantile(language_stats.short_line_ratio, 0.8)), 2),
+                "new_line_ratio": min(round(float(np.quantile(language_stats.new_line_ratio, 0.97)), 2), 1),
+                "char_duplicates_ratio": 0.01,
+                "language_score_thr": round(float(np.quantile(language_stats.language_score, 0.02)), 2),
             }
 
         # Compute language statistics
@@ -183,15 +354,29 @@ if __name__ == "__main__":
                 "total_words": int(language_stats.total_words),
                 "total_docs": int(language_stats.total_docs),
                 "total_bytes": int(language_stats.total_bytes),
-                **{key: {"mean": float(np.mean(ls[key])), "std": float(np.std(ls[key]))} for key in STATS_KEYS},
+                **{
+                    key: {
+                        "mean": float(np.mean(ls[key])),
+                        "std": float(np.std(ls[key])),
+                    }
+                    for key in STATS_KEYS
+                },
             }
 
         pipeline_reduce = {
-            "filters": [
+            "filters_q": [
                 LanguageStatsReducer(
                     input_folder=f"{MAIN_OUTPUT_PATH}/lang_stats_per_rank/{language}",
-                    output_folder="./filters",
-                    map_fn=filters_mapper,
+                    output_folder="./filters_q",
+                    map_fn=filters_q_mapper,
+                    output_filename=f"{language}.yml",
+                )
+            ],
+            "filters_meanstd": [
+                LanguageStatsReducer(
+                    input_folder=f"{MAIN_OUTPUT_PATH}/lang_stats_per_rank/{language}",
+                    output_folder="./filters_meanstd",
+                    map_fn=filters_meanstd_mapper,
                     output_filename=f"{language}.yml",
                 )
             ],
