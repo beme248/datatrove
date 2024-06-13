@@ -19,6 +19,7 @@ from datatrove.pipeline.filters import (
     GopherQualityFilter,
     GopherRepetitionFilter,
     C4QualityFilter,
+    LambdaFilter,
 )
 from datatrove.pipeline.writers.jsonl import JsonlWriter
 
@@ -188,7 +189,7 @@ def process_data(
     assert filter_mode == 'wiki' or filter_mode == 'cc', \
         f"run_mode must either be 'wiki' or 'cc', to use filters computed on wiki-data or cc-data."
     dataset_mode = 'cc'
-    filters_folder = f"./{filter_mode}_filters"
+    filters_folder = f"./{filter_mode}_filters_meanstd"
     run_name = f"{dataset_mode}_with_{filter_mode}_filters"
     filters = load_filters(filters_folder, LANGUAGES)
 
@@ -202,11 +203,12 @@ def process_data(
     line_punct_thr = {k: v["line_punct_thr"] for k, v in filters.items()}
     new_line_ratio = {k: v["new_line_ratio"] for k, v in filters.items()}
     short_line_thr = {k: v["short_line_thr"] for k, v in filters.items()}
+    language_score_thr = {k: v["language_score_thr"] for k, v in filters.items()}
 
     for language in LANGUAGES:
         data_path = f"clean_cc_en/v5/data/{dump_to_process}/{language}/output/{dump_to_process}"
-        filtering_output_path = f"processing/multilingual_{run_name}/data/{dump_to_process}/{language}"
-        logs_path = f"processing/multilingual_{run_name}/logs/{dump_to_process}/{language}"
+        filtering_output_path = f"processing_cc_doc/multilingual_{run_name}/data/{dump_to_process}/{language}"
+        logs_path = f"processing_cc_doc/multilingual_{run_name}/logs/{dump_to_process}/{language}"
         pipeline =[
             JsonlReader(
                 data_path,
@@ -214,9 +216,13 @@ def process_data(
                 limit=doc_limit,
                 text_key="text",
             ),
+            LambdaFilter(
+                lambda doc: doc.metadata["language_score"] > language_score_thr[language],
+                exclusion_writer=JsonlWriter(f"{filtering_output_path}/removed/2_lang_score/{dump_to_process}"),
+            ),
             GopherRepetitionFilter(
                 exclusion_writer=JsonlWriter(f"{filtering_output_path}/removed/3_gopher_rep/{dump_to_process}"),
-                language=language
+                language=language,
             ),
             GopherQualityFilter(
                 max_avg_word_length=max_avg_word_lengths[language],
@@ -225,7 +231,7 @@ def process_data(
                 min_stop_words=min_stop_words[language],
                 max_non_alpha_words_ratio=max_non_alpha_words_ratio[language],
                 exclusion_writer=JsonlWriter(f"{filtering_output_path}/removed/4_gopher_qual/{dump_to_process}"),
-                language=language
+                language=language,
             ),
             C4QualityFilter(
                 filter_no_terminal_punct=False,
@@ -263,4 +269,4 @@ def process_data(
         executor.run()
 
 if __name__ == '__main__':
-  fire.Fire(process_data)
+    fire.Fire(process_data)

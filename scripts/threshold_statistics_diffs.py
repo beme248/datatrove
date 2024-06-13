@@ -12,7 +12,6 @@ import matplotlib.font_manager as fm
 
 from matplotlib import font_manager
 
-# Define the cleaning functions
 def is_clean(word):
     word = word.strip()
     return (
@@ -56,10 +55,12 @@ def is_clean(word):
 def to_clean(stopwords):
     return [w for w in stopwords if is_clean(w)]
 
-def to_clean_stopwords(lang, word_counter):
+def to_clean_stopwords(lang, word_counter, is_doc_word=False):
     stopwords = to_clean(p_thresh_words(word_counter, 0.008))
     if len(stopwords) < 8 or lang == "sr":
         stopwords = p_thresh_words(word_counter, 0.003)
+    if len(stopwords) < 8 and is_doc_word:
+        stopwords = p_thresh_words(word_counter, 0.002)
     return stopwords
 
 def p_thresh_words(word_counter, threshold):
@@ -71,23 +72,29 @@ def p_thresh_words(word_counter, threshold):
 
 # List of languages
 LANGUAGES = [
-    "en", "de", "hr", "pt", "cs", "zh", "fr", "ru", "tr", 
+    # "en",
+    "de", "hr", "pt", "cs", "zh", "fr", "ru", "tr", 
     "ar", "th", "hi", "sw", "te", "ja"
 ]
 
 # Prepare stopwords data
 stopwords_data = {}
 for lang in LANGUAGES:
+    # with open(f'cc_filters_meanstd/{lang}.yml', 'r') as file:
     with open(f'cc_statistics/{lang}.yml', 'r') as file:
         lang_data = yaml.safe_load(file)
     doc_per_word = lang_data['doc_per_word']
     word_count = lang_data['word_counter']
     
-    cc_stopwords = to_clean_stopwords(lang, doc_per_word)
+    cc_stopwords = to_clean_stopwords(lang, doc_per_word, is_doc_word=True)
     wiki_stopwords = to_clean_stopwords(lang, word_count)
+
+    with open(f'cc_filters_meanstd/{lang}.yml', 'r') as file:
+        lang_data_s = yaml.safe_load(file)
+    cc_stopwords_2 = lang_data_s['stopwords'] # to_clean_stopwords(lang, doc_per_word, is_doc_word=True)
     
     stopwords_data[lang] = {
-        'stopwords': (set(cc_stopwords), set(wiki_stopwords))
+        'stopwords': (set(cc_stopwords), set(wiki_stopwords), set(cc_stopwords_2))
     }
 
 # Plot Venn diagrams for stopwords
@@ -106,7 +113,6 @@ font_paths = [
 
 for font_path in font_paths:
     fm.fontManager.addfont(font_path)
-
 
 font_properties = [fm.FontProperties(fname=path) for path in font_paths]
 font_names = [prop.get_name() for prop in font_properties]
@@ -131,10 +137,12 @@ axes = axes.flatten()
 
 plot_idx = 0
 for lang, keys_data in stopwords_data.items():
-    cc_set, wiki_set = keys_data['stopwords']
+    cc_set, wiki_set, cc_stopwords_2 = keys_data['stopwords']
     if plot_idx >= len(axes):
         break  # Ensure we do not exceed the available subplot slots
     
+    assert cc_set == cc_stopwords_2, "different stopwords for filters and statistics"
+
     ax = axes[plot_idx]
     
     # Create the Venn diagram
@@ -163,5 +171,5 @@ for i in range(plot_idx, len(axes)):
     fig.delaxes(axes[i])
 
 plt.tight_layout()
-plt.savefig(os.path.join('aggregated_filter_statistics', 'cc_one_doc_vs_total_languages.pdf'))
+plt.savefig(os.path.join('aggregated_filter_statistics', 'cc_one_doc_vs_total_languages_debug3.pdf'))
 plt.show()

@@ -3,19 +3,25 @@ import fire
 
 import datasets
 import datetime
-datasets.builder.has_sufficient_disk_space = lambda needed_bytes, directory='.': True
+
+import datasets
+import fire
 import yaml
 
 from datatrove.executor.local import LocalPipelineExecutor
 from datatrove.executor.slurm import SlurmPipelineExecutor
 from datatrove.pipeline.filters import (
-    FineWebQualityFilter,
     C4QualityFilter,
+    FineWebQualityFilter,
     GopherQualityFilter,
     GopherRepetitionFilter,
+    LambdaFilter,
 )
-from datatrove.pipeline.readers import JsonlReader, HuggingFaceDatasetReader
+from datatrove.pipeline.readers import HuggingFaceDatasetReader, JsonlReader
 from datatrove.pipeline.writers.jsonl import JsonlWriter
+
+
+datasets.builder.has_sufficient_disk_space = lambda needed_bytes, directory=".": True
 
 END_PUNCTUATION = (
     ".",
@@ -304,27 +310,28 @@ def process_data(
         # Use default adapter, but replace datetime of metadata
         def hf_adapter(ctx, data: dict, path: str, id_in_file: int | str):
             default_metadata = data.pop("metadata", {})
-            if 'date' in default_metadata and isinstance(default_metadata['date'], datetime.datetime):
-                default_metadata['date'] = default_metadata['date'].isoformat()
+            if "date" in default_metadata and isinstance(default_metadata["date"], datetime.datetime):
+                default_metadata["date"] = default_metadata["date"].isoformat()
             return {
                 "text": data.pop(ctx.text_key, ""),
                 "id": data.pop(ctx.id_key, f"{path}/{id_in_file}"),
                 "media": data.pop("media", []),
                 "metadata": default_metadata | data,  # remaining data goes into metadata
             }
+
         readers = {
-            'cc': JsonlReader(
+            "cc": JsonlReader(
                 data_path,
                 default_metadata={"dump": dump_to_process},
                 limit=doc_limit,
                 text_key="content",
             ),
-            'curated': HuggingFaceDatasetReader(
+            "curated": HuggingFaceDatasetReader(
                 "ZR0zNqSGMI/curated_dataset",
                 dataset_options={
                     "data_files": f"{language}/*.jsonl.gz",
                     "split": "train",
-                    "cache_dir": "./hf_cache"
+                    "cache_dir": "./hf_cache00",
                 },
                 limit=doc_limit,
                 default_metadata={"language": language},
@@ -333,30 +340,37 @@ def process_data(
         }
         return readers[dataset_mode]
 
-    filters_folder = f"./{filter_mode}_filters"
-    run_name = f"{dataset_mode}_with_{filter_mode}_filters"
-    filters = load_filters(filters_folder, LANGUAGES)
-
-    min_avg_word_lengths = {k: v["min_avg_word_length"] for k, v in filters.items()}
-    max_avg_word_lengths = {k: v["max_avg_word_length"] for k, v in filters.items()}
-    stopwords = {k: v["stopwords"] for k, v in filters.items()}
-    max_non_alpha_words_ratio = {k: v["max_non_alpha_words_ratio"] for k, v in filters.items()}
-    min_stop_words = {k: 2 for k, _ in filters.items()}
-
-    char_duplicates_ratio = {k: v["char_duplicates_ratio"] for k, v in filters.items()}
-    line_punct_thr = {k: v["line_punct_thr"] for k, v in filters.items()}
-    new_line_ratio = {k: v["new_line_ratio"] for k, v in filters.items()}
-    short_line_thr = {k: v["short_line_thr"] for k, v in filters.items()}
+    filters_folder = f"./{filter_mode}_filters_meanstd"
+    run_name = f"{dataset_mode}_with_{filter_mode}_filters_meanstd"
 
     for language in LANGUAGES:
-        filtering_output_path = f"processing_10000/multilingual_{run_name}/data/{dump_to_process}/{language}"
-        logs_path = f"processing_10000/multilingual_{run_name}/logs/{dump_to_process}/{language}"
+        filtering_output_path = f"processing_cc_doc/multilingual_{run_name}/data/{dump_to_process}/{language}"
+        logs_path = f"processing_cc_doc/multilingual_{run_name}/logs/{dump_to_process}/{language}"
         data_path = f"s3://fineweb-data-processing-us-east-1/base_processing/non_english/{language}/{dump_to_process}"
-        pipeline =[
+
+        filters = load_filters(filters_folder, [ language ])
+
+        min_avg_word_lengths = {k: v["min_avg_word_length"] for k, v in filters.items()}
+        max_avg_word_lengths = {k: v["max_avg_word_length"] for k, v in filters.items()}
+        stopwords = {k: v["stopwords"] for k, v in filters.items()}
+        max_non_alpha_words_ratio = {k: v["max_non_alpha_words_ratio"] for k, v in filters.items()}
+        min_stop_words = {k: 2 for k, _ in filters.items()}
+
+        char_duplicates_ratio = {k: v["char_duplicates_ratio"] for k, v in filters.items()}
+        line_punct_thr = {k: v["line_punct_thr"] for k, v in filters.items()}
+        new_line_ratio = {k: v["new_line_ratio"] for k, v in filters.items()}
+        short_line_thr = {k: v["short_line_thr"] for k, v in filters.items()}
+        language_score_thr = {k: v["language_score_thr"] for k, v in filters.items()}
+
+        pipeline = [
             to_reader(language, data_path),
+            LambdaFilter(
+                lambda doc: doc.metadata["language_score"] > language_score_thr[language],
+                exclusion_writer=JsonlWriter(f"{filtering_output_path}/removed/2_lang_score/{dump_to_process}"),
+            ),
             GopherRepetitionFilter(
                 exclusion_writer=JsonlWriter(f"{filtering_output_path}/removed/3_gopher_rep/{dump_to_process}"),
-                language=language
+                language=language,
             ),
             GopherQualityFilter(
                 max_avg_word_length=max_avg_word_lengths[language],
@@ -365,7 +379,7 @@ def process_data(
                 min_stop_words=min_stop_words[language],
                 max_non_alpha_words_ratio=max_non_alpha_words_ratio[language],
                 exclusion_writer=JsonlWriter(f"{filtering_output_path}/removed/4_gopher_qual/{dump_to_process}"),
-                language=language
+                language=language,
             ),
             C4QualityFilter(
                 filter_no_terminal_punct=False,
@@ -403,4 +417,4 @@ def process_data(
         executor.run()
 
 if __name__ == '__main__':
-  fire.Fire(process_data)
+    fire.Fire(process_data)

@@ -14,8 +14,15 @@ from datatrove.pipeline.filters import (
 from datatrove.pipeline.readers import ShuffledHFDatasetReader
 from datatrove.pipeline.writers.jsonl import JsonlWriter
 
-if len(sys.argv) != 2 or sys.argv[1] not in ["wiki", "cc"]:
-    print("First argument should be: 'cc' or 'wiki'.")
+if len(sys.argv) != 2 or sys.argv[1] not in [
+    "statistics",
+    "filters_q",
+    "filters_meanstd",
+    "raw",
+]:
+    print("First argument should be: 'statistics', 'filters_q', 'filters_meanstd' or 'raw'.")
+    print("Use 'statistics' to generate statistics of the Wikipedia documents.")
+    print("Use 'filters' to only generate the filter values for multilingual Gopher quality filter.")
     exit(1)
 
 RUN_MODE = sys.argv[1]
