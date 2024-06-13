@@ -179,6 +179,8 @@ if __name__ == "__main__":
                 stopwords = to_clean(p_thresh_words(word_counter, 0.008))
                 if len(stopwords) < 8 or lang == "sr":
                     stopwords = p_thresh_words(word_counter, 0.003)
+                if len(stopwords) < 8:
+                    stopwords = p_thresh_words(word_counter, 0.002)
                 return stopwords
 
             return {
@@ -253,6 +255,8 @@ if __name__ == "__main__":
                 stopwords = to_clean(p_thresh_words(word_counter, 0.008))
                 if len(stopwords) < 8 or lang == "sr":
                     stopwords = p_thresh_words(word_counter, 0.003)
+                if len(stopwords) < 8:
+                    stopwords = p_thresh_words(word_counter, 0.002)
                 return stopwords
 
             return {
