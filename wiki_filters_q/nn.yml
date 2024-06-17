@@ -1,0 +1,26 @@
+char_duplicates_ratio: 0.01
+language_score_thr: 0.22
+line_punct_thr: 0.14
+max_avg_word_length: 10
+max_non_alpha_words_ratio: 0.78
+min_avg_word_length: 4
+new_line_ratio: 0.32
+short_line_thr: 0.68
+stopwords:
+- i
+- og
+- av
+- "p\xE5"
+- er
+- som
+- til
+- ein
+- "fr\xE5"
+- den
+- det
+- med
+- for
+- han
+- vart
+- var
+- dei
