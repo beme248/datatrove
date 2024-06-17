@@ -1,0 +1,26 @@
+char_duplicates_ratio: 0.01
+language_score_thr: 0.6
+line_punct_thr: 0.17
+max_avg_word_length: 8
+max_non_alpha_words_ratio: 0.8
+min_avg_word_length: 2
+new_line_ratio: 0.21
+short_line_thr: 0.66
+stopwords:
+- de
+- el
+- la
+- a
+- i
+- d
+- l'
+- d'
+- en
+- que
+- els
+- va
+- per
+- un
+- les
+- una
+- amb
