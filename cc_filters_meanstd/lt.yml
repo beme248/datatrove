@@ -1,0 +1,17 @@
+char_duplicates_ratio: 0.01
+language_score_thr: 0.43
+line_punct_thr: 0.04
+max_avg_word_length: 11
+max_non_alpha_words_ratio: 0.7
+min_avg_word_length: 2
+new_line_ratio: 0.43
+short_line_thr: 0.75
+stopwords:
+- ir
+- su
+- "\u012F"
+- "i\u0161"
+- yra
+- kad
+- apie
+- nuo

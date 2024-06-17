@@ -1,0 +1,26 @@
+char_duplicates_ratio: 0.01
+language_score_thr: 0.31
+line_punct_thr: 0.02
+max_avg_word_length: 9
+max_non_alpha_words_ratio: 0.73
+min_avg_word_length: 2
+new_line_ratio: 0.39
+short_line_thr: 0.76
+stopwords:
+- a
+- na
+- v
+- sa
+- s
+- je
+- pre
+- z
+- do
+- o
+- ako
+- aj
+- si
+- k
+- alebo
+- "s\xFA"
+- od

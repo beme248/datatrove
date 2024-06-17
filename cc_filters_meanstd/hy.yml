@@ -1,0 +1,18 @@
+char_duplicates_ratio: 0.01
+language_score_thr: 0.62
+line_punct_thr: 0
+max_avg_word_length: 11
+max_non_alpha_words_ratio: 0.74
+min_avg_word_length: 2
+new_line_ratio: 0.47
+short_line_thr: 0.71
+stopwords:
+- "\u0567"
+- "\u0587"
+- "\u0565\u0576"
+- "\u0578\u0580"
+- "\u0570\u0561\u0574\u0561\u0580"
+- "\u0561\u0575\u057D"
+- "\u0578\u0582"
+- "\u0574\u0561\u057D\u056B\u0576"
+- "\u0570\u0565\u057F"

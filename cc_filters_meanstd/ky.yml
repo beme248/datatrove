@@ -1,0 +1,21 @@
+char_duplicates_ratio: 0.01
+language_score_thr: 0.42
+line_punct_thr: 0.07
+max_avg_word_length: 10
+max_non_alpha_words_ratio: 0.7
+min_avg_word_length: 3
+new_line_ratio: 0.44
+short_line_thr: 0.68
+stopwords:
+- "\u0436\u0430\u043D\u0430"
+- "\u043C\u0435\u043D\u0435\u043D"
+- "\u0431\u0443\u043B"
+- "\u04AF\u0447\u04AF\u043D"
+- "\u0431\u043E\u044E\u043D\u0447\u0430"
+- "\u0431\u0438\u0440"
+- "\u044D\u043B\u0435"
+- "\u0430\u043B"
+- "\u0431\u043E\u043B\u0443\u043F"
+- "\u043A\u044B\u0440\u0433\u044B\u0437"
+- "\u0431\u0430\u0448\u043A\u0430"
+- "\u0431\u043E\u043B\u0433\u043E\u043D"

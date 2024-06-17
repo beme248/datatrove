@@ -1,0 +1,20 @@
+char_duplicates_ratio: 0.01
+language_score_thr: 0.25
+line_punct_thr: 0.01
+max_avg_word_length: 6
+max_non_alpha_words_ratio: 0.77
+min_avg_word_length: 2
+new_line_ratio: 0.35
+short_line_thr: 0.71
+stopwords:
+- "\u1362"
+- "\u1363"
+- "\u12A5\u1293"
+- "\u120B\u12ED"
+- "\u1290\u12CD"
+- "\u1361"
+- "\u12CD\u1235\u1325"
+- "\u130B\u122D"
+- "\u12C8\u12F0"
+- "\u130A\u12DC"
+- "\u12C8\u12ED\u121D"

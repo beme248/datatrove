@@ -1,0 +1,27 @@
+char_duplicates_ratio: 0.01
+language_score_thr: 0
+line_punct_thr: 0
+max_avg_word_length: 321
+max_non_alpha_words_ratio: 0.62
+min_avg_word_length: 0
+new_line_ratio: 0.57
+short_line_thr: 0.91
+stopwords:
+- sa
+- ang
+- nga
+- mga
+- ug
+- ka
+- '1'
+- ni
+- '2'
+- gikan
+- '3'
+- bahin
+- kini
+- usa
+- mao
+- adunay
+- niini
+- paghimo

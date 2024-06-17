@@ -1,0 +1,24 @@
+char_duplicates_ratio: 0.01
+language_score_thr: 0
+line_punct_thr: 0.09
+max_avg_word_length: 8
+max_non_alpha_words_ratio: 0.79
+min_avg_word_length: 2
+new_line_ratio: 0.36
+short_line_thr: 0.72
+stopwords:
+- ya
+- wa
+- na
+- za
+- kwa
+- katika
+- ni
+- la
+- kwenye
+- cha
+- kama
+- kuwa
+- kutoka
+- au
+- kazi
