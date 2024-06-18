@@ -1,0 +1,19 @@
+char_duplicates_ratio: 0.01
+language_score_thr: 0.14
+line_punct_thr: 0.0
+max_avg_word_length: 30
+max_non_alpha_words_ratio: 0.72
+min_avg_word_length: 0
+new_line_ratio: 0.55
+short_line_thr: 0.86
+stopwords:
+- i
+- u
+- je
+- za
+- na
+- se
+- od
+- da
+- sa
+- su

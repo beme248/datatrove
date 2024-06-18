@@ -1,0 +1,25 @@
+char_duplicates_ratio: 0.01
+language_score_thr: 0.12
+line_punct_thr: 0.0
+max_avg_word_length: 27
+max_non_alpha_words_ratio: 0.72
+min_avg_word_length: 0
+new_line_ratio: 0.46
+short_line_thr: 0.7
+stopwords:
+- va
+- "\u2018"
+- uchun
+- o
+- bo
+- bilan
+- bolalar
+- ko
+- to
+- bu
+- i
+- bir
+- qo
+- ta
+- qilish
+- semestr

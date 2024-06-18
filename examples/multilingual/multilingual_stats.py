@@ -48,6 +48,7 @@ DATASET_MODE = sys.argv[2]
 
 LANGUAGES = [
     # "en",
+    "rm",
     "de",
     "ru",
     "fr",

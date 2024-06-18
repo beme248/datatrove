@@ -386,6 +386,7 @@ WORD_TOKENIZER_FACTORY: dict[str, Callable[[], WordTokenizer]] = {
     Languages.somali: lambda: NLTKTokenizer("english"),  # Proxy
     Languages.turkmen: lambda: NLTKTokenizer("turkish"),  # Proxy
     Languages.pashto: lambda: SpaCyTokenizer("xx"),  # Proxy
+    Languages.rumantsch: lambda: NLTKTokenizer("english"),  # Proxy
 }
 
 WORD_TOKENIZER_CACHE: dict[str, WordTokenizer] = {}

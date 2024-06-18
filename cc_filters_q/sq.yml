@@ -1,0 +1,23 @@
+char_duplicates_ratio: 0.01
+language_score_thr: 0.23
+line_punct_thr: 0.08
+max_avg_word_length: 25
+max_non_alpha_words_ratio: 0.82
+min_avg_word_length: 3
+new_line_ratio: 0.47
+short_line_thr: 0.58
+stopwords:
+- "t\xEB"
+- e
+- "n\xEB"
+- dhe
+- i
+- "p\xEBr"
+- me
+- "nj\xEB"
+- "q\xEB"
+- nga
+- "\xEBsht\xEB"
+- "m\xEB"
+- se
+- ka

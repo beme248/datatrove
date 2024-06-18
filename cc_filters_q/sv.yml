@@ -1,0 +1,25 @@
+char_duplicates_ratio: 0.01
+language_score_thr: 0.27
+line_punct_thr: 0.04
+max_avg_word_length: 50
+max_non_alpha_words_ratio: 0.78
+min_avg_word_length: 2
+new_line_ratio: 0.55
+short_line_thr: 0.74
+stopwords:
+- och
+- i
+- att
+- "p\xE5"
+- "\xE4r"
+- som
+- en
+- "f\xF6r"
+- det
+- med
+- av
+- till
+- du
+- om
+- har
+- den

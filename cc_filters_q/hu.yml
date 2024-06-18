@@ -1,0 +1,24 @@
+char_duplicates_ratio: 0.01
+language_score_thr: 0.25
+line_punct_thr: 0.02
+max_avg_word_length: 104
+max_non_alpha_words_ratio: 0.76
+min_avg_word_length: 2
+new_line_ratio: 0.54
+short_line_thr: 0.74
+stopwords:
+- "keres\u0151optimaliz\xE1l\xE1s"
+- "havid\xEDjas"
+- "t\xE9m\xE1ban"
+- "\xE9s"
+- weboldal
+- "k\xE9sz\xEDt\xE9s"
+- budapest
+- "sz\xE1ll\xEDt\xE1s"
+- a
+- "p\xE1nc\xE9lszekr\xE9ny"
+- "mozgat\xE1s"
+- "ker\xFClet"
+- "b\xE9rl\xE9s"
+- "aut\xF3"
+- "k\xF6nyvel\u0151iroda"

@@ -295,6 +295,7 @@ def load_filters(folder_path, languages):
 def process_data(
     filter_mode: str = 'wiki',
     dataset_mode: str = 'cc',
+    filter_type: str = 'filters_meanstd',
     dump_to_process: str = "CC-MAIN-2023-23",
     doc_limit: int = 1_000,
     num_tasks: int = 100,
@@ -340,8 +341,8 @@ def process_data(
         }
         return readers[dataset_mode]
 
-    filters_folder = f"./{filter_mode}_filters_meanstd"
-    run_name = f"{dataset_mode}_with_{filter_mode}_filters_meanstd"
+    filters_folder = f"./{filter_mode}_{filter_type}"
+    run_name = f"{dataset_mode}_with_{filter_mode}_{filter_type}"
 
     for language in LANGUAGES:
         filtering_output_path = f"processing_cc_doc/multilingual_{run_name}/data/{dump_to_process}/{language}"

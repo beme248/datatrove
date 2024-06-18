@@ -1,0 +1,27 @@
+char_duplicates_ratio: 0.01
+language_score_thr: 0.18
+line_punct_thr: 0.02
+max_avg_word_length: 23
+max_non_alpha_words_ratio: 0.79
+min_avg_word_length: 2
+new_line_ratio: 0.45
+short_line_thr: 0.7
+stopwords:
+- de
+- a
+- "\xEEn"
+- la
+- cu
+- "\u0219i"
+- pentru
+- si
+- din
+- o
+- in
+- care
+- pe
+- mai
+- un
+- este
+- nu
+- "s\u0103"

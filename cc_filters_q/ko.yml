@@ -1,0 +1,24 @@
+char_duplicates_ratio: 0.01
+language_score_thr: 0.42
+line_punct_thr: 0.0
+max_avg_word_length: 9
+max_non_alpha_words_ratio: 0.74
+min_avg_word_length: 1
+new_line_ratio: 0.46
+short_line_thr: 0.95
+stopwords:
+- "\uD558"
+- "\uC774"
+- "\u11AB"
+- "\uB294"
+- "\uC744"
+- "\uC758"
+- "\uC5B4"
+- "\uC5D0"
+- "\uC740"
+- "\uB97C"
+- "\uACE0"
+- "\uC5C8"
+- "\uAC00"
+- "\uC788"
+- "\uB418"

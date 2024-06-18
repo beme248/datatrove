@@ -1,0 +1,20 @@
+char_duplicates_ratio: 0.01
+language_score_thr: 0.14
+line_punct_thr: 0.02
+max_avg_word_length: 15
+max_non_alpha_words_ratio: 0.77
+min_avg_word_length: 2
+new_line_ratio: 0.53
+short_line_thr: 0.82
+stopwords:
+- an
+- a
+- agus
+- ar
+- na
+- le
+- i
+- go
+- is
+- ag
+- do

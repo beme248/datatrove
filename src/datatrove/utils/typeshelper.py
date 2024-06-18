@@ -116,6 +116,7 @@ class Languages:
     sorani = "ckb"
     cebuano = "ceb"
     war = "war"
+    rumantsch = "rm"
 
 
 class StatHints:

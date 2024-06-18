@@ -1,0 +1,26 @@
+char_duplicates_ratio: 0.01
+language_score_thr: 0.34
+line_punct_thr: 0.03
+max_avg_word_length: 23
+max_non_alpha_words_ratio: 0.74
+min_avg_word_length: 0
+new_line_ratio: 0.54
+short_line_thr: 0.71
+stopwords:
+- "v\u0259"
+- "x\u0259b\u0259r"
+- aztv
+- bu
+- "il\u0259"
+- bir
+- "\xFC\xE7\xFCn"
+- ki
+- "az\u0259rbaycan"
+- "d\u0259"
+- i
+- da
+- '2018'
+- olan
+- undefined
+- "\xE7ox"
+- "ke\xE7irilib"

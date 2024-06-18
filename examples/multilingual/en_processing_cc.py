@@ -180,6 +180,7 @@ def load_filters(folder_path, languages):
 
 def process_data(
     filter_mode: str = 'wiki',
+    filter_type: str = 'filters_meanstd',
     dump_to_process: str = "CC-MAIN-2023-23",
     doc_limit: int = 10_000,
     num_tasks: int = 100,
@@ -189,7 +190,7 @@ def process_data(
     assert filter_mode == 'wiki' or filter_mode == 'cc', \
         f"run_mode must either be 'wiki' or 'cc', to use filters computed on wiki-data or cc-data."
     dataset_mode = 'cc'
-    filters_folder = f"./{filter_mode}_filters_meanstd"
+    filters_folder = f"./{filter_mode}_{filter_type}"
     run_name = f"{dataset_mode}_with_{filter_mode}_filters"
     filters = load_filters(filters_folder, LANGUAGES)
 
