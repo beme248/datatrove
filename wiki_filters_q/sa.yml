@@ -1,0 +1,17 @@
+char_duplicates_ratio: 0.01
+language_score_thr: 0.27
+line_punct_thr: 0.03
+max_avg_word_length: 19
+max_non_alpha_words_ratio: 0.73
+min_avg_word_length: 4
+new_line_ratio: 0.69
+short_line_thr: 0.95
+stopwords:
+- "\u091A"
+- "\u0907\u0924\u093F"
+- "\u0905\u0938\u094D\u0924\u093F"
+- "\u0928"
+- "\u092D\u0935\u0924\u093F"
+- "\u0906\u0938\u0940\u0924\u094D"
+- "\u090F\u0935"
+- "\u0905\u092A\u093F"

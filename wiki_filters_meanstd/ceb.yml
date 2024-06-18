@@ -1,0 +1,25 @@
+char_duplicates_ratio: 0.01
+language_score_thr: 0.81
+line_punct_thr: 0.13
+max_avg_word_length: 8
+max_non_alpha_words_ratio: 0.83
+min_avg_word_length: 2
+new_line_ratio: 0.23
+short_line_thr: 0.66
+stopwords:
+- sa
+- ang
+- nga
+- mga
+- ug
+- ni
+- "\xB0c"
+- niini
+- palibot
+- nasod
+- km
+- milimetro
+- gi
+- basihan
+- kasarangang
+- bulan

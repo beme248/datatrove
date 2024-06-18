@@ -1,0 +1,18 @@
+char_duplicates_ratio: 0.01
+language_score_thr: 0.86
+line_punct_thr: 0.15
+max_avg_word_length: 10
+max_non_alpha_words_ratio: 0.69
+min_avg_word_length: 3
+new_line_ratio: 0.37
+short_line_thr: 0.67
+stopwords:
+- "\u0443"
+- "\u0432"
+- "\u043D\u0430"
+- "\u0456"
+- "\u0437"
+- "\u0442\u0430"
+- "\u0434\u043E"
+- "\u0440\u043E\u043A\u0443"
+- "\u0437\u0430"
