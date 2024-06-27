@@ -59,6 +59,7 @@ if __name__ == "__main__":
             ),
         
         }
+        print(f"=======> {MAIN_OUTPUT_PATH}")
         pipeline = [
             readers[DATASET_MODE],
             LanguageStatsCollector(
@@ -97,7 +98,7 @@ if __name__ == "__main__":
                 return xs[:index]
 
             length_counter = language_stats.length_counter
-            word_counter = language_stats.doc_per_word
+            word_counter = language_stats.word_counter if DATASET_MODE != 'cc' else language_stats.doc_per_word
 
             lengths = list(length_counter.keys())
             freqs = list(length_counter.values())
@@ -122,6 +123,7 @@ if __name__ == "__main__":
 
             def is_clean(word):
                 word = word.strip()
+                word = word.strip('\'"')
                 return (
                     word != "–"
                     and word != "—"
@@ -161,16 +163,22 @@ if __name__ == "__main__":
                 )
 
             def to_clean(stopwords):
-                return [w for w in stopwords if is_clean(w)]
+                return [ w.strip().strip('\'"') for w in stopwords if is_clean(w)]
 
             def to_clean_stopwords(lang, word_counter):
                 stopwords = to_clean(p_thresh_words(word_counter, 0.008))
-                if len(stopwords) < 8 or lang == "sr":
-                    stopwords = p_thresh_words(word_counter, 0.003)
+                breakpoint()
+                if len(stopwords) < 8 or lang == "sr" or lang == "te":
+                    stopwords = to_clean(p_thresh_words(word_counter, 0.003))
+                breakpoint()
                 if len(stopwords) < 8:
-                    stopwords = p_thresh_words(word_counter, 0.002)
+                    stopwords = to_clean(p_thresh_words(word_counter, 0.002))
+                if len(stopwords) < 8:
+                    stopwords = to_clean(p_thresh_words(word_counter, 0.001))
                 return stopwords
 
+            from datatrove.pipeline.stats.lang_stats import STATS_KEYS
+            ls = language_stats.to_dict()
             return {
                 "min_avg_word_length": max(round(word_length_mean - word_length_std), 0),
                 "max_avg_word_length": round(word_length_mean + word_length_std),
@@ -181,6 +189,20 @@ if __name__ == "__main__":
                 "new_line_ratio": min(round(new_line_ratio_mean + 2 * new_line_ratio_std, 2), 1),
                 "char_duplicates_ratio": 0.01,
                 "language_score_thr": max(round(float(language_score_mean - 3 * language_score_std), 2), 0),
+                
+                # "length_counter": dict(language_stats.length_counter),
+                # "word_counter": dict(language_stats.word_counter),
+                # "doc_per_word": dict(language_stats.doc_per_word),
+                # "total_words": int(language_stats.total_words),
+                # "total_docs": int(language_stats.total_docs),
+                # "total_bytes": int(language_stats.total_bytes),
+                # **{
+                #     key: {
+                #         "mean": float(np.mean(ls[key])),
+                #         "std": float(np.std(ls[key])),
+                #     }
+                #     for key in STATS_KEYS
+                # },
             }
 
         # Compute language filter parameters
@@ -197,7 +219,7 @@ if __name__ == "__main__":
                 return xs[:index]
 
             def is_clean(word):
-                word = word.strip()
+                word = word.strip().strip('\'"')
                 return (
                     word != "–"
                     and word != "—"
@@ -233,29 +255,31 @@ if __name__ == "__main__":
                     and "=" not in word
                     and "\u200d" not in word
                     and "align" != word
-                    and not word.isdigit()
+                    and not word.isdigit()  # This checks if the word is a digit
                 )
 
-            def to_clean(stopwords):
-                return [w for w in stopwords if is_clean(w)]
+                def to_clean(stopwords):
+                    return [ word.strip().strip('\'"') for w in stopwords if is_clean(w)]
 
-            def to_clean_stopwords(lang, word_counter):
-                stopwords = to_clean(p_thresh_words(word_counter, 0.008))
-                if len(stopwords) < 8 or lang == "sr":
-                    stopwords = p_thresh_words(word_counter, 0.003)
-                return stopwords
+                def to_clean_stopwords(lang, word_counter):
+                    stopwords = to_clean(p_thresh_words(word_counter, 0.008))
+                    if len(stopwords) < 8 or lang == "sr" or lang == "te":
+                        stopwords = p_thresh_words(word_counter, 0.003)
+                    if len(stopwords) < 8:
+                        stopwords = p_thresh_words(word_counter, 0.002)
+                    return stopwords
 
-            return {
-                "min_avg_word_length": round(float(np.quantile(language_stats.avg_word_doc_length, 0.0001))),
-                "max_avg_word_length": round(float(np.quantile(language_stats.avg_word_doc_length, 0.9999))),
-                "max_non_alpha_words_ratio": round(float(np.quantile(language_stats.alpha_ratio, 0.25)), 2),
-                "stopwords": to_clean_stopwords(language, language_stats.word_counter),
-                "line_punct_thr": round(float(float(np.quantile(language_stats.line_punct_ratio, 0.2))), 2),
-                "short_line_thr": round(float(np.quantile(language_stats.short_line_ratio, 0.8)), 2),
-                "new_line_ratio": min(round(float(np.quantile(language_stats.new_line_ratio, 0.97)), 2), 1),
-                "char_duplicates_ratio": 0.01,
-                "language_score_thr": round(float(np.quantile(language_stats.language_score, 0.02)), 2),
-            }
+                return {
+                    "min_avg_word_length": round(float(np.quantile(language_stats.avg_word_doc_length, 0.0001))),
+                    "max_avg_word_length": round(float(np.quantile(language_stats.avg_word_doc_length, 0.9999))),
+                    "max_non_alpha_words_ratio": round(float(np.quantile(language_stats.alpha_ratio, 0.25)), 2),
+                    "stopwords": to_clean_stopwords(language, language_stats.word_counter),
+                    "line_punct_thr": round(float(float(np.quantile(language_stats.line_punct_ratio, 0.2))), 2),
+                    "short_line_thr": round(float(np.quantile(language_stats.short_line_ratio, 0.8)), 2),
+                    "new_line_ratio": min(round(float(np.quantile(language_stats.new_line_ratio, 0.97)), 2), 1),
+                    "char_duplicates_ratio": 0.01,
+                    "language_score_thr": round(float(np.quantile(language_stats.language_score, 0.02)), 2),
+                }
 
         # Compute language statistics
         def statistics_mapper(language_stats: LanguageStatistics):

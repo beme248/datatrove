@@ -182,7 +182,7 @@ def process_data(
     filter_mode: str = 'wiki',
     filter_type: str = 'filters_meanstd',
     dump_to_process: str = "CC-MAIN-2023-23",
-    doc_limit: int = 10_000,
+    doc_limit: int = 1_000,
     num_tasks: int = 100,
     num_workers: int = 100,
     executor_mode: str = "local"):
@@ -208,8 +208,8 @@ def process_data(
 
     for language in LANGUAGES:
         data_path = f"clean_cc_en/v5/data/{dump_to_process}/{language}/output/{dump_to_process}"
-        filtering_output_path = f"processing_cc_doc/multilingual_{run_name}/data/{dump_to_process}/{language}"
-        logs_path = f"processing_cc_doc/multilingual_{run_name}/logs/{dump_to_process}/{language}"
+        filtering_output_path = f"processing_cc_strip_quotes/multilingual_{run_name}/data/{dump_to_process}/{language}"
+        logs_path = f"processing_cc_strip_quotes/multilingual_{run_name}/logs/{dump_to_process}/{language}"
         pipeline =[
             JsonlReader(
                 data_path,

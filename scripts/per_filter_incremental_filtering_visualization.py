@@ -5,21 +5,22 @@ import fire
 import numpy as np
 
 languages = [
-    "en",
-    "de",
-    "hr",
-    "pt",
-    "cs",
-    "zh",
-    "fr",
-    "ru",
-    "tr",
-    "ar",
-    "th",
-    "hi",
-    "sw",
-    "te",
-    "ja"
+    # "en",
+    # "de",
+    # "hr",
+    # "pt",
+    # "cs",
+    # "zh",
+    # "fr",
+    # "ru",
+    # "tr",
+    # "ar",
+    # "th",
+    # "hi",
+    # "sw",
+    # "te",
+    # "ja"
+    "rm"
 ]
 
 def create_path_if_not_exists(path):
@@ -29,10 +30,11 @@ def create_path_if_not_exists(path):
 def main(
         filter_mode: str = 'wiki',
         dataset_mode: str = 'cc',
+        filter_type: str = 'filters_meanstd',
         dump: str = "CC-MAIN-2023-23",
         reference_lang: str = 'en'):
     
-    output_path = os.path.join("aggregated_filter_statistics")
+    output_path = os.path.join("aggregated_filter_statistics_rm")
     create_path_if_not_exists(output_path)
 
     language_stats = {}
@@ -40,60 +42,66 @@ def main(
 
     # First pass to gather all possible dropped keys
     for lang in languages:
-        file_path = os.path.join("processing", f"multilingual_{dataset_mode}_with_{filter_mode}_filters", "logs", dump, lang, "stats.json")
+        file_path = "processing_cc_doc/multilingual_cc_with_wiki_filters_meanstd/logs/CC-MAIN-2023-23/rm/stats.json"
+        # file_path = os.path.join("processing_cc_doc", f"multilingual_{dataset_mode}_with_{filter_mode}_{filter_type}", "logs", dump, lang, "stats.json")
         print(f"path {file_path}")
         try:
             with open(file_path, 'r') as json_file:
                 data = json.load(json_file)
-
                 if len(data) > 4:
-                    for filter_idx in range(1, 5):
-                        filter_stats = data[filter_idx].get("stats", {})
+                    for item in data[1:]:
+                        filter_stats = item.get("stats", {})
                         for k in filter_stats.keys():
-                            if k.startswith("dropped_"):
+                            if k.startswith("dropped_") or k.startswith("line-filter"):
                                 all_dropped_keys.add(k)
-        except FileNotFoundError:
-            print(f"File not found for language {lang}: {file_path}")
-        except json.JSONDecodeError:
-            print(f"Error decoding JSON from file for language {lang}: {file_path}")
+                        if "Lambda" in item.get("name", ""):
+                            all_dropped_keys.add("dropped_lang_score_thr")
+        except (FileNotFoundError, json.JSONDecodeError) as e:
+            print(f"Error loading file {file_path}: {e}")  # Debugging statement
 
     all_dropped_keys.add('total_dropped')
-    breakpoint()
     all_dropped_keys = sorted(all_dropped_keys)  # Sort keys for consistent ordering
 
     # Second pass to gather statistics and percentages
     for lang in languages:
-        file_path = os.path.join("processing", f"multilingual_{dataset_mode}_with_{filter_mode}_filters", "logs", dump, lang, "stats.json")
+        file_path = "processing_cc_doc/multilingual_cc_with_wiki_filters_meanstd/logs/CC-MAIN-2023-23/rm/stats.json"
+        # file_path = os.path.join("processing", f"multilingual_{dataset_mode}_with_{filter_mode}_filters", "logs", dump, lang, "stats.json")
         print(f"path {file_path}")
         try:
             with open(file_path, 'r') as json_file:
                 data = json.load(json_file)
-
                 if len(data) > 4:
                     aggregate_dropped_stats = {}
-                    for filter_idx in range(1, 5):
-                        filter_stats = data[filter_idx].get("stats", {})
+                    for item in data[1:]:
+                        filter_stats = item.get("stats", {})
                         for k, v in filter_stats.items():
-                            if k.startswith("dropped_"):
+                            if k in all_dropped_keys:
                                 if k in aggregate_dropped_stats:
                                     aggregate_dropped_stats[k] += v
                                 else:
                                     aggregate_dropped_stats[k] = v
-
-                    total_num_docs = data[0].get("stats", {}).get("documents", {}).get("total", 1)  # Default to 1 to avoid division by zero
+                        if "Lambda" in item.get("name", ""):
+                            if "dropped_lang_score_thr" in aggregate_dropped_stats:
+                                aggregate_dropped_stats["dropped_lang_score_thr"] += filter_stats.get("dropped", 0)
+                            else:
+                                aggregate_dropped_stats["dropped_lang_score_thr"] = filter_stats.get("dropped", 0)
+                    total_num_docs = data[0].get("stats", {}).get("documents", {}).get("total", 1)
                     if total_num_docs == 0:
-                        total_num_docs = 1  # Avoid division by zero
-                    percentage_dropped_stats = {k: (v / total_num_docs) * 100 for k, v in aggregate_dropped_stats.items()}
+                        total_num_docs = 1
+                    total_num_lines = data[-3].get("stats", {}).get("line-total", 1)
+                    percentage_dropped_stats = {
+                        k: (v / total_num_docs) * 100 if k.startswith("dropped") else (v / total_num_lines) * 100
+                        for k, v in aggregate_dropped_stats.items()
+                    }
 
-                    percentage_dropped_stats['total_dropped'] = (total_num_docs - data[-1]['stats']['total']) / total_num_docs
 
+                    if  'total' not in data[-1]['stats']:
+                        print(f"===========> missing total: {lang}")
+                    percentage_dropped_stats['total_dropped'] = (total_num_docs - data[-1]['stats'].get('total', 0)) / total_num_docs
                     language_stats[lang] = percentage_dropped_stats
-                else:
-                    print(f"Data for language {lang} does not contain enough items to process.")
-        except FileNotFoundError:
-            print(f"File not found for language {lang}: {file_path}")
-        except json.JSONDecodeError:
-            print(f"Error decoding JSON from file for language {lang}: {file_path}")
+        except (FileNotFoundError, json.JSONDecodeError) as e:
+            print(f"Error loading file {file_path}: {e}")  # Debugging statement
+
 
     # Load reference statistics
     reference_file_path = os.path.join("processing", f"multilingual_{dataset_mode}_with_default_filters", "logs", dump, reference_lang, "stats.json")
@@ -101,28 +109,34 @@ def main(
     try:
         with open(reference_file_path, 'r') as json_file:
             reference_data = json.load(json_file)
-
             if len(reference_data) > 4:
+                reference_stats = {}
                 for filter_idx in range(1, 5):
                     filter_stats = reference_data[filter_idx].get("stats", {})
                     for k, v in filter_stats.items():
-                        if k.startswith("dropped_"):
+                        if k in all_dropped_keys:
                             if k in reference_stats:
                                 reference_stats[k] += v
                             else:
                                 reference_stats[k] = v
+                        if "Lambda" in item.get("name", ""):
+                            if "dropped_lang_score_thr" in aggregate_dropped_stats:
+                                aggregate_dropped_stats["dropped_lang_score_thr"] += filter_stats.get("dropped", 0)
+                            else:
+                                aggregate_dropped_stats["dropped_lang_score_thr"] = filter_stats.get("dropped", 0)
 
                 total_num_docs = reference_data[0].get("stats", {}).get("documents", {}).get("total", 1)
+                total_num_lines = reference_data[-3].get("stats", {}).get("line-total", 1)
                 if total_num_docs == 0:
                     total_num_docs = 1
-                reference_percentage_stats = {k: (v / total_num_docs) * 100 for k, v in reference_stats.items()}
+                reference_percentage_stats = {
+                    k: (v / total_num_docs) * 100 if k.startswith("dropped") else (v / total_num_lines) * 100
+                    for k, v in reference_stats.items()
+                }
                 reference_percentage_stats['total_dropped'] = (total_num_docs - reference_data[-1]['stats']['total']) / total_num_docs
-    except FileNotFoundError:
-        print(f"Reference file not found for language {reference_lang}: {reference_file_path}")
-        reference_percentage_stats = {}
-    except json.JSONDecodeError:
-        print(f"Error decoding JSON from reference file for language {reference_lang}: {reference_file_path}")
-        reference_percentage_stats = {}
+    except (FileNotFoundError, json.JSONDecodeError) as e:
+        print(f"Error loading reference file {reference_file_path}: {e}")  # Debugging statement
+
 
     # Plotting
     num_dropped_keys = len(all_dropped_keys)

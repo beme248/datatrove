@@ -42,115 +42,115 @@ DATASET_MODE = sys.argv[2]
 #     "th",
 #     "hi",
 #     "sw",
-#     "te",
+    # "te",
 #     "ja",
 # ]
 
 LANGUAGES = [
     # "en",
-    "rm",
-    "de",
-    "ru",
-    "fr",
-    "ja",
-    "es",
-    "zh",
-    "it",
-    "nl",
-    "pl",
-    "pt",
-    "cs",
-    "vi",
-    "id",
-    "tr",
-    "sv",
-    "fa",
-    "ko",
-    "hu",
-    "ar",
-    "el",
-    "ro",
-    "da",
-    "fi",
-    "th",
-    "uk",
-    "sk",
-    "no",
-    "bg",
-    "ca",
-    "hr",
-    "la",
-    "sr",
-    "hi",
-    "sl",
-    "lt",
-    "et",
-    "he",
-    "bn",
-    "lv",
-    "sh",
-    "sq",
-    "az",
-    "ta",
-    "is",
-    "mk",
-    # "ka",
-    "gl",
-    "hy",
-    "eu",
-    "ms",
-    "ur",
-    "ne",
-    "mr",
-    "ml",
-    "kk",
+    # "rm",
+    # "de",
+    # "ru",
+    # "fr",
+    # "ja",
+    # "es",
+    # "zh",
+    # "it",
+    # "nl",
+    # "pl",
+    # "pt",
+    # "cs",
+    # "vi",
+    # "id",
+    # "tr",
+    # "sv",
+    # "fa",
+    # "ko",
+    # "hu",
+    # "ar",
+    # "el",
+    # "ro",
+    # "da",
+    # "fi",
+    # "th",
+    # "uk",
+    # "sk",
+    # "no",
+    # "bg",
+    # "ca",
+    # "hr",
+    # "la",
+    # "sr",
+    # "hi",
+    # "sl",
+    # "lt",
+    # "et",
+    # "he",
+    # "bn",
+    # "lv",
+    # "sh",
+    # "sq",
+    # "az",
+    # "ta",
+    # "is",
+    # "mk",
+    # # "ka",
+    # "gl",
+    # "hy",
+    # "eu",
+    # "ms",
+    # "ur",
+    # "ne",
+    # "mr",
+    # "ml",
+    # "kk",
     "te",
-    # "mn",
-    "be",
-    "gu",
-    "kn",
-    "tl",
-    # "my",
-    "eo",
-    "uz",
-    # "km",
-    "tg",
-    "cy",
-    "nn",
-    "bs",
-    "si",
-    "sw",
-    "pa",
-    "tt",
-    "ckb",
-    "af",
-    "or",
-    "ky",
-    "ga",
-    "am",
-    "oc",
-    "ku",
-    # "lo",
-    "lb",
-    "ba",
-    "ceb",
-    "fy",
-    "ps",
-    "mt",
-    # "br",
-    "as",
-    "mg",
-    "war",
-    # "dv",
-    "yi",
-    "so",
-    "sa",
-    "sd",
-    "azb",
-    "tk",
+    # # "mn",
+    # "be",
+    # "gu",
+    # "kn",
+    # "tl",
+    # # "my",
+    # "eo",
+    # "uz",
+    # # "km",
+    # "tg",
+    # "cy",
+    # "nn",
+    # "bs",
+    # "si",
+    # "sw",
+    # "pa",
+    # "tt",
+    # "ckb",
+    # "af",
+    # "or",
+    # "ky",
+    # "ga",
+    # "am",
+    # "oc",
+    # "ku",
+    # # "lo",
+    # "lb",
+    # "ba",
+    # "ceb",
+    # "fy",
+    # "ps",
+    # "mt",
+    # # "br",
+    # "as",
+    # "mg",
+    # "war",
+    # # "dv",
+    # "yi",
+    # "so",
+    # "sa",
+    # "sd",
+    # "azb",
+    # "tk",
 ]
 
-MAIN_OUTPUT_PATH = f"./{DATASET_MODE}_stats_pipeline_{RUN_MODE}"
+MAIN_OUTPUT_PATH = f"./{DATASET_MODE}_stats_pipeline_{RUN_MODE}_strip_quotes_new2"
 DOC_LIMIT = 4000
 NUM_TASKS = 10
 NUM_WORKERS = 10
@@ -242,6 +242,7 @@ if __name__ == "__main__":
 
             def is_clean(word):
                 word = word.strip()
+                word = word.strip('\'"')
                 return (
                     word != "–"
                     and word != "—"
@@ -281,14 +282,16 @@ if __name__ == "__main__":
                 )
 
             def to_clean(stopwords):
-                return [w for w in stopwords if is_clean(w)]
+                return [ w.strip().strip('\'"') for w in stopwords if is_clean(w)]
 
             def to_clean_stopwords(lang, word_counter):
                 stopwords = to_clean(p_thresh_words(word_counter, 0.008))
-                if len(stopwords) < 8 or lang == "sr":
-                    stopwords = p_thresh_words(word_counter, 0.003)
+                if len(stopwords) < 8 or lang == "sr" or lang == "te":
+                    stopwords = to_clean(p_thresh_words(word_counter, 0.003))
                 if len(stopwords) < 8:
-                    stopwords = p_thresh_words(word_counter, 0.002)
+                    stopwords = to_clean(p_thresh_words(word_counter, 0.002))
+                if len(stopwords) < 8:
+                    stopwords = to_clean(p_thresh_words(word_counter, 0.001))
                 return stopwords
 
             from datatrove.pipeline.stats.lang_stats import STATS_KEYS
@@ -333,7 +336,7 @@ if __name__ == "__main__":
                 return xs[:index]
 
             def is_clean(word):
-                word = word.strip()
+                word = word.strip().strip('\'"')
                 return (
                     word != "–"
                     and word != "—"
@@ -369,15 +372,15 @@ if __name__ == "__main__":
                     and "=" not in word
                     and "\u200d" not in word
                     and "align" != word
-                    and not word.isdigit()
+                    and not word.isdigit()  # This checks if the word is a digit
                 )
 
             def to_clean(stopwords):
-                return [w for w in stopwords if is_clean(w)]
+                return [ word.strip().strip('\'"') for w in stopwords if is_clean(w)]
 
             def to_clean_stopwords(lang, word_counter):
                 stopwords = to_clean(p_thresh_words(word_counter, 0.008))
-                if len(stopwords) < 8 or lang == "sr":
+                if len(stopwords) < 8 or lang == "sr" or lang == "te":
                     stopwords = p_thresh_words(word_counter, 0.003)
                 if len(stopwords) < 8:
                     stopwords = p_thresh_words(word_counter, 0.002)

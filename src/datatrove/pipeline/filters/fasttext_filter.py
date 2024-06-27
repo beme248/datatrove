@@ -68,10 +68,10 @@ class FastTextClassifierFilter(BaseFilter):
         if not self._model:
             from fasttext.FastText import _FastText
 
-            model_file = cached_asset_path_or_download(
-                self.model_url, namespace="filters", subfolder="fasttext", desc="fast-text model"
-            )
-            self._model = _FastText(model_file)
+            # model_file = cached_asset_path_or_download(
+            #     self.model_url, namespace="filters", subfolder="fasttext", desc="fast-text model"
+            # )
+            self._model = _FastText("./model.bin") # model_file)
             # check label values
             available_labels = [x.removeprefix("__label__") for x in self._model.labels]
             for label, _ in self.keep_labels or [] + self.remove_labels or []:

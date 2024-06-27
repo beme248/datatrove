@@ -46,14 +46,14 @@ LANGUAGES = [
     "ar", "th", "hi", "sw", "te", "ja"
 ]
 
-output_path = os.path.join("aggregated_filter_statistics")
+output_path = os.path.join("aggregated_filter_statistics_v2")
 create_path_if_not_exists(output_path)
 
 # Store data for combined plots
 combined_data = defaultdict(lambda: defaultdict(list))
 stopwords_data = defaultdict(lambda: defaultdict(dict))
 
-for run_type in ["filters"]:
+for run_type in ["filters_meanstd"]:
     for lang in LANGUAGES:
         cc_path = f"cc_{run_type}/{lang}.yml"
         wiki_path = f"wiki_{run_type}/{lang}.yml"

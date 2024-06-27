@@ -117,6 +117,8 @@ class Languages:
     cebuano = "ceb"
     war = "war"
     rumantsch = "rm"
+    alemannisch = "als"
+    swissgerman = "gsw"
 
 
 class StatHints:

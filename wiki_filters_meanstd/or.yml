@@ -7,7 +7,6 @@ min_avg_word_length: 2
 new_line_ratio: 0.83
 short_line_thr: 0.83
 stopwords:
-- "\u0964"
 - "\u0B13"
 - "\u0B0F\u0B39\u0B3F"
 - "\u0B38\u0B47"
