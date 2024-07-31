@@ -275,7 +275,7 @@ if __name__ == "__main__":
                     and word != "\\"
                     and word != "\\\\"
                     and "=" not in word
-                    and "\u200d" not in word
+                    # and "\u200d" not in word
                     and "align" != word
                     and not word.isdigit()
                 )
@@ -286,9 +286,9 @@ if __name__ == "__main__":
             def to_clean_stopwords(lang, word_counter):
                 stopwords = to_clean(p_thresh_words(word_counter, 0.008))
                 if len(stopwords) < 8 or lang == "sr":
-                    stopwords = p_thresh_words(word_counter, 0.003)
+                    stopwords = to_clean(p_thresh_words(word_counter, 0.003))
                 if len(stopwords) < 8:
-                    stopwords = p_thresh_words(word_counter, 0.002)
+                    stopwords = to_clean(p_thresh_words(word_counter, 0.002))
                 return stopwords
 
             from datatrove.pipeline.stats.lang_stats import STATS_KEYS
@@ -367,7 +367,7 @@ if __name__ == "__main__":
                     and word != "\\"
                     and word != "\\\\"
                     and "=" not in word
-                    and "\u200d" not in word
+                    # and "\u200d" not in word
                     and "align" != word
                     and not word.isdigit()
                 )
@@ -378,9 +378,9 @@ if __name__ == "__main__":
             def to_clean_stopwords(lang, word_counter):
                 stopwords = to_clean(p_thresh_words(word_counter, 0.008))
                 if len(stopwords) < 8 or lang == "sr":
-                    stopwords = p_thresh_words(word_counter, 0.003)
+                    stopwords = to_clean(p_thresh_words(word_counter, 0.003))
                 if len(stopwords) < 8:
-                    stopwords = p_thresh_words(word_counter, 0.002)
+                    stopwords = to_clean(p_thresh_words(word_counter, 0.002))
                 return stopwords
 
             return {
