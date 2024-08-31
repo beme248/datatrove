@@ -28,24 +28,6 @@ if len(sys.argv) < 3 or sys.argv[2] not in ["cc", "wiki"]:
 
 RUN_MODE = sys.argv[1]
 DATASET_MODE = sys.argv[2]
-# LANGUAGES = [
-#     # "en",
-#     "de",
-#     "hr",
-#     "pt",
-#     "cs",
-#     "zh",
-#     "fr",
-#     "ru",
-#     "tr",
-#     "ar",
-#     "th",
-#     "hi",
-#     "sw",
-#     "te",
-#     "ja",
-# ]
-
 LANGUAGES = [
     # "en",
     "rm",
@@ -150,6 +132,19 @@ LANGUAGES = [
     "tk",
 ]
 
+LANGUAGES = [
+    "en",
+    "zh",
+    "fr",
+    "ru",
+    "tr",
+    "ar",
+    "th",
+    "hi",
+    "sw",
+    "te",
+]
+
 MAIN_OUTPUT_PATH = f"./{DATASET_MODE}_stats_pipeline_{RUN_MODE}"
 DOC_LIMIT = 4000
 NUM_TASKS = 10
@@ -240,6 +235,45 @@ if __name__ == "__main__":
             language_score_mean = float(np.mean(language_stats.language_score))
             language_score_std = float(np.std(language_stats.language_score))
 
+            dup_line_frac_mean = float(np.mean(language_stats.dup_line_frac))
+            dup_line_frac_std = float(np.std(language_stats.dup_line_frac))
+
+            dup_para_frac_mean = float(np.mean(language_stats.dup_para_frac))
+            dup_para_frac_std = float(np.std(language_stats.dup_para_frac))
+
+            dup_line_char_frac_mean = float(np.mean(language_stats.dup_line_char_frac))
+            dup_line_char_frac_std = float(np.std(language_stats.dup_line_char_frac))
+
+            dup_para_char_frac_mean = float(np.mean(language_stats.dup_para_char_frac))
+            dup_para_char_frac_std = float(np.std(language_stats.dup_para_char_frac))
+
+            top_2_gram_mean = float(np.mean(language_stats.top_2_gram))
+            top_2_gram_std = float(np.std(language_stats.top_2_gram))
+
+            top_3_gram_mean = float(np.mean(language_stats.top_3_gram))
+            top_3_gram_std = float(np.std(language_stats.top_3_gram))
+
+            top_4_gram_mean = float(np.mean(language_stats.top_4_gram))
+            top_4_gram_std = float(np.std(language_stats.top_4_gram))
+
+            dup_5_grams_mean = float(np.mean(language_stats.duplicated_5_grams))
+            dup_5_grams_std = float(np.std(language_stats.duplicated_5_grams))
+
+            dup_6_grams_mean = float(np.mean(language_stats.duplicated_6_grams))
+            dup_6_grams_std = float(np.std(language_stats.duplicated_6_grams))
+
+            dup_7_grams_mean = float(np.mean(language_stats.duplicated_7_grams))
+            dup_7_grams_std = float(np.std(language_stats.duplicated_7_grams))
+
+            dup_8_grams_mean = float(np.mean(language_stats.duplicated_8_grams))
+            dup_8_grams_std = float(np.std(language_stats.duplicated_8_grams))
+
+            dup_9_grams_mean = float(np.mean(language_stats.duplicated_9_grams))
+            dup_9_grams_std = float(np.std(language_stats.duplicated_9_grams))
+
+            dup_10_grams_mean = float(np.mean(language_stats.duplicated_10_grams))
+            dup_10_grams_std = float(np.std(language_stats.duplicated_10_grams))
+
             def is_clean(word):
                 word = word.strip()
                 return (
@@ -303,20 +337,19 @@ if __name__ == "__main__":
                 "new_line_ratio": min(round(new_line_ratio_mean + 2 * new_line_ratio_std, 2), 1),
                 "char_duplicates_ratio": 0.01,
                 "language_score_thr": max(round(float(language_score_mean - 3 * language_score_std), 2), 0),
-                
-                # "length_counter": dict(language_stats.length_counter),
-                # "word_counter": dict(language_stats.word_counter),
-                # "doc_per_word": dict(language_stats.doc_per_word),
-                # "total_words": int(language_stats.total_words),
-                # "total_docs": int(language_stats.total_docs),
-                # "total_bytes": int(language_stats.total_bytes),
-                # **{
-                #     key: {
-                #         "mean": float(np.mean(ls[key])),
-                #         "std": float(np.std(ls[key])),
-                #     }
-                #     for key in STATS_KEYS
-                # },
+                "dup_line_frac": round(dup_line_frac_mean + 6 * dup_line_frac_std, 2),
+                "dup_para_frac": round(dup_para_frac_mean + 13 * dup_para_frac_std, 2),   
+                "dup_line_char_frac": round(dup_line_char_frac_mean + 10 * dup_line_char_frac_std, 2),
+                "dup_para_char_frac": round(dup_para_char_frac_mean + 24 * dup_para_char_frac_std, 2),
+                "top_2_gram": round(top_2_gram_mean + 3 * top_2_gram_std, 2),
+                "top_3_gram":  round(top_3_gram_mean + 3 * top_3_gram_std, 2),
+                "top_4_gram": round(top_4_gram_mean + 2 * top_4_gram_std, 2),
+                "duplicated_5_grams": round(dup_5_grams_mean + 3 * dup_5_grams_std, 2),
+                "duplicated_6_grams": round(dup_6_grams_mean + 4 * dup_6_grams_std, 2),
+                "duplicated_7_grams":  round(dup_7_grams_mean + 4 * dup_7_grams_std, 2),
+                "duplicated_8_grams":  round(dup_8_grams_mean + 5 * dup_8_grams_std, 2),
+                "duplicated_9_grams":  round(dup_9_grams_mean + 5 * dup_9_grams_std, 2),
+                "duplicated_10_grams": round(dup_10_grams_mean + 5 * dup_10_grams_std, 2),
             }
 
         # Compute language filter parameters
@@ -393,6 +426,19 @@ if __name__ == "__main__":
                 "new_line_ratio": min(round(float(np.quantile(language_stats.new_line_ratio, 0.97)), 2), 1),
                 "char_duplicates_ratio": 0.01,
                 "language_score_thr": round(float(np.quantile(language_stats.language_score, 0.02)), 2),
+                "dup_line_frac": round(float(np.quantile(language_stats.dup_line_frac, 0.9925)), 2),
+                "dup_para_frac": round(float(np.quantile(language_stats.dup_para_frac, 0.9986)), 2),
+                "dup_line_char_frac": round(float(np.quantile(language_stats.dup_line_char_frac, 0.9977)), 2),
+                "dup_para_char_frac": round(float(np.quantile(language_stats.dup_para_char_frac, 0.9997)), 2),
+                "top_2_gram": round(float(np.quantile(language_stats.top_2_gram, 0.9828)), 2),
+                "top_3_gram": round(float(np.quantile(language_stats.top_3_gram, 0.9737)), 2),
+                "top_4_gram": round(float(np.quantile(language_stats.top_4_gram, 0.9617)), 2),
+                "duplicated_5_grams": round(float(np.quantile(language_stats.duplicated_5_grams, 0.9809)), 2),
+                "duplicated_6_grams": round(float(np.quantile(language_stats.duplicated_6_grams, 0.9860)), 2),
+                "duplicated_7_grams": round(float(np.quantile(language_stats.duplicated_7_grams, 0.9893)), 2),
+                "duplicated_8_grams": round(float(np.quantile(language_stats.duplicated_8_grams, 0.9909)), 2),
+                "duplicated_9_grams": round(float(np.quantile(language_stats.duplicated_9_grams, 0.9918)), 2),
+                "duplicated_10_grams": round(float(np.quantile(language_stats.duplicated_10_grams, 0.9928)), 2),
             }
 
         # Compute language statistics

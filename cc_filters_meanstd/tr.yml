@@ -1,4 +1,14 @@
 char_duplicates_ratio: 0.01
+dup_line_char_frac: 1.42
+dup_line_frac: 1.06
+dup_para_char_frac: 0.0
+dup_para_frac: 0.0
+duplicated_10_grams: 0.57
+duplicated_5_grams: 0.43
+duplicated_6_grams: 0.52
+duplicated_7_grams: 0.51
+duplicated_8_grams: 0.6
+duplicated_9_grams: 0.59
 language_score_thr: 0.47
 line_punct_thr: 0.06
 max_avg_word_length: 10
@@ -16,3 +26,6 @@ stopwords:
 - de
 - olarak
 - en
+top_2_gram: 0.25
+top_3_gram: 0.3
+top_4_gram: 0.26

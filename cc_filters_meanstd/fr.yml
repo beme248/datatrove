@@ -1,4 +1,14 @@
 char_duplicates_ratio: 0.01
+dup_line_char_frac: 1.29
+dup_line_frac: 1.03
+dup_para_char_frac: 0.0
+dup_para_frac: 0.0
+duplicated_10_grams: 0.5
+duplicated_5_grams: 0.39
+duplicated_6_grams: 0.47
+duplicated_7_grams: 0.45
+duplicated_8_grams: 0.54
+duplicated_9_grams: 0.52
 language_score_thr: 0.42
 line_punct_thr: 0.02
 max_avg_word_length: 13
@@ -35,3 +45,6 @@ stopwords:
 - ce
 - ou
 - pas
+top_2_gram: 0.22
+top_3_gram: 0.28
+top_4_gram: 0.25

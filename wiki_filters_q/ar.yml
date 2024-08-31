@@ -1,4 +1,14 @@
 char_duplicates_ratio: 0.01
+dup_line_char_frac: 0.22
+dup_line_frac: 0.33
+dup_para_char_frac: 0.07
+dup_para_frac: 0.1
+duplicated_10_grams: 0.14
+duplicated_5_grams: 0.19
+duplicated_6_grams: 0.18
+duplicated_7_grams: 0.15
+duplicated_8_grams: 0.15
+duplicated_9_grams: 0.14
 language_score_thr: 0.99
 line_punct_thr: 0.07
 max_avg_word_length: 9
@@ -28,3 +38,6 @@ stopwords:
 - "\u0627\u0644\u0645\u062A\u062D\u062F\u0629"
 - "\u0643\u0627\u0646"
 - "\u0628\u064A\u0646"
+top_2_gram: 0.26
+top_3_gram: 0.25
+top_4_gram: 0.22

@@ -1,4 +1,14 @@
 char_duplicates_ratio: 0.01
+dup_line_char_frac: 0.32
+dup_line_frac: 0.37
+dup_para_char_frac: 0.33
+dup_para_frac: 0.39
+duplicated_10_grams: 0.3
+duplicated_5_grams: 0.12
+duplicated_6_grams: 0.14
+duplicated_7_grams: 0.18
+duplicated_8_grams: 0.2
+duplicated_9_grams: 0.25
 language_score_thr: 0.86
 line_punct_thr: 0.1
 max_avg_word_length: 16
@@ -18,3 +28,6 @@ stopwords:
 - "\u090F\u0915"
 - "\u0939\u0948\u0902"
 - "\u092A\u0930"
+top_2_gram: 0.41
+top_3_gram: 0.31
+top_4_gram: 0.33

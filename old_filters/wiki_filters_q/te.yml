@@ -1,0 +1,19 @@
+char_duplicates_ratio: 0.01
+language_score_thr: 1.0
+line_punct_thr: 0.15
+max_avg_word_length: 18
+max_non_alpha_words_ratio: 0.76
+min_avg_word_length: 3
+new_line_ratio: 0.34
+short_line_thr: 0.67
+stopwords:
+- "\u0C28\u0C41\u0C02\u0C21\u0C3F"
+- "\u0C09\u0C28\u0C4D\u0C28\u0C3E\u0C2F\u0C3F"
+- "\u0C17\u0C4D\u0C30\u0C3E\u0C2E\u0C02"
+- "\u0C09\u0C02\u0C26\u0C3F"
+- "\u0C26\u0C42\u0C30\u0C02\u0C32\u0C4B"
+- "\u0C17\u0C4D\u0C30\u0C3E\u0C2E\u0C02\u0C32\u0C4B"
+- "\u0C15\u0C3F.\u0C2E\u0C40"
+- "\u0C08"
+- "\u0C38\u0C4C\u0C15\u0C30\u0C4D\u0C2F\u0C02"
+- "\u0C15\u0C47\u0C02\u0C26\u0C4D\u0C30\u0C02"

@@ -1,4 +1,14 @@
 char_duplicates_ratio: 0.01
+dup_line_char_frac: 0.2
+dup_line_frac: 0.3
+dup_para_char_frac: 0.2
+dup_para_frac: 0.29
+duplicated_10_grams: 0.1
+duplicated_5_grams: 0.15
+duplicated_6_grams: 0.14
+duplicated_7_grams: 0.13
+duplicated_8_grams: 0.12
+duplicated_9_grams: 0.11
 language_score_thr: 0.65
 line_punct_thr: 0.11
 max_avg_word_length: 10
@@ -19,3 +29,6 @@ stopwords:
 - as
 - 'on'
 - by
+top_2_gram: 0.2
+top_3_gram: 0.18
+top_4_gram: 0.16

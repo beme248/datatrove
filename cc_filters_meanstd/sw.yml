@@ -1,4 +1,14 @@
 char_duplicates_ratio: 0.01
+dup_line_char_frac: 1.06
+dup_line_frac: 0.82
+dup_para_char_frac: 0.0
+dup_para_frac: 0.0
+duplicated_10_grams: 0.41
+duplicated_5_grams: 0.33
+duplicated_6_grams: 0.38
+duplicated_7_grams: 0.36
+duplicated_8_grams: 0.43
+duplicated_9_grams: 0.42
 language_score_thr: 0
 line_punct_thr: 0.09
 max_avg_word_length: 8
@@ -22,3 +32,6 @@ stopwords:
 - kutoka
 - au
 - kazi
+top_2_gram: 0.21
+top_3_gram: 0.27
+top_4_gram: 0.25

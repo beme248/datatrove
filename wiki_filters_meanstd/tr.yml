@@ -1,4 +1,14 @@
 char_duplicates_ratio: 0.01
+dup_line_char_frac: 0.31
+dup_line_frac: 0.32
+dup_para_char_frac: 0.12
+dup_para_frac: 0.22
+duplicated_10_grams: 0.15
+duplicated_5_grams: 0.15
+duplicated_6_grams: 0.17
+duplicated_7_grams: 0.16
+duplicated_8_grams: 0.18
+duplicated_9_grams: 0.17
 language_score_thr: 0.66
 line_punct_thr: 0.09
 max_avg_word_length: 10
@@ -26,3 +36,6 @@ stopwords:
 - "d\u0131\u015F"
 - "ba\u011Flant\u0131lar"
 - ilk
+top_2_gram: 0.25
+top_3_gram: 0.34
+top_4_gram: 0.33

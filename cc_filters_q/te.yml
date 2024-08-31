@@ -1,4 +1,14 @@
 char_duplicates_ratio: 0.01
+dup_line_char_frac: 0.53
+dup_line_frac: 0.57
+dup_para_char_frac: 0.0
+dup_para_frac: 0.0
+duplicated_10_grams: 0.41
+duplicated_5_grams: 0.4
+duplicated_6_grams: 0.41
+duplicated_7_grams: 0.42
+duplicated_8_grams: 0.41
+duplicated_9_grams: 0.41
 language_score_thr: 0.51
 line_punct_thr: 0.05
 max_avg_word_length: 32
@@ -12,7 +22,6 @@ stopwords:
 - "\u0C15\u0C42\u0C21\u0C3E"
 - "\u0C06"
 - "\u0C12\u0C15"
-- "\u2018"
 - the
 - "\u0C32\u0C4B"
 - "\u0C05\u0C28\u0C3F"
@@ -21,3 +30,6 @@ stopwords:
 - "\u0C09\u0C02\u0C26\u0C3F"
 - "\u0C15\u0C4B\u0C38\u0C02"
 - "\u0C28\u0C41\u0C02\u0C1A\u0C3F"
+top_2_gram: 0.21
+top_3_gram: 0.19
+top_4_gram: 0.19
