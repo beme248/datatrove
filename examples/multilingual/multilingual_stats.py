@@ -13,9 +13,10 @@ if len(sys.argv) < 3 or sys.argv[1] not in [
     "statistics",
     "filters_q",
     "filters_meanstd",
+    "filters_medianstd",
     "raw",
 ]:
-    print("First argument should be: 'statistics', 'filters_q', 'filters_meanstd' or 'raw'.")
+    print("First argument should be: 'statistics', 'filters_q', 'filters_meanstd', 'filters_medianstd' or 'raw'.")
     print("Use 'statistics' to generate statistics of the Wikipedia documents.")
     print("Use 'filters' to only generate the filter values for multilingual Gopher quality filter.")
     exit(1)
@@ -232,9 +233,6 @@ if __name__ == "__main__":
             new_line_ratio_mean = float(np.mean(language_stats.new_line_ratio))
             new_line_ratio_std = float(np.std(language_stats.new_line_ratio))
 
-            language_score_mean = float(np.mean(language_stats.language_score))
-            language_score_std = float(np.std(language_stats.language_score))
-
             dup_line_frac_mean = float(np.mean(language_stats.dup_line_frac))
             dup_line_frac_std = float(np.std(language_stats.dup_line_frac))
 
@@ -336,7 +334,6 @@ if __name__ == "__main__":
                 "short_line_thr": round(short_line_ratio_mean + short_line_ratio_std, 2),
                 "new_line_ratio": min(round(new_line_ratio_mean + 2 * new_line_ratio_std, 2), 1),
                 "char_duplicates_ratio": 0.01,
-                "language_score_thr": max(round(float(language_score_mean - 3 * language_score_std), 2), 0),
                 "dup_line_frac": round(dup_line_frac_mean + 6 * dup_line_frac_std, 2),
                 "dup_para_frac": round(dup_para_frac_mean + 13 * dup_para_frac_std, 2),   
                 "dup_line_char_frac": round(dup_line_char_frac_mean + 10 * dup_line_char_frac_std, 2),
@@ -425,7 +422,6 @@ if __name__ == "__main__":
                 "short_line_thr": round(float(np.quantile(language_stats.short_line_ratio, 0.8)), 2),
                 "new_line_ratio": min(round(float(np.quantile(language_stats.new_line_ratio, 0.97)), 2), 1),
                 "char_duplicates_ratio": 0.01,
-                "language_score_thr": round(float(np.quantile(language_stats.language_score, 0.02)), 2),
                 "dup_line_frac": round(float(np.quantile(language_stats.dup_line_frac, 0.9925)), 2),
                 "dup_para_frac": round(float(np.quantile(language_stats.dup_para_frac, 0.9986)), 2),
                 "dup_line_char_frac": round(float(np.quantile(language_stats.dup_line_char_frac, 0.9977)), 2),
@@ -440,6 +436,168 @@ if __name__ == "__main__":
                 "duplicated_9_grams": round(float(np.quantile(language_stats.duplicated_9_grams, 0.9918)), 2),
                 "duplicated_10_grams": round(float(np.quantile(language_stats.duplicated_10_grams, 0.9928)), 2),
             }
+
+        # Compute language filter parameters
+        def filters_medianstd_mapper(language_stats: LanguageStatistics):
+            # Make sure to import np here for slurm executor
+            import numpy as np
+
+            def p_thresh_words(counts, p):
+                counts_sorted = sorted(counts, key=lambda x: -x[1])
+                xs = [d[0] for d in counts_sorted]
+                ys = [d[1] for d in counts_sorted]
+                ys_cumsum = np.cumsum(ys)
+                index = np.sum(ys > p * ys_cumsum[-1])
+                return xs[:index]
+
+            # From https://gist.github.com/robbibt/c7ec5f0cb3e4e0cee5ed3156bcb666de
+            def weighted_median(values, weights):
+                values = np.array(values)
+                weights = np.array(weights)
+                sort_indices = np.argsort(values)
+                values_sorted = values[sort_indices]
+                weights_sorted = weights[sort_indices]  
+                cumsum = weights_sorted.cumsum()
+                cutoff = weights_sorted.sum() / 2.
+                return values_sorted[cumsum >= cutoff][0]
+
+            length_counter = language_stats.length_counter
+            word_counter = language_stats.word_counter if DATASET_MODE != 'cc' else language_stats.doc_per_word
+
+            lengths = list(length_counter.keys())
+            freqs = list(length_counter.values())
+
+            word_length_mean = weighted_median(lengths, freqs)
+            word_length_std = np.sqrt(np.cov(lengths, fweights=freqs))
+
+            alpha_ratio_mean = float(np.median(language_stats.alpha_ratio))
+            alpha_ratio_std = float(np.std(language_stats.alpha_ratio))
+
+            line_punct_ratio_mean = float(np.median(language_stats.line_punct_ratio))
+            line_punct_ratio_std = float(np.std(language_stats.line_punct_ratio))
+
+            short_line_ratio_mean = float(np.median(language_stats.short_line_ratio))
+            short_line_ratio_std = float(np.std(language_stats.short_line_ratio))
+
+            new_line_ratio_mean = float(np.median(language_stats.new_line_ratio))
+            new_line_ratio_std = float(np.std(language_stats.new_line_ratio))
+
+            dup_line_frac_mean = float(np.median(language_stats.dup_line_frac))
+            dup_line_frac_std = float(np.std(language_stats.dup_line_frac))
+
+            dup_para_frac_mean = float(np.median(language_stats.dup_para_frac))
+            dup_para_frac_std = float(np.std(language_stats.dup_para_frac))
+
+            dup_line_char_frac_mean = float(np.median(language_stats.dup_line_char_frac))
+            dup_line_char_frac_std = float(np.std(language_stats.dup_line_char_frac))
+
+            dup_para_char_frac_mean = float(np.median(language_stats.dup_para_char_frac))
+            dup_para_char_frac_std = float(np.std(language_stats.dup_para_char_frac))
+
+            top_2_gram_mean = float(np.median(language_stats.top_2_gram))
+            top_2_gram_std = float(np.std(language_stats.top_2_gram))
+
+            top_3_gram_mean = float(np.median(language_stats.top_3_gram))
+            top_3_gram_std = float(np.std(language_stats.top_3_gram))
+
+            top_4_gram_mean = float(np.median(language_stats.top_4_gram))
+            top_4_gram_std = float(np.std(language_stats.top_4_gram))
+
+            dup_5_grams_mean = float(np.median(language_stats.duplicated_5_grams))
+            dup_5_grams_std = float(np.std(language_stats.duplicated_5_grams))
+
+            dup_6_grams_mean = float(np.median(language_stats.duplicated_6_grams))
+            dup_6_grams_std = float(np.std(language_stats.duplicated_6_grams))
+
+            dup_7_grams_mean = float(np.median(language_stats.duplicated_7_grams))
+            dup_7_grams_std = float(np.std(language_stats.duplicated_7_grams))
+
+            dup_8_grams_mean = float(np.median(language_stats.duplicated_8_grams))
+            dup_8_grams_std = float(np.std(language_stats.duplicated_8_grams))
+
+            dup_9_grams_mean = float(np.median(language_stats.duplicated_9_grams))
+            dup_9_grams_std = float(np.std(language_stats.duplicated_9_grams))
+
+            dup_10_grams_mean = float(np.median(language_stats.duplicated_10_grams))
+            dup_10_grams_std = float(np.std(language_stats.duplicated_10_grams))
+
+            def is_clean(word):
+                word = word.strip()
+                return (
+                    word != "–"
+                    and word != "—"
+                    and word != "’"
+                    and word != "’’"
+                    and word != "||"
+                    and word != "|"
+                    and word != "।"
+                    and word != "''"
+                    and word != "'"
+                    and word != "``"
+                    and word != "`"
+                    and word != "‘"
+                    and word != "„"
+                    and word != "“"
+                    and word != "”"
+                    and word != "«"
+                    and word != "»"
+                    and word != "|-"
+                    and word != ":"
+                    and word != "："
+                    and word != "《"
+                    and word != "》"
+                    and word != "，"
+                    and word != "("
+                    and word != ")"
+                    and word != "（"
+                    and word != "）"
+                    and word != "//"
+                    and word != "/"
+                    and word != "\\"
+                    and word != "\\\\"
+                    and "=" not in word
+                    # and "\u200d" not in word
+                    and "align" != word
+                    and not word.isdigit()
+                )
+
+            def to_clean(stopwords):
+                return [w for w in stopwords if is_clean(w)]
+
+            def to_clean_stopwords(lang, word_counter):
+                stopwords = to_clean(p_thresh_words(word_counter, 0.008))
+                if len(stopwords) < 8 or lang == "sr":
+                    stopwords = to_clean(p_thresh_words(word_counter, 0.003))
+                if len(stopwords) < 8:
+                    stopwords = to_clean(p_thresh_words(word_counter, 0.002))
+                return stopwords
+
+            from datatrove.pipeline.stats.lang_stats import STATS_KEYS
+            ls = language_stats.to_dict()
+            return {
+                "min_avg_word_length": max(round(word_length_mean - 0.5 * word_length_std), 0),
+                "max_avg_word_length": round(word_length_mean + 2 * word_length_std),
+                "max_non_alpha_words_ratio": round(alpha_ratio_mean - 0.5 * alpha_ratio_std, 2),
+                "stopwords": to_clean_stopwords(language, word_counter),
+                "line_punct_thr": max(round(line_punct_ratio_mean - line_punct_ratio_std, 2), 0),
+                "short_line_thr": round(short_line_ratio_mean + short_line_ratio_std, 2),
+                "new_line_ratio": min(round(new_line_ratio_mean + 3 * new_line_ratio_std, 2), 1),
+                "char_duplicates_ratio": 0.01,
+                "dup_line_frac": round(dup_line_frac_mean + 6 * dup_line_frac_std, 2),
+                "dup_para_frac": round(dup_para_frac_mean + 13 * dup_para_frac_std, 2),   
+                "dup_line_char_frac": round(dup_line_char_frac_mean + 10 * dup_line_char_frac_std, 2),
+                "dup_para_char_frac": round(dup_para_char_frac_mean + 24 * dup_para_char_frac_std, 2),
+                "top_2_gram": round(top_2_gram_mean + 4 * top_2_gram_std, 2),
+                "top_3_gram":  round(top_3_gram_mean + 3 * top_3_gram_std, 2),
+                "top_4_gram": round(top_4_gram_mean + 3 * top_4_gram_std, 2),
+                "duplicated_5_grams": round(dup_5_grams_mean + 3 * dup_5_grams_std, 2),
+                "duplicated_6_grams": round(dup_6_grams_mean + 4 * dup_6_grams_std, 2),
+                "duplicated_7_grams":  round(dup_7_grams_mean + 5 * dup_7_grams_std, 2),
+                "duplicated_8_grams":  round(dup_8_grams_mean + 5 * dup_8_grams_std, 2),
+                "duplicated_9_grams":  round(dup_9_grams_mean + 5 * dup_9_grams_std, 2),
+                "duplicated_10_grams": round(dup_10_grams_mean + 5 * dup_10_grams_std, 2),
+            }
+
 
         # Compute language statistics
         def statistics_mapper(language_stats: LanguageStatistics):
@@ -479,6 +637,14 @@ if __name__ == "__main__":
                     input_folder=f"{MAIN_OUTPUT_PATH}/lang_stats_per_rank/{language}",
                     output_folder=f"./{DATASET_MODE}_{RUN_MODE}",
                     map_fn=filters_meanstd_mapper,
+                    output_filename=f"{language}.yml",
+                )
+            ],
+            "filters_medianstd": [
+                LanguageStatsReducer(
+                    input_folder=f"{MAIN_OUTPUT_PATH}/lang_stats_per_rank/{language}",
+                    output_folder=f"./{DATASET_MODE}_{RUN_MODE}",
+                    map_fn=filters_medianstd_mapper,
                     output_filename=f"{language}.yml",
                 )
             ],
